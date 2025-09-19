@@ -136,6 +136,13 @@ def test_portal_end_to_end_workflow() -> None:
         project_summary = response.json()
         assert project_summary["scenarios"] == ["alternate_routing"]
 
+        overview_response = client.get("/projects/demo/overview")
+        assert overview_response.status_code == 200
+        overview = overview_response.json()
+        assert overview["scenario_count"] == 1
+        assert overview["total_runs"] == 0
+        assert overview["inputs"] is None
+
         projects_response = client.get("/projects")
         assert projects_response.status_code == 200
         projects = projects_response.json()["projects"]
@@ -155,6 +162,12 @@ def test_portal_end_to_end_workflow() -> None:
         inputs_payload = inputs_response.json()
         assert inputs_payload["forcing"]["S1"] == forcing["S1"]
         assert "updated_at" in inputs_payload
+
+        overview_after_inputs = client.get("/projects/demo/overview").json()
+        assert overview_after_inputs["inputs"]["forcing"]["series_count"] == len(forcing)
+        assert overview_after_inputs["inputs"]["forcing"]["max_length"] == 4
+        assert overview_after_inputs["inputs"]["observations"]["min_value"] is not None
+
 
         inputs_get = client.get("/projects/demo/inputs")
         assert inputs_get.status_code == 200
@@ -211,6 +224,12 @@ def test_portal_end_to_end_workflow() -> None:
         assert payload["result"]["overall_scores"]
 
         run_id = payload["id"]
+
+        overview_after_run = client.get("/projects/demo/overview").json()
+        assert overview_after_run["total_runs"] == 1
+        assert overview_after_run["latest_run"]["id"] == run_id
+        assert overview_after_run["latest_summary"]["baseline"]["scenario_id"] == "baseline"
+
 
         summary_response = client.get(f"/runs/{run_id}/summary")
         assert summary_response.status_code == 200

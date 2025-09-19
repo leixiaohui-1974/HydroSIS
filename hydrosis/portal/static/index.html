@@ -113,6 +113,7 @@
         </form>
         <button type="button" id="refresh-projects">刷新项目列表</button>
         <pre id="projects-list">尚无项目信息</pre>
+        <pre id="project-overview">项目总览尚未加载</pre>
         <pre id="config-result">等待配置...</pre>
       </section>
       <section>
@@ -188,6 +189,7 @@
     <script>
       const messagesEl = document.getElementById("messages");
       const projectInput = document.getElementById("project-id");
+      const overviewEl = document.getElementById("project-overview");
       const scenarioFeedback = document.getElementById("scenario-feedback");
       const inputsFeedback = document.getElementById("inputs-feedback");
 
@@ -202,8 +204,31 @@
           const data = await response.json();
           document.getElementById("projects-list").textContent = JSON.stringify(data.projects || [], null, 2);
           await loadInputs();
+          await loadOverview();
         } catch (err) {
           document.getElementById("projects-list").textContent = `项目列表加载失败: ${err}`;
+        }
+      }
+
+      async function loadOverview() {
+        const projectId = currentProjectId();
+        try {
+          const response = await fetch(`/projects/${projectId}/overview`);
+          if (response.status === 404) {
+            overviewEl.textContent = "尚未配置项目或缺少总览数据";
+            return;
+          }
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          overviewEl.textContent = JSON.stringify(data, null, 2);
+          if (data.latest_run && data.latest_run.id) {
+            const summaryInput = document.getElementById("summary-run-id");
+            if (!summaryInput.value) {
+              summaryInput.value = data.latest_run.id;
+            }
+          }
+        } catch (err) {
+          overviewEl.textContent = `项目总览加载失败: ${err}`;
         }
       }
 
@@ -339,6 +364,7 @@
         }
         inputsFeedback.textContent = "输入已更新";
         loadInputs();
+        loadOverview();
       });
 
       document.getElementById("refresh-inputs").addEventListener("click", (event) => {
@@ -373,6 +399,7 @@
         scenarioFeedback.textContent = "情景创建成功";
         document.getElementById("scenario-create-form").reset();
         loadScenarios();
+        loadOverview();
       });
 
       document.getElementById("scenario-update-form").addEventListener("submit", async (event) => {
@@ -405,6 +432,7 @@
         scenarioFeedback.textContent = "情景更新成功";
         document.getElementById("scenario-update-form").reset();
         loadScenarios();
+        loadOverview();
       });
 
       document.getElementById("scenario-delete").addEventListener("click", async (event) => {
@@ -425,6 +453,7 @@
         scenarioFeedback.textContent = "情景已删除";
         document.getElementById("scenario-delete-id").value = "";
         loadScenarios();
+        loadOverview();
       });
 
       document.getElementById("refresh-scenarios").addEventListener("click", (event) => {
@@ -470,6 +499,7 @@
           await loadRunSummary(data.id);
         }
         loadRuns();
+        loadOverview();
       });
 
       document.getElementById("refresh-runs").addEventListener("click", (event) => {
@@ -498,6 +528,7 @@
       loadProjects();
       loadScenarios();
       loadInputs();
+      loadOverview();
       loadRuns();
     </script>
   </body>

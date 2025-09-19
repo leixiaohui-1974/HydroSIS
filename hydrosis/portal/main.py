@@ -16,19 +16,22 @@ from .llm import IntentParser
 from .schemas import (
     ConversationMessageSchema,
     ConversationResponse,
+    InputSeriesSummary,
+    InputsOverview,
+    ProjectConfigPayload,
     ProjectInputsPayload,
     ProjectInputsResponse,
     ProjectList,
-    ProjectConfigPayload,
+    ProjectOverview,
     ProjectSummary,
+    RunList,
     RunRequest,
     RunResponse,
-    RunList,
     ScenarioCreatePayload,
     ScenarioList,
     ScenarioUpdatePayload,
 )
-from .state import ConversationMessage, PortalState
+from .state import ConversationMessage, PortalState, ProjectInputs
 
 
 
@@ -40,6 +43,51 @@ def _remove_none(obj):
     return obj
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+
+def _series_summary(data: Mapping[str, Iterable[float]] | None) -> Optional[InputSeriesSummary]:
+    if not data:
+        return None
+
+    lengths: List[int] = []
+    all_values: List[float] = []
+    for series in data.values():
+        numeric_series = [float(value) for value in series]
+        lengths.append(len(numeric_series))
+        all_values.extend(numeric_series)
+
+    if not lengths:
+        return None
+
+    min_value = min(all_values) if all_values else None
+    max_value = max(all_values) if all_values else None
+    mean_length = sum(lengths) / len(lengths)
+
+    return InputSeriesSummary(
+        series_count=len(lengths),
+        min_length=min(lengths),
+        max_length=max(lengths),
+        mean_length=mean_length,
+        min_value=min_value,
+        max_value=max_value,
+    )
+
+
+def _build_inputs_overview(dataset: Optional[ProjectInputs]) -> Optional[InputsOverview]:
+    if dataset is None:
+        return None
+
+    forcing_summary = _series_summary(dataset.forcing)
+    observations_summary = (
+        _series_summary(dataset.observations) if dataset.observations else None
+    )
+
+    return InputsOverview(
+        forcing=forcing_summary,
+        observations=observations_summary,
+        updated_at=dataset.updated_at.isoformat(),
+    )
+
 
 
 def create_app(state: PortalState | None = None) -> FastAPI:
@@ -107,6 +155,40 @@ def create_app(state: PortalState | None = None) -> FastAPI:
             for project in portal_state.list_projects()
         ]
         return ProjectList(projects=projects)
+
+    @app.get("/projects/{project_id}/overview", response_model=ProjectOverview)
+    def project_overview(project_id: str) -> ProjectOverview:
+        try:
+            project = portal_state.get_project(project_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+        try:
+            dataset = portal_state.get_inputs(project_id)
+        except KeyError:
+            dataset = None
+
+        inputs_overview = _build_inputs_overview(dataset)
+
+        runs = portal_state.list_runs(project_id)
+        latest_run = RunResponse(**runs[0].to_dict()) if runs else None
+        latest_summary = (
+            summarise_workflow_result(runs[0].result)
+            if runs and runs[0].result is not None
+            else None
+        )
+
+        return ProjectOverview(
+            id=project.id,
+            name=project.name,
+            scenarios=[scenario.id for scenario in project.model_config.scenarios],
+            scenario_count=len(project.model_config.scenarios),
+            total_runs=len(runs),
+            inputs=inputs_overview,
+            latest_run=latest_run,
+            latest_summary=latest_summary,
+        )
+
 
     @app.post(
         "/projects/{project_id}/inputs",

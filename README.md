@@ -145,12 +145,14 @@ API 支持的关键资源包括：
 - `POST /projects/{project_id}/inputs` 与 `GET /projects/{project_id}/inputs`：集中管理项目的入流与观测数据；
 - `POST /projects/{project_id}/scenarios` / `PUT` / `DELETE`：创建、更新或删除情景；
 - `GET /projects/{project_id}/scenarios`：查看情景清单；
+- `GET /projects/{project_id}/overview`：快速了解项目的情景数量、输入数据统计、最近一次运行及摘要；
 - `POST /projects/{project_id}/runs`：触发建模计算；
 - `GET /projects/{project_id}/runs` 与 `GET /runs`：查看运行历史与最新状态；
 - `GET /runs/{run_id}`、`/runs/{run_id}/report`、`/runs/{run_id}/figures`：查询结果详情与输出。
 - `GET /runs/{run_id}/summary`：提炼基准与情景运行的主要统计量与差异摘要。
 
-静态页面中的“水文输入管理”区域可集中维护降雨/观测序列，之后在“触发模拟”区域提交运行时即可复用，无需重复粘贴时间序列。运行完成后页面会自动填充运行 ID，并可直接查看新增的摘要输出，便于快速理解情景相对于基准的变化。
+静态页面中的“水文输入管理”区域可集中维护降雨/观测序列，之后在“触发模拟”区域提交运行时即可复用，无需重复粘贴时间序列。页面新增的“项目总览”卡片会在保存配置后自动汇总情景数量、输入数据时长/幅度统计、最新运行以及其摘要，帮助快速判断建模准备情况。运行完成后页面会自动填充运行 ID，并可直接查看新增的摘要输出，便于快速理解情景相对于基准的变化。
+
 
 单元测试 `tests/test_portal_api.py` 展示了如何以编程方式驱动该门户：
 

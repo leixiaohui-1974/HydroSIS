@@ -75,6 +75,33 @@ class ProjectSummary:
 
 
 @dataclass
+class InputSeriesSummary:
+    series_count: int
+    min_length: int
+    max_length: int
+    mean_length: float
+    min_value: Optional[float]
+    max_value: Optional[float]
+
+    def to_dict(self) -> Dict[str, object]:
+        return asdict(self)
+
+
+@dataclass
+class InputsOverview:
+    forcing: Optional[InputSeriesSummary]
+    observations: Optional[InputSeriesSummary]
+    updated_at: Optional[str]
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "forcing": self.forcing.to_dict() if self.forcing else None,
+            "observations": self.observations.to_dict() if self.observations else None,
+            "updated_at": self.updated_at,
+        }
+
+
+@dataclass
 class ScenarioCreatePayload:
     id: str
     description: str
@@ -233,6 +260,31 @@ class ProjectList:
 
 
 @dataclass
+class ProjectOverview:
+    id: str
+    name: Optional[str]
+    scenarios: List[str]
+    scenario_count: int
+    total_runs: int
+    inputs: Optional[InputsOverview]
+    latest_run: Optional["RunResponse"]
+    latest_summary: Optional[Dict[str, object]]
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "scenarios": list(self.scenarios),
+            "scenario_count": self.scenario_count,
+            "total_runs": self.total_runs,
+            "inputs": self.inputs.to_dict() if self.inputs else None,
+            "latest_run": self.latest_run.to_dict() if self.latest_run else None,
+            "latest_summary": self.latest_summary,
+        }
+
+
+@dataclass
+
 class RunList:
     runs: List[RunResponse]
 
@@ -254,4 +306,8 @@ __all__ = [
     "ScenarioUpdatePayload",
     "ProjectInputsPayload",
     "ProjectInputsResponse",
+    "InputSeriesSummary",
+    "InputsOverview",
+    "ProjectOverview",
+
 ]
