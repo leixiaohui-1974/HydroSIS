@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>HydroSIS Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: "Segoe UI", Roboto, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f5f7fb;
+        color: #1f2933;
+      }
+      header {
+        background: #1b5e20;
+        color: white;
+        padding: 1.5rem 2rem;
+      }
+      main {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+        padding: 2rem;
+      }
+      section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        padding: 1.5rem;
+      }
+      h2 {
+        margin-top: 0;
+        font-size: 1.2rem;
+      }
+      textarea,
+      input,
+      button {
+        width: 100%;
+        padding: 0.6rem;
+        margin-top: 0.6rem;
+        border-radius: 8px;
+        border: 1px solid #cfd8dc;
+        font-size: 0.95rem;
+      }
+      button {
+        background: #1b5e20;
+        color: white;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #144618;
+      }
+      pre {
+        background: #0f172a;
+        color: #f8fafc;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow: auto;
+        max-height: 260px;
+      }
+      .messages {
+        max-height: 280px;
+        overflow-y: auto;
+        margin-top: 1rem;
+        border: 1px solid #e0e6ed;
+        border-radius: 8px;
+        padding: 0.8rem;
+        background: #f8fafc;
+      }
+      .message {
+        margin-bottom: 0.8rem;
+      }
+      .message strong {
+        display: block;
+        margin-bottom: 0.2rem;
+      }
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        margin-top: 1rem;
+      }
+      .actions input,
+      .actions button {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>HydroSIS 自然语言建模门户</h1>
+      <p>通过对话配置情景、触发模拟并查看报告。</p>
+    </header>
+    <main>
+      <section>
+        <h2>对话入口</h2>
+        <form id="chat-form">
+          <label for="chat-input">请输入自然语言指令：</label>
+          <textarea id="chat-input" rows="4" placeholder="例如：运行降雨增加 20% 的情景"></textarea>
+          <button type="submit">发送</button>
+        </form>
+        <div class="messages" id="messages"></div>
+      </section>
+      <section>
+        <h2>项目配置</h2>
+        <form id="config-form">
+          <label for="project-id">项目 ID</label>
+          <input id="project-id" value="demo" />
+          <label for="config-json">模型配置（JSON）</label>
+          <textarea id="config-json" rows="10" placeholder="粘贴 ModelConfig JSON"></textarea>
+          <button type="submit">保存配置</button>
+        </form>
+        <button type="button" id="refresh-projects">刷新项目列表</button>
+        <pre id="projects-list">尚无项目信息</pre>
+        <pre id="project-overview">项目总览尚未加载</pre>
+        <pre id="config-result">等待配置...</pre>
+      </section>
+      <section>
+        <h2>水文输入管理</h2>
+        <form id="inputs-form">
+          <label for="forcing-data">入流数据（JSON，键为子流域）</label>
+          <textarea id="forcing-data" rows="8" placeholder='{"S1": [0,10,20]}'></textarea>
+          <label for="observations-json">观测流量（JSON，可选）</label>
+          <textarea id="observations-json" rows="6" placeholder='{"S3": [0.5,0.8,0.2]}'></textarea>
+          <button type="submit">保存水文输入</button>
+        </form>
+        <div class="actions">
+          <button type="button" id="refresh-inputs">刷新输入信息</button>
+        </div>
+        <div id="inputs-feedback"></div>
+        <pre id="inputs-current">尚未配置输入</pre>
+      </section>
+      <section>
+        <h2>情景管理</h2>
+        <form id="scenario-create-form">
+          <label for="scenario-id">新情景 ID</label>
+          <input id="scenario-id" placeholder="scenario_id" />
+          <label for="scenario-description">描述</label>
+          <input id="scenario-description" placeholder="例如：降雨增加 20%" />
+          <label for="scenario-mods">参数调整（JSON）</label>
+          <textarea id="scenario-mods" rows="6" placeholder='{"S1": {"routing_model": "lag_long"}}'></textarea>
+          <button type="submit">创建情景</button>
+        </form>
+        <form id="scenario-update-form">
+          <label for="scenario-update-id">更新情景 ID</label>
+          <input id="scenario-update-id" placeholder="scenario_id" />
+          <label for="scenario-update-description">新的描述（可选）</label>
+          <input id="scenario-update-description" placeholder="输入新的描述" />
+          <label for="scenario-update-mods">参数调整（JSON，可选）</label>
+          <textarea id="scenario-update-mods" rows="4" placeholder='{"S2": {"runoff_model": "vic"}}'></textarea>
+          <button type="submit">更新情景</button>
+        </form>
+        <div class="actions">
+          <label for="scenario-delete-id">删除情景 ID</label>
+          <input id="scenario-delete-id" placeholder="scenario_id" />
+          <button type="button" id="scenario-delete">删除情景</button>
+          <button type="button" id="refresh-scenarios">刷新情景列表</button>
+        </div>
+        <div id="scenario-feedback"></div>
+        <pre id="scenario-list">尚无情景</pre>
+      </section>
+      <section>
+        <h2>触发模拟</h2>
+        <form id="run-form">
+          <label for="forcing-json">输入流量（JSON，键为子流域，值为数组）</label>
+          <textarea id="forcing-json" rows="8" placeholder='{"S1": [1,2,3], "S2": [0,1,0]}'></textarea>
+          <label for="scenarios">情景 ID（用逗号分隔，留空则运行全部）</label>
+          <input id="scenarios" placeholder="scenario_a,scenario_b" />
+          <label>
+            <input type="checkbox" id="persist" /> 持久化输出
+          </label>
+          <label>
+            <input type="checkbox" id="report" /> 生成报告
+          </label>
+          <button type="submit">执行</button>
+        </form>
+        <button type="button" id="refresh-runs">刷新运行记录</button>
+        <pre id="run-result">等待运行...</pre>
+        <pre id="run-history">尚无运行记录</pre>
+        <div class="actions">
+          <label for="summary-run-id">运行 ID（用于查看摘要）</label>
+          <input id="summary-run-id" placeholder="自动填入最近一次运行" />
+          <button type="button" id="fetch-summary">查看运行摘要</button>
+        </div>
+        <pre id="run-summary">尚未加载摘要</pre>
+      </section>
+    </main>
+    <script>
+      const messagesEl = document.getElementById("messages");
+      const projectInput = document.getElementById("project-id");
+      const overviewEl = document.getElementById("project-overview");
+      const scenarioFeedback = document.getElementById("scenario-feedback");
+      const inputsFeedback = document.getElementById("inputs-feedback");
+
+      function currentProjectId() {
+        return projectInput.value || "demo";
+      }
+
+      async function loadProjects() {
+        try {
+          const response = await fetch(`/projects`);
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          document.getElementById("projects-list").textContent = JSON.stringify(data.projects || [], null, 2);
+          await loadInputs();
+          await loadOverview();
+        } catch (err) {
+          document.getElementById("projects-list").textContent = `项目列表加载失败: ${err}`;
+        }
+      }
+
+      async function loadOverview() {
+        const projectId = currentProjectId();
+        try {
+          const response = await fetch(`/projects/${projectId}/overview`);
+          if (response.status === 404) {
+            overviewEl.textContent = "尚未配置项目或缺少总览数据";
+            return;
+          }
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          overviewEl.textContent = JSON.stringify(data, null, 2);
+          if (data.latest_run && data.latest_run.id) {
+            const summaryInput = document.getElementById("summary-run-id");
+            if (!summaryInput.value) {
+              summaryInput.value = data.latest_run.id;
+            }
+          }
+        } catch (err) {
+          overviewEl.textContent = `项目总览加载失败: ${err}`;
+        }
+      }
+
+      async function loadInputs() {
+        const projectId = currentProjectId();
+        try {
+          const response = await fetch(`/projects/${projectId}/inputs`);
+          if (response.status === 404) {
+            document.getElementById("inputs-current").textContent = "尚未配置输入";
+            return;
+          }
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          document.getElementById("inputs-current").textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+          document.getElementById("inputs-current").textContent = `输入加载失败: ${err}`;
+        }
+      }
+
+      async function loadScenarios() {
+        const projectId = currentProjectId();
+        try {
+          const response = await fetch(`/projects/${projectId}/scenarios`);
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          document.getElementById("scenario-list").textContent = JSON.stringify(data.scenarios || [], null, 2);
+        } catch (err) {
+          document.getElementById("scenario-list").textContent = `情景加载失败: ${err}`;
+        }
+      }
+
+      async function loadRuns() {
+        const projectId = currentProjectId();
+        try {
+          const response = await fetch(`/projects/${projectId}/runs`);
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          document.getElementById("run-history").textContent = JSON.stringify(data.runs || [], null, 2);
+          if (data.runs && data.runs.length && !document.getElementById("summary-run-id").value) {
+            document.getElementById("summary-run-id").value = data.runs[0].id;
+          }
+        } catch (err) {
+          document.getElementById("run-history").textContent = `运行记录加载失败: ${err}`;
+        }
+      }
+
+      document.getElementById("chat-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const content = document.getElementById("chat-input").value;
+        if (!content.trim()) return;
+        const response = await fetch(`/conversations/default/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: "user", content }),
+        });
+        const data = await response.json();
+        messagesEl.innerHTML = data.messages
+          .map(
+            (msg) => `
+              <div class="message">
+                <strong>${msg.role}</strong>
+                <div>${msg.content}</div>
+                ${msg.intent ? `<small>Intent: ${JSON.stringify(msg.intent)}</small>` : ""}
+              </div>
+            `
+          )
+          .join("\n");
+        document.getElementById("chat-input").value = "";
+      });
+
+      document.getElementById("config-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const projectId = currentProjectId();
+        const configText = document.getElementById("config-json").value;
+        try {
+          const model = JSON.parse(configText);
+          const response = await fetch(`/projects/${projectId}/config`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model }),
+          });
+          const data = await response.json();
+          document.getElementById("config-result").textContent = JSON.stringify(data, null, 2);
+          await loadProjects();
+          await loadScenarios();
+        } catch (err) {
+          document.getElementById("config-result").textContent = `配置解析失败: ${err}`;
+        }
+      });
+
+      document.getElementById("refresh-projects").addEventListener("click", (event) => {
+        event.preventDefault();
+        loadProjects();
+      });
+
+      document.getElementById("inputs-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const projectId = currentProjectId();
+        const forcingText = document.getElementById("forcing-data").value.trim();
+        if (!forcingText) {
+          inputsFeedback.textContent = "请输入有效的入流数据 JSON";
+          return;
+        }
+        let forcing;
+        try {
+          forcing = JSON.parse(forcingText);
+        } catch (err) {
+          inputsFeedback.textContent = `入流数据解析失败: ${err}`;
+          return;
+        }
+        const observationsText = document.getElementById("observations-json").value.trim();
+        let observations;
+        if (observationsText) {
+          try {
+            observations = JSON.parse(observationsText);
+          } catch (err) {
+            inputsFeedback.textContent = `观测数据解析失败: ${err}`;
+            return;
+          }
+        }
+        const payload = { forcing };
+        if (observations !== undefined) {
+          payload.observations = observations;
+        }
+        const response = await fetch(`/projects/${projectId}/inputs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          inputsFeedback.textContent = `保存失败: ${await response.text()}`;
+          return;
+        }
+        inputsFeedback.textContent = "输入已更新";
+        loadInputs();
+        loadOverview();
+      });
+
+      document.getElementById("refresh-inputs").addEventListener("click", (event) => {
+        event.preventDefault();
+        loadInputs();
+      });
+
+      document.getElementById("scenario-create-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const projectId = currentProjectId();
+        let modifications;
+        try {
+          modifications = JSON.parse(document.getElementById("scenario-mods").value || "{}");
+        } catch (err) {
+          scenarioFeedback.textContent = `情景参数解析失败: ${err}`;
+          return;
+        }
+        const payload = {
+          id: document.getElementById("scenario-id").value,
+          description: document.getElementById("scenario-description").value,
+          modifications,
+        };
+        const response = await fetch(`/projects/${projectId}/scenarios`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          scenarioFeedback.textContent = `创建失败: ${await response.text()}`;
+          return;
+        }
+        scenarioFeedback.textContent = "情景创建成功";
+        document.getElementById("scenario-create-form").reset();
+        loadScenarios();
+        loadOverview();
+      });
+
+      document.getElementById("scenario-update-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const projectId = currentProjectId();
+        const scenarioId = document.getElementById("scenario-update-id").value;
+        let modifications;
+        const modsText = document.getElementById("scenario-update-mods").value;
+        if (modsText.trim()) {
+          try {
+            modifications = JSON.parse(modsText);
+          } catch (err) {
+            scenarioFeedback.textContent = `更新参数解析失败: ${err}`;
+            return;
+          }
+        }
+        const payload = {
+          description: document.getElementById("scenario-update-description").value || undefined,
+          modifications,
+        };
+        const response = await fetch(`/projects/${projectId}/scenarios/${scenarioId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          scenarioFeedback.textContent = `更新失败: ${await response.text()}`;
+          return;
+        }
+        scenarioFeedback.textContent = "情景更新成功";
+        document.getElementById("scenario-update-form").reset();
+        loadScenarios();
+        loadOverview();
+      });
+
+      document.getElementById("scenario-delete").addEventListener("click", async (event) => {
+        event.preventDefault();
+        const projectId = currentProjectId();
+        const scenarioId = document.getElementById("scenario-delete-id").value;
+        if (!scenarioId) {
+          scenarioFeedback.textContent = "请先填写情景 ID";
+          return;
+        }
+        const response = await fetch(`/projects/${projectId}/scenarios/${scenarioId}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          scenarioFeedback.textContent = `删除失败: ${await response.text()}`;
+          return;
+        }
+        scenarioFeedback.textContent = "情景已删除";
+        document.getElementById("scenario-delete-id").value = "";
+        loadScenarios();
+        loadOverview();
+      });
+
+      document.getElementById("refresh-scenarios").addEventListener("click", (event) => {
+        event.preventDefault();
+        loadScenarios();
+      });
+
+      document.getElementById("run-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const projectId = currentProjectId();
+        const forcingText = document.getElementById("forcing-json").value.trim();
+        let forcing;
+        if (forcingText) {
+          try {
+            forcing = JSON.parse(forcingText);
+          } catch (err) {
+            document.getElementById("run-result").textContent = `降雨数据解析失败: ${err}`;
+            return;
+          }
+        }
+        const scenarioText = document.getElementById("scenarios").value;
+        const scenario_ids = scenarioText
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+        const body = {
+          scenario_ids,
+          persist_outputs: document.getElementById("persist").checked,
+          generate_report: document.getElementById("report").checked,
+        };
+        if (forcing !== undefined) {
+          body.forcing = forcing;
+        }
+        const response = await fetch(`/projects/${projectId}/runs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await response.json();
+        document.getElementById("run-result").textContent = JSON.stringify(data, null, 2);
+        if (data.id) {
+          document.getElementById("summary-run-id").value = data.id;
+          await loadRunSummary(data.id);
+        }
+        loadRuns();
+        loadOverview();
+      });
+
+      document.getElementById("refresh-runs").addEventListener("click", (event) => {
+        event.preventDefault();
+        loadRuns();
+      });
+
+      async function loadRunSummary(runId) {
+        if (!runId) return;
+        try {
+          const response = await fetch(`/runs/${runId}/summary`);
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          document.getElementById("run-summary").textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+          document.getElementById("run-summary").textContent = `摘要获取失败: ${err}`;
+        }
+      }
+
+      document.getElementById("fetch-summary").addEventListener("click", (event) => {
+        event.preventDefault();
+        const runId = document.getElementById("summary-run-id").value;
+        loadRunSummary(runId);
+      });
+
+      loadProjects();
+      loadScenarios();
+      loadInputs();
+      loadOverview();
+      loadRuns();
+    </script>
+  </body>
+</html>

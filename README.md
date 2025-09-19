@@ -122,6 +122,52 @@ python examples/run_sample_workflow.py
 运行结束后可直接查看 `results/example_run` 目录下的 CSV、图表与报告，
 用于快速了解模型参数、情景配置及准确性分析的效果。
 
+
+## 自然语言门户原型
+
+仓库新增了基于最小依赖实现的 Web 门户（`hydrosis.portal`），包含
+
+- `hydrosis/portal/main.py`：提供 REST 风格 API，支持会话解析、项目配置、情景管理与模型运行；
+- `hydrosis/portal/static/index.html`：轻量化的前端页面，可直接通过表单与 API 交互；
+- `fastapi/`：内置的极简 FastAPI 兼容层，在离线环境也能运行同样的接口定义。
+
+快速体验步骤：
+
+```bash
+python -m http.server 8000 --directory hydrosis/portal/static  # 也可自定义部署方式
+```
+
+或使用任意 ASGI/WGI 兼容方案加载 `hydrosis.portal.create_app()` 创建的应用。
+API 支持的关键资源包括：
+
+- `GET /projects`：列出当前门户中注册的所有项目；
+- `POST /projects/{project_id}/config`：保存或更新模型配置；
+- `POST /projects/{project_id}/inputs` 与 `GET /projects/{project_id}/inputs`：集中管理项目的入流与观测数据；
+- `POST /projects/{project_id}/scenarios` / `PUT` / `DELETE`：创建、更新或删除情景；
+- `GET /projects/{project_id}/scenarios`：查看情景清单；
+- `GET /projects/{project_id}/overview`：快速了解项目的情景数量、输入数据统计、最近一次运行及摘要；
+- `POST /projects/{project_id}/runs`：触发建模计算；
+- `GET /projects/{project_id}/runs` 与 `GET /runs`：查看运行历史与最新状态；
+- `GET /runs/{run_id}`、`/runs/{run_id}/report`、`/runs/{run_id}/figures`：查询结果详情与输出。
+- `GET /runs/{run_id}/summary`：提炼基准与情景运行的主要统计量与差异摘要。
+
+静态页面中的“水文输入管理”区域可集中维护降雨/观测序列，之后在“触发模拟”区域提交运行时即可复用，无需重复粘贴时间序列。页面新增的“项目总览”卡片会在保存配置后自动汇总情景数量、输入数据时长/幅度统计、最新运行以及其摘要，帮助快速判断建模准备情况。运行完成后页面会自动填充运行 ID，并可直接查看新增的摘要输出，便于快速理解情景相对于基准的变化。
+
+单元测试 `tests/test_portal_api.py` 展示了如何以编程方式驱动该门户：
+
+```python
+from hydrosis.portal import create_app
+from fastapi.testclient import TestClient
+
+app = create_app()
+client = TestClient(app)
+client.post('/projects/demo/config', json={'model': {...}})
+client.post('/projects/demo/inputs', json={'forcing': {...}, 'observations': {...}})
+client.post('/projects/demo/runs', json={'scenario_ids': ['alternate_routing']})
+```
+
+这样即可在无外部依赖的环境下完成自然语言解析、建模运行和结果查询的端到端链路。
+
 ## 参数区多目标优化与不确定性分析
 
 `hydrosis.parameters` 包提供 `ParameterZoneOptimizer` 与 `UncertaintyAnalyzer`
