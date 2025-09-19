@@ -14,6 +14,22 @@
 1. baseline: 66.31896097718354
 2. reservoir_reoperation: 161.3881941190155
 
-未生成指标图表（可能缺少 matplotlib 依赖）。
+## 指标图表
 
-未生成径流对比图（可能缺少 matplotlib 依赖）。
+![metric_rmse](../figures/metric_rmse.svg)
+
+![metric_mae](../figures/metric_mae.svg)
+
+![metric_pbias](../figures/metric_pbias.svg)
+
+![metric_nse](../figures/metric_nse.svg)
+
+## 子流域径流过程对比
+
+![hydrograph_SB4](../figures/hydrograph_SB4.svg)
+
+![hydrograph_SB1](../figures/hydrograph_SB1.svg)
+
+![hydrograph_SB3](../figures/hydrograph_SB3.svg)
+
+![hydrograph_SB2](../figures/hydrograph_SB2.svg)

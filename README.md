@@ -12,7 +12,6 @@ HydroSIS 是一个面向多情景建模和调度分析的分布式水文模拟�
 - **精度评价与多模型对比**：内置 NSE、RMSE、MAE、百分比偏差等指标及模型对比器，可对多参数分区、多子流域情景的结果进行统一评价。
 - **结果可视化与报告生成**：提供指标柱状图、径流过程对比图以及 Markdown 报告生成功能，便于开展模型准确性分析与自动化汇报。
 
-
 ## 目录结构
 
 ```
@@ -49,7 +48,6 @@ write_simulation_results(config.io.results_directory, aggregated)
 
 # 可以直接提取参数分区控制点的流量序列：
 zone_flows = model.parameter_zone_discharge(local_results)
-
 ```
 
 3. **应用情景参数调整**：
@@ -106,9 +104,6 @@ python examples/run_sample_workflow.py
 运行结束后可直接查看 `results/example_run` 目录下的 CSV、图表与报告，
 用于快速了解模型参数、情景配置及准确性分析的效果。
 
-=======
-
-```
 
 ## 与大模型集成
 

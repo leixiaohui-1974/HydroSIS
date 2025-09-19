@@ -1,6 +1,8 @@
 """Markdown report generation for HydroSIS evaluations."""
 from __future__ import annotations
 
+import os
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, List, Mapping, MutableSequence, Sequence
@@ -162,6 +164,14 @@ def generate_evaluation_report(
         figures_directory = output_path.parent / "figures"
     figures_directory.mkdir(parents=True, exist_ok=True)
 
+    report_directory = output_path.parent
+
+    def _relative_figure_path(path: Path) -> Path:
+        try:
+            return path.relative_to(report_directory)
+        except ValueError:
+            return Path(os.path.relpath(path, report_directory))
+
     builder = MarkdownReportBuilder(title="HydroSIS 模型评估报告")
     if description:
         builder.add_paragraph(description)
@@ -196,7 +206,7 @@ def generate_evaluation_report(
     if metric_figures:
         builder.add_heading("指标图表", level=2)
         for figure in metric_figures:
-            builder.add_image(figure, alt_text=figure.stem)
+            builder.add_image(_relative_figure_path(figure), alt_text=figure.stem)
     else:
         builder.add_paragraph("未生成指标图表（可能缺少 matplotlib 依赖）。")
 
@@ -207,7 +217,7 @@ def generate_evaluation_report(
         if hydrograph_figures:
             builder.add_heading("子流域径流过程对比", level=2)
             for figure in hydrograph_figures:
-                builder.add_image(figure, alt_text=figure.stem)
+                builder.add_image(_relative_figure_path(figure), alt_text=figure.stem)
         elif observations is not None:
             builder.add_paragraph("未生成径流对比图（可能缺少 matplotlib 依赖）。")
 

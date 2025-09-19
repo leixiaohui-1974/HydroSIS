@@ -1,11 +1,12 @@
 """Tests for reporting utilities."""
 from __future__ import annotations
 
-import importlib
+
 import tempfile
 from pathlib import Path
 
 import unittest
+
 
 from hydrosis import (
     MarkdownReportBuilder,
@@ -74,28 +75,60 @@ class ReportingTests(unittest.TestCase):
             self.assertIn("总体评价指标", content)
             self.assertIn("基于 RMSE 的模型排序", content)
 
-    @unittest.skipUnless(importlib.util.find_spec("matplotlib"), "matplotlib not available")
     def test_plot_helpers_create_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             hydro_path = Path(tmpdir) / "hydro.png"
             metric_path = Path(tmpdir) / "metric.png"
 
-            plot_hydrograph(
+            created_hydro = plot_hydrograph(
+
                 hydro_path,
                 simulations={"baseline": [1.0, 2.0, 1.5]},
                 observed=[0.9, 2.1, 1.4],
                 title="Hydrograph",
             )
-            self.assertTrue(hydro_path.exists())
+            self.assertTrue(created_hydro.exists())
+            self.assertIn(created_hydro.suffix, {".png", ".svg"})
 
-            plot_metric_bars(
+            created_metric = plot_metric_bars(
                 metric_path,
                 self.scores,
                 self.evaluator,
                 metric="rmse",
                 title="RMSE",
             )
-            self.assertTrue(metric_path.exists())
+            self.assertTrue(created_metric.exists())
+            self.assertIn(created_metric.suffix, {".png", ".svg"})
+
+    def test_generate_report_uses_relative_paths_for_figures(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report_dir = Path(tmpdir) / "reports"
+            figures_dir = Path(tmpdir) / "figures"
+            figures_dir.mkdir(parents=True, exist_ok=True)
+            metric_figure = figures_dir / "metric_rmse.svg"
+            hydro_figure = figures_dir / "hydrograph_S1.svg"
+            metric_figure.write_text("<svg></svg>", encoding="utf-8")
+            hydro_figure.write_text("<svg></svg>", encoding="utf-8")
+
+            with mock.patch(
+                "hydrosis.reporting.markdown._generate_metric_figures",
+                return_value=[metric_figure],
+            ), mock.patch(
+                "hydrosis.reporting.markdown._generate_hydrograph_figures",
+                return_value=[hydro_figure],
+            ):
+                report_path = report_dir / "evaluation.md"
+                generate_evaluation_report(
+                    report_path,
+                    self.scores,
+                    self.evaluator,
+                    simulations={"baseline": {"S1": [1.0, 1.1, 1.2]}},
+                    observations={"S1": [0.9, 1.0, 1.05]},
+                    figures_directory=figures_dir,
+                )
+            content = report_path.read_text(encoding="utf-8")
+            self.assertIn("![metric_rmse](../figures/metric_rmse.svg)", content)
+            self.assertIn("![hydrograph_S1](../figures/hydrograph_S1.svg)", content)
 
 
 if __name__ == "__main__":  # pragma: no cover
