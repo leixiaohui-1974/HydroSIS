@@ -28,6 +28,7 @@ class ComparisonPlanConfig:
     subbasins: Optional[Sequence[str]] = None
     ranking_metric: Optional[str] = None
 
+
     @classmethod
     def from_dict(cls, data: Mapping[str, object]) -> "ComparisonPlanConfig":
         return cls(
@@ -37,6 +38,7 @@ class ComparisonPlanConfig:
             reference=data.get("reference", "observed"),
             subbasins=list(data.get("subbasins", [])) or None,
             ranking_metric=data.get("ranking_metric"),
+
         )
 
     def to_dict(self) -> Dict[str, object]:

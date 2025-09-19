@@ -13,6 +13,7 @@ from .model import HydroSISModel
 from .utils import accumulate_subbasin_flows
 from .workflow import EvaluationOutcome, ScenarioRun, WorkflowResult, run_workflow
 
+
 __all__ = [
     "HydroSISModel",
     "ModelConfig",
@@ -30,3 +31,4 @@ __all__ = [
     "WorkflowResult",
     "run_workflow",
 ]
+

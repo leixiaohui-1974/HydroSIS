@@ -410,6 +410,5 @@ class HydroSISExampleTests(unittest.TestCase):
         self.assertLess(aggregated["calibrated"]["rmse"], aggregated["sluggish"]["rmse"])
         self.assertLess(abs(aggregated["calibrated"]["pbias"]), abs(aggregated["biased"]["pbias"]))
 
-
 if __name__ == "__main__":  # pragma: no cover - allow direct execution
     unittest.main()

@@ -42,6 +42,7 @@ runoff_models:
     parameters:
       curve_number: 70
       initial_abstraction_ratio: 0.05
+
   - id: midland
     model_type: xin_an_jiang
     parameters:
@@ -102,6 +103,7 @@ parameter_zones:
       routing_model: muskingum_outlet
 
 io:
+
   precipitation: data/sample/forcing
   discharge_observations: data/sample/observations
   results_directory: results/example_run
@@ -129,3 +131,4 @@ evaluation:
       models: [baseline, reservoir_reoperation]
       subbasins: [SB3, SB4]
       ranking_metric: rmse
+
