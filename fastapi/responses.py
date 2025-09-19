@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Iterable, Iterator
 
 
 @dataclass
@@ -14,4 +15,15 @@ class HTMLResponse:
         yield self.content
 
 
-__all__ = ["HTMLResponse"]
+@dataclass
+class StreamingResponse:
+    """Very small streaming response shim used for server-sent events in tests."""
+
+    body: Iterable[str]
+    media_type: str = "text/plain"
+
+    def __iter__(self) -> Iterator[str]:
+        yield from self.body
+
+
+__all__ = ["HTMLResponse", "StreamingResponse"]

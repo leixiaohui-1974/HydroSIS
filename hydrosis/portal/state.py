@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence
 import uuid
+import threading
 
 from hydrosis.config import ModelConfig, ScenarioConfig
 from hydrosis.workflow import WorkflowResult, ScenarioRun, EvaluationOutcome
@@ -102,6 +103,7 @@ class PortalState:
         self._projects: Dict[str, Project] = {}
         self._runs: Dict[str, RunRecord] = {}
         self._inputs: Dict[str, ProjectInputs] = {}
+        self._run_lock = threading.Lock()
 
     # Conversation helpers -------------------------------------------------
     def get_conversation(self, conversation_id: str) -> Conversation:
@@ -222,28 +224,39 @@ class PortalState:
             created_at=datetime.now(timezone.utc),
             status="pending",
         )
-        self._runs[run_id] = record
+        with self._run_lock:
+            self._runs[run_id] = record
         return record
+
+    def start_run(self, run_id: str) -> RunRecord:
+        with self._run_lock:
+            record = self._runs[run_id]
+            record.status = "running"
+            return record
 
     def complete_run(self, run_id: str, result: WorkflowResult) -> RunRecord:
-        record = self._runs[run_id]
-        record.status = "completed"
-        record.result = result
-        return record
+        with self._run_lock:
+            record = self._runs[run_id]
+            record.status = "completed"
+            record.result = result
+            return record
 
     def fail_run(self, run_id: str, error: str) -> RunRecord:
-        record = self._runs[run_id]
-        record.status = "failed"
-        record.error = error
-        return record
+        with self._run_lock:
+            record = self._runs[run_id]
+            record.status = "failed"
+            record.error = error
+            return record
 
     def get_run(self, run_id: str) -> RunRecord:
-        if run_id not in self._runs:
-            raise KeyError(f"Run '{run_id}' not found")
-        return self._runs[run_id]
+        with self._run_lock:
+            if run_id not in self._runs:
+                raise KeyError(f"Run '{run_id}' not found")
+            return self._runs[run_id]
 
     def list_runs(self, project_id: Optional[str] = None) -> Sequence[RunRecord]:
-        runs = list(self._runs.values())
+        with self._run_lock:
+            runs = list(self._runs.values())
         if project_id is None:
             return sorted(runs, key=lambda record: record.created_at, reverse=True)
         return sorted(

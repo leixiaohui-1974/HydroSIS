@@ -175,6 +175,7 @@ def run_workflow(
     narrative_callback: Callable[[str], str] | None = None,
     report_template: EvaluationReportTemplate | None = None,
     template_context: Mapping[str, str] | None = None,
+    progress_callback: Callable[[str, Mapping[str, object]], None] | None = None,
 ) -> WorkflowResult:
     """Run baseline and scenario simulations and optionally evaluate them.
 
@@ -201,33 +202,67 @@ def run_workflow(
         Custom evaluation report template. Defaults to :func:`default_evaluation_template`.
     template_context:
         Pre-filled段落文本，当提供时优先使用而不会触发 ``narrative_callback``。
+    progress_callback:
+        可选回调函数，用于实时接收阶段性进度更新。回调的第一个参数为阶段
+        名称，第二个参数为包含阶段信息的字典。
     """
 
-    baseline_model = _instantiate_model(config)
-    baseline_result = _run_model("baseline", baseline_model, forcing)
+    def _notify(stage: str, **payload: object) -> None:
+        if progress_callback is None:
+            return
+        progress_callback(stage, payload)
 
-    scenario_results: Dict[str, ScenarioRun] = {}
     requested_ids = (
         list(scenario_ids)
         if scenario_ids is not None
         else [scenario.id for scenario in config.scenarios]
     )
 
-    for scenario_id in requested_ids:
+    _notify("workflow", phase="start", scenario_total=len(requested_ids))
+
+    baseline_model = _instantiate_model(config)
+    _notify("baseline", phase="start", subbasins=len(forcing))
+    baseline_result = _run_model("baseline", baseline_model, forcing)
+    _notify(
+        "baseline",
+        phase="complete",
+        subbasins=len(baseline_result.local),
+    )
+
+    scenario_results: Dict[str, ScenarioRun] = {}
+
+    for index, scenario_id in enumerate(requested_ids, start=1):
         scenario_cfg = copy.deepcopy(config)
         scenario_model = _instantiate_model(scenario_cfg)
         scenario_cfg.apply_scenario(scenario_id, scenario_model.subbasins.values())
+        _notify(
+            "scenario",
+            phase="start",
+            scenario_id=scenario_id,
+            index=index,
+            total=len(requested_ids),
+        )
         scenario_results[scenario_id] = _run_model(
             scenario_id, scenario_model, forcing
         )
+        _notify(
+            "scenario",
+            phase="complete",
+            scenario_id=scenario_id,
+            index=index,
+            total=len(requested_ids),
+            subbasins=len(scenario_results[scenario_id].local),
+        )
 
     if persist_outputs:
+        _notify("persistence", phase="start", scenario_total=len(requested_ids))
         base_directory = config.io.results_directory
         write_simulation_results(base_directory / "baseline", baseline_result.aggregated)
         for scenario_id, result in scenario_results.items():
             write_simulation_results(
                 base_directory / scenario_id, result.aggregated
             )
+        _notify("persistence", phase="complete", scenario_total=len(requested_ids))
 
     evaluator = _build_evaluator(config.evaluation)
     comparator = ModelComparator(evaluator)
@@ -239,14 +274,30 @@ def run_workflow(
     report_path: Optional[Path] = None
 
     if observations is not None:
+        _notify("evaluation", phase="start", scenario_total=len(requested_ids))
         overall_scores = comparator.compare(simulations, observations)
 
         report_context: Dict[str, str] = dict(template_context or {})
 
         if config.evaluation is not None:
-            for plan in config.evaluation.comparisons:
+            total_plans = len(config.evaluation.comparisons)
+            for index, plan in enumerate(config.evaluation.comparisons, start=1):
+                _notify(
+                    "evaluation_plan",
+                    phase="start",
+                    plan_id=plan.id,
+                    index=index,
+                    total=total_plans,
+                )
                 outcome = _evaluate_plan(plan, comparator, simulations, observations)
                 evaluation_outcomes.append(outcome)
+                _notify(
+                    "evaluation_plan",
+                    phase="complete",
+                    plan_id=plan.id,
+                    index=index,
+                    total=total_plans,
+                )
 
             if overall_scores:
                 model_ids = ", ".join(score.model_id for score in overall_scores)
@@ -271,6 +322,7 @@ def run_workflow(
             )
 
             if generate_report:
+                _notify("report", phase="start")
                 report_directory = (
                     config.io.reports_directory
                     if config.io.reports_directory is not None
@@ -293,6 +345,16 @@ def run_workflow(
                     narrative_callback=narrative_callback,
                     template_context=report_context,
                 )
+                _notify("report", phase="complete", path=str(report_path))
+
+        _notify("evaluation", phase="complete", scenario_total=len(requested_ids))
+
+    _notify(
+        "workflow",
+        phase="complete",
+        scenario_total=len(requested_ids),
+        evaluation_performed=observations is not None,
+    )
 
     return WorkflowResult(
         baseline=baseline_result,

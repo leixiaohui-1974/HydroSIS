@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Mapping, List
+import json
+from datetime import datetime, timezone
+from typing import Dict, Iterable, Optional, Mapping, List, Callable
 
 from fastapi import FastAPI, HTTPException, Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from hydrosis.config import ModelConfig
@@ -13,6 +15,7 @@ from hydrosis.workflow import run_workflow, WorkflowResult
 
 from .analytics import summarise_workflow_result
 from .llm import IntentParser
+from .executor import RunEventBroker, RunExecutor, RunProgressEvent
 from .schemas import (
     ConversationMessageSchema,
     ConversationResponse,
@@ -100,6 +103,12 @@ def create_app(state: PortalState | None = None) -> FastAPI:
 
     portal_state = state or PortalState()
     intent_parser = IntentParser()
+    event_broker = RunEventBroker()
+    run_executor = RunExecutor(
+        portal_state,
+        event_broker,
+        workflow_runner=_execute_workflow,
+    )
 
     if STATIC_DIR.exists():
         app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -333,14 +342,51 @@ def create_app(state: PortalState | None = None) -> FastAPI:
         )
         run_record = portal_state.create_run(project_id, scenario_ids)
 
-        try:
-            result = _execute_workflow(project_id, project.model_config, payload, scenario_ids, portal_state)
-            portal_state.complete_run(run_record.id, result)
-        except Exception as exc:  # pragma: no cover - workflow errors bubble to client
-            portal_state.fail_run(run_record.id, str(exc))
-            raise HTTPException(status_code=500, detail=str(exc)) from exc
+        run_executor.submit(
+            run_record.id,
+            project_id,
+            project.model_config,
+            payload,
+            scenario_ids,
+        )
 
         return RunResponse(**portal_state.get_run(run_record.id).to_dict())
+
+    @app.get("/runs/{run_id}/stream")
+    def stream_run(run_id: str) -> StreamingResponse:
+        try:
+            run = portal_state.get_run(run_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+        queue = event_broker.subscribe(run_id)
+
+        latest_event = event_broker.latest(run_id)
+        if latest_event is not None:
+            queue.put(latest_event)
+        else:
+            queue.put(
+                RunProgressEvent(
+                    run_id=run_id,
+                    stage="snapshot",
+                    status=run.status,
+                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    percent=0,
+                    message="已连接到运行进度流",
+                ).to_dict()
+            )
+
+        def event_generator():
+            try:
+                while True:
+                    event = queue.get()
+                    yield f"data: {json.dumps(event)}\n\n"
+                    if event.get("status") in {"completed", "failed"}:
+                        break
+            finally:
+                event_broker.unsubscribe(run_id, queue)
+
+        return StreamingResponse(event_generator(), media_type="text/event-stream")
 
     @app.get("/projects/{project_id}/runs", response_model=RunList)
     def list_project_runs(project_id: str) -> RunList:
@@ -448,6 +494,7 @@ def _execute_workflow(
     payload: RunRequest,
     scenario_ids: Iterable[str],
     state: PortalState,
+    progress_callback: Callable[[str, Mapping[str, object]], None] | None = None,
 ) -> WorkflowResult:
     config_copy = ModelConfig.from_dict(_remove_none(config.to_dict()))
 
@@ -500,6 +547,7 @@ def _execute_workflow(
         scenario_ids=list(scenario_ids),
         persist_outputs=payload.persist_outputs,
         generate_report=payload.generate_report,
+        progress_callback=progress_callback,
     )
 
 
