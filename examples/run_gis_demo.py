@@ -1,4 +1,3 @@
-"""Run the GIS enhanced HydroSIS demonstration workflow with rich reporting."""
 from __future__ import annotations
 
 import importlib.util
@@ -112,7 +111,6 @@ def run_workflow() -> None:
     config = load_config()
     delineated = config.delineation.to_subbasins()
     zones = ParameterZoneBuilder.from_config(config.parameter_zones, delineated)
-
     model = HydroSISModel.from_config(config)
     forcing = load_forcing(ROOT / config.io.precipitation)
     routed = model.run(forcing)

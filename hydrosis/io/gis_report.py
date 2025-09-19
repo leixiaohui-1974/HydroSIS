@@ -25,7 +25,6 @@ else:  # pragma: no cover - delegate to numpy when available
     def _np_sum(values: Iterable[float]) -> float:
         return float(_np.sum(list(values)))
 
-
 @dataclass
 class LayerDefinition:
     label: str
@@ -154,6 +153,7 @@ layers['{layer.label}'] = {var_name};
     #map {{ height: 640px; margin: 1rem 0; border: 1px solid #ccd; }}
     .section {{ margin-bottom: 1.5rem; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
     .section h2 {{ margin-top: 0; }}
+
     table {{ border-collapse: collapse; width: 100%; }}
     th, td {{ border: 1px solid #dde; padding: 0.35rem 0.5rem; text-align: left; }}
     th {{ background: #eef2f7; }}
@@ -210,7 +210,6 @@ def write_html(path: Path, content: str) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
-
 
 def build_card(title: str, body: str) -> str:
     """Wrap ``body`` HTML inside a styled card with a heading."""
