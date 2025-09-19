@@ -171,6 +171,31 @@ client.post('/projects/demo/runs', json={'scenario_ids': ['alternate_routing']})
 
 这样即可在无外部依赖的环境下完成自然语言解析、建模运行和结果查询的端到端链路。
 
+### 持久化配置与数据库初始化
+
+门户默认使用进程内内存保存项目、输入与运行记录。若需在多实例或长期部署场景中共享数据，可通过环境变量或配置文件启用 SQL 数据库存储：
+
+- 设置 `HYDROSIS_PORTAL_DB_URL` 为 SQLAlchemy 支持的连接字符串，例如 `sqlite:///portal.db` 或 `postgresql://user:pass@host:5432/hydrosis`。
+- 或创建 JSON 配置文件（默认为 UTF-8 编码），内容类似：
+
+  ```json
+  {
+    "database_url": "sqlite:///portal.db"
+  }
+  ```
+
+  然后将 `HYDROSIS_PORTAL_CONFIG` 指向该文件路径，或在调用 `create_app` 时显式传入 `config_path`。
+
+首次启用数据库持久化时，需要创建基础表结构及索引（涵盖项目、输入、情景与运行记录，并为情景修改和运行结果提供 JSON/GeoJSON 字段）：
+
+```bash
+python -m hydrosis.portal.storage.migrations --database-url sqlite:///portal.db
+# 或者读取同一份 JSON 配置
+python -m hydrosis.portal.storage.migrations --config portal_config.json
+```
+
+上述脚本会自动执行 `Base.metadata.create_all`，创建 `projects`、`project_scenarios`、`project_inputs`、`runs` 等表，并建立 `project_scenarios.project_id` 与 `runs(project_id, created_at)` 索引以优化常见查询。随后即可按前述方式启动 API，所有项目配置、输入数据、情景修改和运行结果都会持久化在数据库中，API 返回结构与内存实现保持兼容。
+
 ## 参数区多目标优化与不确定性分析
 
 `hydrosis.parameters` 包提供 `ParameterZoneOptimizer` 与 `UncertaintyAnalyzer`
