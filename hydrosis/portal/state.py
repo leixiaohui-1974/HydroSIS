@@ -1,14 +1,31 @@
-"""In-memory state container backing the HydroSIS portal API."""
+"""State management primitives backing the HydroSIS portal API.
+
+This module defines light-weight data containers and serialisation helpers that
+can be used by multiple persistence backends.  The default in-memory
+implementation is retained for compatibility, whilst additional storage
+mechanisms (for example a SQL database) can implement the :class:`PortalState`
+protocol to plug into the web application.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence
 import uuid
-import threading
+from typing import (
+    Any,
+    Dict,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Protocol,
+    Sequence,
+    runtime_checkable,
+)
 
-from hydrosis.config import ModelConfig, ScenarioConfig
-from hydrosis.workflow import WorkflowResult, ScenarioRun, EvaluationOutcome
+from hydrosis.config import ComparisonPlanConfig, ModelConfig, ScenarioConfig
+from hydrosis.evaluation.comparison import ModelScore
+from hydrosis.workflow import EvaluationOutcome, ScenarioRun, WorkflowResult
 
 
 @dataclass
@@ -45,7 +62,9 @@ class Project:
         return {
             "id": self.id,
             "name": self.name,
-            "scenarios": [scenario["id"] for scenario in config_dict.get("scenarios", [])],
+            "scenarios": [
+                scenario["id"] for scenario in config_dict.get("scenarios", [])
+            ],
             "evaluation": config_dict.get("evaluation"),
         }
 
@@ -95,7 +114,84 @@ class RunRecord:
         }
 
 
-class PortalState:
+@runtime_checkable
+class PortalState(Protocol):
+    """Common interface implemented by portal persistence backends."""
+
+    # Conversation helpers -------------------------------------------------
+    def get_conversation(self, conversation_id: str) -> Conversation:
+        ...
+
+    # Project helpers ------------------------------------------------------
+    def upsert_project(
+        self, project_id: str, name: Optional[str], model_config: ModelConfig
+    ) -> Project:
+        ...
+
+    def get_project(self, project_id: str) -> Project:
+        ...
+
+    def list_projects(self) -> Sequence[Project]:
+        ...
+
+    def set_inputs(
+        self,
+        project_id: str,
+        forcing: Mapping[str, Sequence[float]],
+        observations: Optional[Mapping[str, Sequence[float]]] = None,
+    ) -> ProjectInputs:
+        ...
+
+    def get_inputs(self, project_id: str) -> Optional[ProjectInputs]:
+        ...
+
+    def add_scenario(
+        self,
+        project_id: str,
+        scenario_id: str,
+        description: str,
+        modifications: Mapping[str, Mapping[str, Any]],
+    ) -> ScenarioConfig:
+        ...
+
+    def update_scenario(
+        self,
+        project_id: str,
+        scenario_id: str,
+        *,
+        description: Optional[str] = None,
+        modifications: Optional[Mapping[str, Mapping[str, Any]]] = None,
+    ) -> ScenarioConfig:
+        ...
+
+    def remove_scenario(self, project_id: str, scenario_id: str) -> None:
+        ...
+
+    def list_scenarios(self, project_id: str) -> Sequence[ScenarioConfig]:
+        ...
+
+    # Run helpers ----------------------------------------------------------
+    def create_run(
+        self,
+        project_id: str,
+        scenario_ids: Sequence[str],
+    ) -> RunRecord:
+        ...
+
+    def complete_run(self, run_id: str, result: WorkflowResult) -> RunRecord:
+        ...
+
+    def fail_run(self, run_id: str, error: str) -> RunRecord:
+        ...
+
+    def get_run(self, run_id: str) -> RunRecord:
+        ...
+
+    def list_runs(self, project_id: Optional[str] = None) -> Sequence[RunRecord]:
+        ...
+
+
+class InMemoryPortalState:
     """Centralised in-memory state for the API."""
 
     def __init__(self) -> None:
@@ -161,7 +257,9 @@ class PortalState:
         modifications: Mapping[str, Mapping[str, Any]],
     ) -> ScenarioConfig:
         project = self.get_project(project_id)
-        if any(scenario.id == scenario_id for scenario in project.model_config.scenarios):
+        if any(
+            scenario.id == scenario_id for scenario in project.model_config.scenarios
+        ):
             raise ValueError(f"Scenario '{scenario_id}' already exists")
         scenario = ScenarioConfig(
             id=scenario_id,
@@ -268,7 +366,9 @@ class PortalState:
 
 # Serialisation utilities --------------------------------------------------
 
-def serialize_workflow_result(result: Optional[WorkflowResult]) -> Optional[Dict[str, object]]:
+def serialize_workflow_result(
+    result: Optional[WorkflowResult],
+) -> Optional[Dict[str, object]]:
     if result is None:
         return None
     return {
@@ -295,7 +395,7 @@ def serialize_scenario_run(run: ScenarioRun) -> Dict[str, object]:
     }
 
 
-def serialize_model_score(score) -> Dict[str, object]:
+def serialize_model_score(score: ModelScore) -> Dict[str, object]:
     return {
         "model_id": score.model_id,
         "per_subbasin": score.per_subbasin,
@@ -313,6 +413,83 @@ def serialize_evaluation_outcome(outcome: EvaluationOutcome) -> Dict[str, object
 
 
 
+def deserialize_workflow_result(
+    payload: Optional[Mapping[str, Any]]
+) -> Optional[WorkflowResult]:
+    """Rebuild a :class:`WorkflowResult` from serialised JSON data."""
+
+    if payload is None:
+        return None
+
+    baseline = deserialize_scenario_run(payload["baseline"])
+    scenarios = {
+        scenario_id: deserialize_scenario_run(data)
+        for scenario_id, data in payload.get("scenarios", {}).items()
+    }
+
+    overall_scores = [
+        deserialize_model_score(item) for item in payload.get("overall_scores", [])
+    ]
+
+    evaluation_outcomes = [
+        deserialize_evaluation_outcome(item)
+        for item in payload.get("evaluation_outcomes", [])
+    ]
+
+    report_path = payload.get("report_path")
+    if report_path:
+        from pathlib import Path
+
+        report = Path(report_path)
+    else:
+        report = None
+
+    return WorkflowResult(
+        baseline=baseline,
+        scenarios=scenarios,
+        overall_scores=overall_scores,
+        evaluation_outcomes=evaluation_outcomes,
+        report_path=report,
+    )
+
+
+def deserialize_scenario_run(data: Mapping[str, Any]) -> ScenarioRun:
+    return ScenarioRun(
+        scenario_id=data["scenario_id"],
+        local={key: list(values) for key, values in data.get("local", {}).items()},
+        aggregated={
+            key: list(values) for key, values in data.get("aggregated", {}).items()
+        },
+        zone_discharge={
+            zone: {key: list(values) for key, values in flows.items()}
+            for zone, flows in data.get("zone_discharge", {}).items()
+        },
+    )
+
+
+def deserialize_model_score(data: Mapping[str, Any]) -> ModelScore:
+    return ModelScore(
+        model_id=data["model_id"],
+        per_subbasin={
+            basin: {metric: float(value) for metric, value in scores.items()}
+            for basin, scores in data.get("per_subbasin", {}).items()
+        },
+        aggregated={metric: float(value) for metric, value in data.get("aggregated", {}).items()},
+    )
+
+
+def deserialize_evaluation_outcome(data: Mapping[str, Any]) -> EvaluationOutcome:
+    plan = ComparisonPlanConfig.from_dict(data["plan"])
+    scores = [deserialize_model_score(item) for item in data.get("scores", [])]
+    ranking = [deserialize_model_score(item) for item in data.get("ranking", [])]
+    return EvaluationOutcome(
+        plan=plan,
+        scores=scores,
+        ranking=ranking,
+        ranking_metric=data.get("ranking_metric"),
+    )
+
+
 def _normalise_series(data: Mapping[str, Sequence[float]]) -> Dict[str, List[float]]:
     return {str(key): [float(value) for value in values] for key, values in data.items()}
 
@@ -321,6 +498,7 @@ __all__ = [
     "Conversation",
     "ConversationMessage",
     "PortalState",
+    "InMemoryPortalState",
     "Project",
     "RunRecord",
     "ProjectInputs",
@@ -328,4 +506,8 @@ __all__ = [
     "serialize_scenario_run",
     "serialize_model_score",
     "serialize_evaluation_outcome",
+    "deserialize_workflow_result",
+    "deserialize_scenario_run",
+    "deserialize_model_score",
+    "deserialize_evaluation_outcome",
 ]

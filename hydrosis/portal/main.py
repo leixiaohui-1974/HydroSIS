@@ -1,6 +1,8 @@
 """FastAPI application exposing the HydroSIS portal."""
 from __future__ import annotations
 
+import json
+import os
 from pathlib import Path
 import json
 from datetime import datetime, timezone
@@ -36,6 +38,7 @@ from .schemas import (
 )
 from .state import (
     ConversationMessage,
+    InMemoryPortalState,
     PortalState,
     ProjectInputs,
     serialize_evaluation_outcome,
@@ -98,10 +101,15 @@ def _build_inputs_overview(dataset: Optional[ProjectInputs]) -> Optional[InputsO
         updated_at=dataset.updated_at.isoformat(),
     )
 
-def create_app(state: PortalState | None = None) -> FastAPI:
+def create_app(
+    state: PortalState | None = None,
+    *,
+    database_url: str | None = None,
+    config_path: str | Path | None = None,
+) -> FastAPI:
     app = FastAPI(title="HydroSIS Portal", version="0.1.0")
 
-    portal_state = state or PortalState()
+    portal_state = _initialise_state(state, database_url=database_url, config_path=config_path)
     intent_parser = IntentParser()
     event_broker = RunEventBroker()
     run_executor = RunExecutor(
@@ -471,6 +479,64 @@ def create_app(state: PortalState | None = None) -> FastAPI:
             ],
         }
     return app
+
+
+def _initialise_state(
+    supplied_state: PortalState | None,
+    *,
+    database_url: str | None = None,
+    config_path: str | Path | None = None,
+) -> PortalState:
+    if supplied_state is not None:
+        return supplied_state
+
+    resolved_url = _resolve_database_url(database_url=database_url, config_path=config_path)
+    if resolved_url:
+        try:
+            from .storage import create_sqlalchemy_state
+        except ImportError as exc:  # pragma: no cover - optional dependency guard
+            raise RuntimeError(
+                "SQLAlchemy backend requested but SQLAlchemy is not installed"
+            ) from exc
+
+        return create_sqlalchemy_state(resolved_url)
+
+    return InMemoryPortalState()
+
+
+def _resolve_database_url(
+    *,
+    database_url: str | None = None,
+    config_path: str | Path | None = None,
+) -> Optional[str]:
+    if database_url:
+        return database_url
+
+    env_url = os.environ.get("HYDROSIS_PORTAL_DB_URL")
+    if env_url:
+        return env_url
+
+    config_location = config_path or os.environ.get("HYDROSIS_PORTAL_CONFIG")
+    if not config_location:
+        return None
+
+    config_file = Path(config_location)
+    if not config_file.exists():
+        raise FileNotFoundError(f"Portal configuration file '{config_file}' not found")
+
+    try:
+        config_data = json.loads(config_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            f"Portal configuration file '{config_file}' must be valid JSON"
+        ) from exc
+
+    url = config_data.get("database_url")
+    if url and not isinstance(url, str):
+        raise ValueError(
+            f"database_url in '{config_file}' must be a string if provided"
+        )
+    return url
 
 
 def _render_assistant_reply(intent: Dict[str, object], conversation_id: str) -> str:
