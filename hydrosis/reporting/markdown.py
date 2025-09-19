@@ -126,7 +126,8 @@ def _generate_hydrograph_figures(
         return []
 
     figures: List[Path] = []
-    for subbasin_id, observed in observations.items():
+    for subbasin_id in sorted(observations):
+        observed = observations[subbasin_id]
         relevant_simulations = {
             model_id: hydrographs[subbasin_id]
             for model_id, hydrographs in simulations.items()

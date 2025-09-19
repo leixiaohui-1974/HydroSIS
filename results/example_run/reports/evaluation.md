@@ -28,13 +28,13 @@
 
 ## 子流域径流过程对比
 
-![hydrograph_SB4](../figures/hydrograph_SB4.svg)
-
-![hydrograph_SB3](../figures/hydrograph_SB3.svg)
+![hydrograph_SB1](../figures/hydrograph_SB1.svg)
 
 ![hydrograph_SB2](../figures/hydrograph_SB2.svg)
 
-![hydrograph_SB1](../figures/hydrograph_SB1.svg)
+![hydrograph_SB3](../figures/hydrograph_SB3.svg)
+
+![hydrograph_SB4](../figures/hydrograph_SB4.svg)
 
 ## 模型运行概述
 
