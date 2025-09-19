@@ -46,6 +46,7 @@ def _color_palette() -> list[str]:
     ]
 
 
+
 def plot_hydrograph(
     output_path: Path,
     simulations: Mapping[str, Sequence[float]],
@@ -57,6 +58,7 @@ def plot_hydrograph(
     """Plot simulated and observed hydrographs and save to a file."""
 
     output_path = Path(output_path)
+
 
     if not simulations:
         raise ValueError("At least one simulation series is required for plotting.")
@@ -99,7 +101,6 @@ def plot_hydrograph(
         ylabel=ylabel,
     )
 
-
 def plot_metric_bars(
     output_path: Path,
     scores: Sequence[ModelScore],
@@ -109,8 +110,8 @@ def plot_metric_bars(
 ) -> Path:
     """Create a bar chart summarising aggregated metrics for each model."""
 
-    output_path = Path(output_path)
 
+    output_path = Path(output_path)
     labels: list[str] = []
     values: list[float] = []
     orientation = evaluator.metric_orientation(metric)

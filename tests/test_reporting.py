@@ -1,11 +1,12 @@
 """Tests for reporting utilities."""
 from __future__ import annotations
 
+
 import tempfile
 from pathlib import Path
 
 import unittest
-from unittest import mock
+
 
 from hydrosis import (
     MarkdownReportBuilder,
@@ -80,6 +81,7 @@ class ReportingTests(unittest.TestCase):
             metric_path = Path(tmpdir) / "metric.png"
 
             created_hydro = plot_hydrograph(
+
                 hydro_path,
                 simulations={"baseline": [1.0, 2.0, 1.5]},
                 observed=[0.9, 2.1, 1.4],
