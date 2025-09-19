@@ -182,8 +182,12 @@
           <label for="summary-run-id">运行 ID（用于查看摘要）</label>
           <input id="summary-run-id" placeholder="自动填入最近一次运行" />
           <button type="button" id="fetch-summary">查看运行摘要</button>
+          <button type="button" id="fetch-timeseries">查看时序数据</button>
+          <button type="button" id="fetch-evaluation">查看评估结果</button>
         </div>
         <pre id="run-summary">尚未加载摘要</pre>
+        <pre id="run-timeseries">尚未加载时序</pre>
+        <pre id="run-evaluation">尚未加载评估</pre>
       </section>
     </main>
     <script>
@@ -497,6 +501,8 @@
         if (data.id) {
           document.getElementById("summary-run-id").value = data.id;
           await loadRunSummary(data.id);
+          await loadRunTimeseries(data.id);
+          await loadRunEvaluation(data.id);
         }
         loadRuns();
         loadOverview();
@@ -519,10 +525,48 @@
         }
       }
 
-      document.getElementById("fetch-summary").addEventListener("click", (event) => {
+      async function loadRunTimeseries(runId) {
+        if (!runId) return;
+        try {
+          const response = await fetch(`/runs/${runId}/timeseries`);
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          document.getElementById("run-timeseries").textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+          document.getElementById("run-timeseries").textContent = `时序获取失败: ${err}`;
+        }
+      }
+
+      async function loadRunEvaluation(runId) {
+        if (!runId) return;
+        try {
+          const response = await fetch(`/runs/${runId}/evaluation`);
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          document.getElementById("run-evaluation").textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+          document.getElementById("run-evaluation").textContent = `评估获取失败: ${err}`;
+        }
+      }
+
+      document.getElementById("fetch-summary").addEventListener("click", async (event) => {
         event.preventDefault();
         const runId = document.getElementById("summary-run-id").value;
-        loadRunSummary(runId);
+        await loadRunSummary(runId);
+        await loadRunTimeseries(runId);
+        await loadRunEvaluation(runId);
+      });
+
+      document.getElementById("fetch-timeseries").addEventListener("click", async (event) => {
+        event.preventDefault();
+        const runId = document.getElementById("summary-run-id").value;
+        await loadRunTimeseries(runId);
+      });
+
+      document.getElementById("fetch-evaluation").addEventListener("click", async (event) => {
+        event.preventDefault();
+        const runId = document.getElementById("summary-run-id").value;
+        await loadRunEvaluation(runId);
       });
 
       loadProjects();

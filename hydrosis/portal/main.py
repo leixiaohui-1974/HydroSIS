@@ -31,7 +31,14 @@ from .schemas import (
     ScenarioList,
     ScenarioUpdatePayload,
 )
-from .state import ConversationMessage, PortalState, ProjectInputs
+from .state import (
+    ConversationMessage,
+    PortalState,
+    ProjectInputs,
+    serialize_evaluation_outcome,
+    serialize_model_score,
+    serialize_scenario_run,
+)
 
 
 
@@ -87,8 +94,6 @@ def _build_inputs_overview(dataset: Optional[ProjectInputs]) -> Optional[InputsO
         observations=observations_summary,
         updated_at=dataset.updated_at.isoformat(),
     )
-
-
 
 def create_app(state: PortalState | None = None) -> FastAPI:
     app = FastAPI(title="HydroSIS Portal", version="0.1.0")
@@ -188,7 +193,6 @@ def create_app(state: PortalState | None = None) -> FastAPI:
             latest_run=latest_run,
             latest_summary=latest_summary,
         )
-
 
     @app.post(
         "/projects/{project_id}/inputs",
@@ -391,6 +395,35 @@ def create_app(state: PortalState | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="Run result not available")
         return summarise_workflow_result(run.result)
 
+    @app.get("/runs/{run_id}/timeseries")
+    def run_timeseries(run_id: str) -> Dict[str, object]:
+        run = portal_state.get_run(run_id)
+        if run.result is None:
+            raise HTTPException(status_code=404, detail="Run result not available")
+        result = run.result
+        return {
+            "baseline": serialize_scenario_run(result.baseline),
+            "scenarios": {
+                scenario_id: serialize_scenario_run(scenario_result)
+                for scenario_id, scenario_result in result.scenarios.items()
+            },
+        }
+
+    @app.get("/runs/{run_id}/evaluation")
+    def run_evaluation(run_id: str) -> Dict[str, object]:
+        run = portal_state.get_run(run_id)
+        if run.result is None:
+            raise HTTPException(status_code=404, detail="Run result not available")
+        result = run.result
+        return {
+            "overall_scores": [
+                serialize_model_score(score) for score in result.overall_scores or []
+            ],
+            "evaluation_outcomes": [
+                serialize_evaluation_outcome(outcome)
+                for outcome in result.evaluation_outcomes
+            ],
+        }
     return app
 
 

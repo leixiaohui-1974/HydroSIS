@@ -312,4 +312,7 @@ __all__ = [
     "RunRecord",
     "ProjectInputs",
     "serialize_workflow_result",
+    "serialize_scenario_run",
+    "serialize_model_score",
+    "serialize_evaluation_outcome",
 ]

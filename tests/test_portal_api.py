@@ -168,7 +168,6 @@ def test_portal_end_to_end_workflow() -> None:
         assert overview_after_inputs["inputs"]["forcing"]["max_length"] == 4
         assert overview_after_inputs["inputs"]["observations"]["min_value"] is not None
 
-
         inputs_get = client.get("/projects/demo/inputs")
         assert inputs_get.status_code == 200
         assert inputs_get.json()["observations"]["S1"] == observations["S1"]
@@ -230,7 +229,6 @@ def test_portal_end_to_end_workflow() -> None:
         assert overview_after_run["latest_run"]["id"] == run_id
         assert overview_after_run["latest_summary"]["baseline"]["scenario_id"] == "baseline"
 
-
         summary_response = client.get(f"/runs/{run_id}/summary")
         assert summary_response.status_code == 200
         summary = summary_response.json()
@@ -240,6 +238,23 @@ def test_portal_end_to_end_workflow() -> None:
         alt_summary = summary["scenarios"]["alternate_routing"]
         assert "aggregated" in alt_summary and "S3" in alt_summary["aggregated"]
         assert "delta_vs_baseline" in alt_summary
+
+        timeseries_response = client.get(f"/runs/{run_id}/timeseries")
+        assert timeseries_response.status_code == 200
+        timeseries = timeseries_response.json()
+        assert timeseries["baseline"]["scenario_id"] == "baseline"
+        assert len(timeseries["baseline"]["aggregated"]["S3"]) == len(forcing["S3"])
+        assert "alternate_routing" in timeseries["scenarios"]
+        assert timeseries["scenarios"]["alternate_routing"]["local"]["S1"]
+
+        evaluation_response = client.get(f"/runs/{run_id}/evaluation")
+        assert evaluation_response.status_code == 200
+        evaluation = evaluation_response.json()
+        assert evaluation["overall_scores"], evaluation
+        assert evaluation["evaluation_outcomes"], evaluation
+        first_plan = evaluation["evaluation_outcomes"][0]
+        assert first_plan["plan"]["id"] == "baseline_vs_scenario"
+        assert first_plan["ranking"], first_plan
 
         project_runs = client.get("/projects/demo/runs")
         assert project_runs.status_code == 200

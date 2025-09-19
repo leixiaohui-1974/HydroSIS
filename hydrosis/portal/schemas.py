@@ -284,7 +284,6 @@ class ProjectOverview:
 
 
 @dataclass
-
 class RunList:
     runs: List[RunResponse]
 
@@ -309,5 +308,4 @@ __all__ = [
     "InputSeriesSummary",
     "InputsOverview",
     "ProjectOverview",
-
 ]
