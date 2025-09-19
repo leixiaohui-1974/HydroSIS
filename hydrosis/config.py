@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, MutableMapping, Optional
+from typing import Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence
 
 try:  # pragma: no cover - optional dependency
     import yaml
@@ -18,6 +18,62 @@ from .parameters.zone import ParameterZoneConfig
 
 
 @dataclass
+class ComparisonPlanConfig:
+    """Configuration describing a model comparison experiment."""
+
+    id: str
+    description: str
+    models: Sequence[str]
+    reference: str
+    subbasins: Optional[Sequence[str]] = None
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> "ComparisonPlanConfig":
+        return cls(
+            id=data["id"],
+            description=data.get("description", ""),
+            models=list(data.get("models", [])),
+            reference=data.get("reference", "observed"),
+            subbasins=list(data.get("subbasins", [])) or None,
+        )
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "id": self.id,
+            "description": self.description,
+            "models": list(self.models),
+            "reference": self.reference,
+            "subbasins": list(self.subbasins) if self.subbasins else None,
+        }
+
+
+@dataclass
+class EvaluationConfig:
+    """Evaluation setup including metrics and comparison plans."""
+
+    metrics: Sequence[str] = field(
+        default_factory=lambda: ["rmse", "mae", "pbias", "nse"]
+    )
+    comparisons: List[ComparisonPlanConfig] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> "EvaluationConfig":
+        return cls(
+            metrics=list(data.get("metrics", ["rmse", "mae", "pbias", "nse"])),
+            comparisons=[
+                ComparisonPlanConfig.from_dict(item)
+                for item in data.get("comparisons", [])
+            ],
+        )
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "metrics": list(self.metrics),
+            "comparisons": [cfg.to_dict() for cfg in self.comparisons],
+        }
+
+
+@dataclass
 class IOConfig:
     """Input/output configuration for simulation data."""
 
@@ -25,6 +81,8 @@ class IOConfig:
     evaporation: Optional[Path] = None
     discharge_observations: Optional[Path] = None
     results_directory: Path = Path("results")
+    figures_directory: Optional[Path] = None
+    reports_directory: Optional[Path] = None
 
     @classmethod
     def from_dict(cls, data: Mapping[str, str]) -> "IOConfig":
@@ -33,6 +91,8 @@ class IOConfig:
             evaporation=Path(data.get("evaporation")) if data.get("evaporation") else None,
             discharge_observations=Path(data["discharge_observations"]) if data.get("discharge_observations") else None,
             results_directory=Path(data.get("results_directory", "results")),
+            figures_directory=Path(data["figures_directory"]) if data.get("figures_directory") else None,
+            reports_directory=Path(data["reports_directory"]) if data.get("reports_directory") else None,
         )
 
 
@@ -55,6 +115,7 @@ class ModelConfig:
     parameter_zones: List[ParameterZoneConfig]
     io: IOConfig
     scenarios: List[ScenarioConfig] = field(default_factory=list)
+    evaluation: Optional[EvaluationConfig] = None
 
     @classmethod
     def from_yaml(cls, path: Path) -> "ModelConfig":
@@ -71,6 +132,11 @@ class ModelConfig:
         parameter_zones = [ParameterZoneConfig.from_dict(cfg) for cfg in data.get("parameter_zones", [])]
         io_cfg = IOConfig.from_dict(data["io"])
         scenarios = [ScenarioConfig(**cfg) for cfg in data.get("scenarios", [])]
+        evaluation = (
+            EvaluationConfig.from_dict(data["evaluation"])
+            if data.get("evaluation")
+            else None
+        )
 
         return cls(
             delineation=delineation,
@@ -79,6 +145,7 @@ class ModelConfig:
             parameter_zones=parameter_zones,
             io=io_cfg,
             scenarios=scenarios,
+            evaluation=evaluation,
         )
 
     def to_dict(self) -> Dict[str, object]:
@@ -94,6 +161,12 @@ class ModelConfig:
                 if self.io.discharge_observations
                 else None,
                 "results_directory": str(self.io.results_directory),
+                "figures_directory": str(self.io.figures_directory)
+                if self.io.figures_directory
+                else None,
+                "reports_directory": str(self.io.reports_directory)
+                if self.io.reports_directory
+                else None,
             },
             "scenarios": [
                 {
@@ -103,6 +176,7 @@ class ModelConfig:
                 }
                 for scenario in self.scenarios
             ],
+            "evaluation": self.evaluation.to_dict() if self.evaluation else None,
         }
 
     def apply_scenario(self, scenario_id: str, subbasins: Iterable[Subbasin]) -> None:

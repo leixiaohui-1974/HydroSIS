@@ -20,3 +20,11 @@ def write_simulation_results(directory: Path, results: Dict[str, List[float]]) -
     directory.mkdir(parents=True, exist_ok=True)
     for sub_id, series in results.items():
         write_time_series(directory / f"{sub_id}.csv", series)
+
+
+def write_markdown(path: Path, content: str) -> None:
+    """Persist markdown content to disk with UTF-8 encoding."""
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")

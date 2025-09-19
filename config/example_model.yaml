@@ -101,6 +101,8 @@ io:
   evaporation: data/forcing/evaporation.csv
   discharge_observations: data/observations/discharge.csv
   results_directory: results/scenario_baseline
+  figures_directory: results/figures
+  reports_directory: results/reports
 
 scenarios:
   - id: reservoir_reoperation
@@ -113,3 +115,12 @@ scenarios:
         runoff_model: floodplain
       SB1:
         curve_number: 70
+
+evaluation:
+  metrics: [rmse, mae, pbias, nse]
+  comparisons:
+    - id: baseline_vs_reoperation
+      description: Compare baseline and reservoir scenario at key gauges
+      reference: observed
+      models: [baseline, reservoir_reoperation]
+      subbasins: [SB3, SB4]

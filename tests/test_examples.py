@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from typing import Dict, List
 
-from hydrosis import HydroSISModel, ModelConfig
+from hydrosis import HydroSISModel, ModelComparator, ModelConfig, SimulationEvaluator
 from hydrosis.config import IOConfig, ScenarioConfig
 from hydrosis.delineation.dem_delineator import DelineationConfig
 from hydrosis.model import Subbasin
@@ -89,6 +89,84 @@ def _build_sample_config() -> ModelConfig:
         parameter_zones=parameter_zones,
         io=io_config,
         scenarios=scenarios,
+    )
+
+
+def _build_comparison_config() -> ModelConfig:
+    """Configuration with multiple parameter zones for comparison tests."""
+
+    delineation = DelineationConfig(
+        dem_path=Path("dem.tif"),
+        pour_points_path=Path("pour_points.geojson"),
+        precomputed_subbasins=[
+            {"id": "S1", "area_km2": 1.5, "downstream": "S3", "parameters": {}},
+            {"id": "S2", "area_km2": 2.0, "downstream": "S3", "parameters": {}},
+            {"id": "S3", "area_km2": 3.0, "downstream": "S4", "parameters": {}},
+            {"id": "S4", "area_km2": 4.0, "downstream": None, "parameters": {}},
+        ],
+    )
+
+    runoff_models = [
+        RunoffModelConfig(
+            id="headwater",
+            model_type="scs_curve_number",
+            parameters={"curve_number": 70, "initial_abstraction_ratio": 0.1},
+        ),
+        RunoffModelConfig(
+            id="headwater_wet",
+            model_type="scs_curve_number",
+            parameters={"curve_number": 82, "initial_abstraction_ratio": 0.05},
+        ),
+        RunoffModelConfig(
+            id="mid_storage",
+            model_type="linear_reservoir",
+            parameters={"recession": 0.82, "conversion": 0.9},
+        ),
+        RunoffModelConfig(
+            id="lowland_storage",
+            model_type="linear_reservoir",
+            parameters={"recession": 0.9, "conversion": 0.75},
+        ),
+    ]
+
+    routing_models = [
+        RoutingModelConfig(id="lag_fast", model_type="lag", parameters={"lag_steps": 1}),
+        RoutingModelConfig(id="lag_medium", model_type="lag", parameters={"lag_steps": 2}),
+        RoutingModelConfig(id="lag_slow", model_type="lag", parameters={"lag_steps": 3}),
+    ]
+
+    parameter_zones = [
+        ParameterZoneConfig(
+            id="ZU",
+            description="Upstream gauge",
+            control_points=["S1"],
+            parameters={"runoff_model": "headwater", "routing_model": "lag_fast"},
+        ),
+        ParameterZoneConfig(
+            id="ZM",
+            description="Mid catchment reservoir",
+            control_points=["S2"],
+            parameters={"runoff_model": "mid_storage", "routing_model": "lag_medium"},
+        ),
+        ParameterZoneConfig(
+            id="ZD",
+            description="Downstream station",
+            control_points=["S4"],
+            parameters={"runoff_model": "lowland_storage", "routing_model": "lag_medium"},
+        ),
+    ]
+
+    io_config = IOConfig(
+        precipitation=Path("data/forcing/precipitation.csv"),
+        results_directory=Path("results"),
+    )
+
+    return ModelConfig(
+        delineation=delineation,
+        runoff_models=runoff_models,
+        routing_models=routing_models,
+        parameter_zones=parameter_zones,
+        io=io_config,
     )
 
 
@@ -261,6 +339,57 @@ class HydroSISExampleTests(unittest.TestCase):
             flows = model.simulate(subbasin, precipitation)
             self.assertEqual(len(flows), len(precipitation))
             self.assertTrue(all(math.isfinite(flow) for flow in flows))
+
+    def test_multi_model_comparison_identifies_best_performer(self) -> None:
+        """Model comparator ranks multi-zone simulations by accuracy metrics."""
+
+        config = _build_comparison_config()
+        truth_model = HydroSISModel.from_config(config)
+
+        forcing: Dict[str, List[float]] = {
+            "S1": [5.0, 10.0, 20.0, 0.0],
+            "S2": [0.0, 15.0, 10.0, 5.0],
+            "S3": [0.0, 0.0, 5.0, 0.0],
+            "S4": [1.0, 0.0, 2.0, 0.0],
+        }
+
+        observations = truth_model.run(forcing)
+
+        calibrated_config = _build_comparison_config()
+        calibrated_model = HydroSISModel.from_config(calibrated_config)
+        calibrated_results = calibrated_model.run(forcing)
+
+        biased_config = _build_comparison_config()
+        for runoff_cfg in biased_config.runoff_models:
+            if runoff_cfg.id == "headwater":
+                runoff_cfg.parameters["curve_number"] = 88
+        biased_model = HydroSISModel.from_config(biased_config)
+        biased_results = biased_model.run(forcing)
+
+        sluggish_config = _build_comparison_config()
+        for routing_cfg in sluggish_config.routing_models:
+            if routing_cfg.id == "lag_medium":
+                routing_cfg.parameters["lag_steps"] = 4
+        sluggish_model = HydroSISModel.from_config(sluggish_config)
+        sluggish_results = sluggish_model.run(forcing)
+
+        simulations = {
+            "calibrated": calibrated_results,
+            "biased": biased_results,
+            "sluggish": sluggish_results,
+        }
+
+        comparator = ModelComparator(SimulationEvaluator())
+        scores = comparator.compare(simulations, observations)
+        ranking = comparator.rank(scores, metric="rmse")
+
+        self.assertEqual(ranking[0].model_id, "calibrated")
+        self.assertEqual(ranking[-1].model_id, "biased")
+
+        aggregated = {score.model_id: score.aggregated for score in scores}
+        self.assertLess(aggregated["calibrated"]["rmse"], aggregated["sluggish"]["rmse"])
+        self.assertLess(abs(aggregated["calibrated"]["pbias"]), abs(aggregated["biased"]["pbias"]))
+
 
 
 if __name__ == "__main__":  # pragma: no cover - allow direct execution
