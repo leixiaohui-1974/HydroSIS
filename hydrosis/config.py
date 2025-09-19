@@ -26,6 +26,8 @@ class ComparisonPlanConfig:
     models: Sequence[str]
     reference: str
     subbasins: Optional[Sequence[str]] = None
+    ranking_metric: Optional[str] = None
+
 
     @classmethod
     def from_dict(cls, data: Mapping[str, object]) -> "ComparisonPlanConfig":
@@ -35,6 +37,8 @@ class ComparisonPlanConfig:
             models=list(data.get("models", [])),
             reference=data.get("reference", "observed"),
             subbasins=list(data.get("subbasins", [])) or None,
+            ranking_metric=data.get("ranking_metric"),
+
         )
 
     def to_dict(self) -> Dict[str, object]:
@@ -44,6 +48,8 @@ class ComparisonPlanConfig:
             "models": list(self.models),
             "reference": self.reference,
             "subbasins": list(self.subbasins) if self.subbasins else None,
+            "ranking_metric": self.ranking_metric,
+
         }
 
 

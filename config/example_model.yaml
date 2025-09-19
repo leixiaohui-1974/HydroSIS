@@ -124,3 +124,5 @@ evaluation:
       reference: observed
       models: [baseline, reservoir_reoperation]
       subbasins: [SB3, SB4]
+      ranking_metric: rmse
+

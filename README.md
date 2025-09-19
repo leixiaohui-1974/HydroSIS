@@ -49,8 +49,6 @@ write_simulation_results(config.io.results_directory, aggregated)
 
 # 可以直接提取参数分区控制点的流量序列：
 zone_flows = model.parameter_zone_discharge(local_results)
-results = model.run(forcing)
-write_simulation_results(config.io.results_directory, results)
 
 ```
 
@@ -61,45 +59,26 @@ config.apply_scenario("reservoir_reoperation", model.subbasins.values())
 results = model.accumulate_discharge(model.run(forcing))
 ```
 
-=======
-results = model.run(forcing)
-```
-
-
-
 4. **开展精度评价、可视化与报告生成**：
 
 ```python
-from hydrosis import (
-    ModelComparator,
-    SimulationEvaluator,
-    generate_evaluation_report,
-)
+from hydrosis import run_workflow
 
 observed = {...}  # 例如由水文站径流观测整理得到
-candidate_results = {
-    "baseline": results,
-    "reservoir_reoperation": model.accumulate_discharge(model.run(forcing)),
-    "reservoir_reoperation": model.run(forcing),
-}
 
-comparator = ModelComparator(SimulationEvaluator())
-scores = comparator.compare(candidate_results, observed)
-ranking = comparator.rank(scores, metric="rmse")
-
-for score in ranking:
-    print(score.model_id, score.aggregated)
-
-report_path = (config.io.reports_directory or config.io.results_directory) / "evaluation.md"
-generate_evaluation_report(
-    report_path,
-    scores,
-    comparator.evaluator,
-    simulations=candidate_results,
+result = run_workflow(
+    config,
+    forcing,
     observations=observed,
-    description="基于情景模拟的模型精度分析",
-    figures_directory=config.io.figures_directory or (config.io.results_directory / "figures"),
+    scenario_ids=["reservoir_reoperation"],
+    persist_outputs=True,
+    generate_report=True,
 )
+
+print(result.overall_scores[0].aggregated)  # 输出基准情景的指标
+for outcome in result.evaluation_outcomes:
+    print(outcome.plan.id, [score.model_id for score in outcome.ranking])
+
 ```
 
 ## 与大模型集成
