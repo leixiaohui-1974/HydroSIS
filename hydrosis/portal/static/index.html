@@ -85,6 +85,43 @@
       .actions button {
         width: 100%;
       }
+      .progress-container {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+      .progress-bar-wrapper {
+        width: 100%;
+        background: #e1e5ee;
+        border-radius: 999px;
+        overflow: hidden;
+        height: 16px;
+      }
+      .progress-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #1b5e20, #4caf50);
+        color: white;
+        font-size: 0.75rem;
+        text-align: center;
+        line-height: 16px;
+        transition: width 0.3s ease;
+      }
+      .progress-status {
+        font-size: 0.9rem;
+        color: #0f172a;
+      }
+      .progress-log {
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 0.75rem;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: "Fira Code", monospace;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+      }
     </style>
   </head>
   <body>
@@ -173,14 +210,21 @@
           <label>
             <input type="checkbox" id="report" /> 生成报告
           </label>
-          <button type="submit">执行</button>
-        </form>
-        <button type="button" id="refresh-runs">刷新运行记录</button>
-        <pre id="run-result">等待运行...</pre>
-        <pre id="run-history">尚无运行记录</pre>
-        <div class="actions">
-          <label for="summary-run-id">运行 ID（用于查看摘要）</label>
-          <input id="summary-run-id" placeholder="自动填入最近一次运行" />
+        <button type="submit">执行</button>
+      </form>
+      <button type="button" id="refresh-runs">刷新运行记录</button>
+      <pre id="run-result">等待运行...</pre>
+      <div class="progress-container">
+        <div class="progress-bar-wrapper">
+          <div id="run-progress-bar" class="progress-bar-fill">0%</div>
+        </div>
+        <div id="run-progress-status" class="progress-status">尚未开始实时进度</div>
+        <div id="run-progress-log" class="progress-log">尚未开始实时进度</div>
+      </div>
+      <pre id="run-history">尚无运行记录</pre>
+      <div class="actions">
+        <label for="summary-run-id">运行 ID（用于查看摘要）</label>
+        <input id="summary-run-id" placeholder="自动填入最近一次运行" />
           <button type="button" id="fetch-summary">查看运行摘要</button>
           <button type="button" id="fetch-timeseries">查看时序数据</button>
           <button type="button" id="fetch-evaluation">查看评估结果</button>
@@ -196,6 +240,81 @@
       const overviewEl = document.getElementById("project-overview");
       const scenarioFeedback = document.getElementById("scenario-feedback");
       const inputsFeedback = document.getElementById("inputs-feedback");
+      const progressStatusEl = document.getElementById("run-progress-status");
+      const progressBarEl = document.getElementById("run-progress-bar");
+      const progressLogEl = document.getElementById("run-progress-log");
+      let runEventSource = null;
+
+      function resetProgressDisplay() {
+        progressBarEl.style.width = "0%";
+        progressBarEl.textContent = "0%";
+        progressStatusEl.textContent = "尚未开始实时进度";
+        progressLogEl.textContent = "尚未开始实时进度";
+      }
+
+      function appendProgressLog(entry) {
+        const timestamp = entry.timestamp || new Date().toISOString();
+        const message = entry.message || `${entry.stage || "阶段"} ${entry.status || "更新"}`;
+        const line = `[${timestamp}] ${message}`;
+        if (!progressLogEl.textContent || progressLogEl.textContent === "尚未开始实时进度") {
+          progressLogEl.textContent = line;
+          return;
+        }
+        progressLogEl.textContent = `${line}\n${progressLogEl.textContent}`;
+      }
+
+      function updateProgressDisplay(event) {
+        if (typeof event.percent === "number") {
+          progressBarEl.style.width = `${event.percent}%`;
+          progressBarEl.textContent = `${event.percent}%`;
+        }
+        if (event.message) {
+          progressStatusEl.textContent = event.message;
+        }
+        appendProgressLog(event);
+      }
+
+      function closeRunStream() {
+        if (runEventSource) {
+          runEventSource.close();
+          runEventSource = null;
+        }
+      }
+
+      function openRunStream(runId) {
+        if (typeof EventSource === "undefined") {
+          progressStatusEl.textContent = "浏览器不支持实时事件流";
+          return;
+        }
+        closeRunStream();
+        progressBarEl.style.width = "0%";
+        progressBarEl.textContent = "0%";
+        progressLogEl.textContent = "";
+        progressStatusEl.textContent = "运行已排队，等待开始";
+        runEventSource = new EventSource(`/runs/${runId}/stream`);
+        runEventSource.onmessage = (event) => {
+          try {
+            const payload = JSON.parse(event.data || "{}");
+            updateProgressDisplay(payload);
+            if (payload.status === "completed") {
+              closeRunStream();
+              loadRuns();
+              loadOverview();
+              loadRunSummary(runId);
+              loadRunTimeseries(runId);
+              loadRunEvaluation(runId);
+            } else if (payload.status === "failed") {
+              closeRunStream();
+            }
+          } catch (err) {
+            appendProgressLog({ message: `解析进度事件失败: ${err}` });
+          }
+        };
+        runEventSource.onerror = () => {
+          appendProgressLog({ message: "进度流连接已断开" });
+          closeRunStream();
+        };
+      }
 
       function currentProjectId() {
         return projectInput.value || "demo";
@@ -500,9 +619,7 @@
         document.getElementById("run-result").textContent = JSON.stringify(data, null, 2);
         if (data.id) {
           document.getElementById("summary-run-id").value = data.id;
-          await loadRunSummary(data.id);
-          await loadRunTimeseries(data.id);
-          await loadRunEvaluation(data.id);
+          openRunStream(data.id);
         }
         loadRuns();
         loadOverview();
@@ -569,6 +686,7 @@
         await loadRunEvaluation(runId);
       });
 
+      resetProgressDisplay();
       loadProjects();
       loadScenarios();
       loadInputs();

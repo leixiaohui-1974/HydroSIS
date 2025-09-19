@@ -11,6 +11,11 @@ try:
 except ImportError:  # pragma: no cover - test environment always includes pydantic
     BaseModel = object  # type: ignore
 
+try:  # pragma: no cover - shim always available in tests
+    from fastapi.responses import StreamingResponse as ShimStreamingResponse
+except ImportError:  # pragma: no cover - fallback when responses module missing
+    ShimStreamingResponse = None  # type: ignore
+
 
 class HTTPException(Exception):
     """Exception carrying an HTTP status code and payload."""
@@ -157,6 +162,9 @@ class Response:
 def _normalise_response(result: Any, response_class: Any | None) -> Response:
     if isinstance(result, Response):
         return result
+    if ShimStreamingResponse is not None and isinstance(result, ShimStreamingResponse):
+        body = "".join(str(part) for part in result)
+        return Response(status_code=200, data=body)
     if is_dataclass(result):
         return Response(status_code=200, data=asdict(result))
     if BaseModel is not object and isinstance(result, BaseModel):  # type: ignore[isinstance]
