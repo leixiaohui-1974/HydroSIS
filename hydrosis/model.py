@@ -1,6 +1,7 @@
 """Core HydroSIS distributed hydrological model orchestrating runoff and routing."""
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Mapping, Optional
 
@@ -74,7 +75,7 @@ class HydroSISModel:
             if model_key is None:
                 raise ValueError(f"Subbasin {sub_id} missing runoff_model parameter")
 
-            runoff_model = self.runoff_models[model_key]
+            runoff_model = copy.deepcopy(self.runoff_models[model_key])
             forcings = forcing.get(sub_id, [])
             runoff_results[sub_id] = runoff_model.simulate(subbasin, forcings)
 
@@ -84,7 +85,7 @@ class HydroSISModel:
             model_key = subbasin.parameters.get("routing_model")
             if model_key is None:
                 raise ValueError(f"Subbasin {sub_id} missing routing_model parameter")
-            routing_model = self.routing_models[model_key]
+            routing_model = copy.deepcopy(self.routing_models[model_key])
             routed[sub_id] = routing_model.route(subbasin, flows)
 
         return routed

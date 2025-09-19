@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, Type
+from typing import TYPE_CHECKING, ClassVar, Dict, List, Mapping, Type
 
-from ..model import Subbasin
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from ..model import Subbasin
 
 
 class RoutingModel:
@@ -13,7 +14,7 @@ class RoutingModel:
     def __init__(self, parameters: Mapping[str, float]):
         self.parameters = dict(parameters)
 
-    def route(self, subbasin: Subbasin, inflow: List[float]) -> List[float]:
+    def route(self, subbasin: "Subbasin", inflow: List[float]) -> List[float]:
         raise NotImplementedError
 
 
@@ -25,7 +26,7 @@ class RoutingModelConfig:
     model_type: str
     parameters: Dict[str, float]
 
-    REGISTRY: Dict[str, Type[RoutingModel]] = {}
+    REGISTRY: ClassVar[Dict[str, Type[RoutingModel]]] = {}
 
     @classmethod
     def register(cls, key: str, model: Type[RoutingModel]) -> None:

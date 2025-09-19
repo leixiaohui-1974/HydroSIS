@@ -1,10 +1,12 @@
 """A simple linear reservoir runoff production model."""
 from __future__ import annotations
 
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from .base import RunoffModel, RunoffModelConfig
-from ..model import Subbasin
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from ..model import Subbasin
 
 
 class LinearReservoirRunoff(RunoffModel):
@@ -16,7 +18,7 @@ class LinearReservoirRunoff(RunoffModel):
         self.conversion = float(self.parameters.get("conversion", 1.0))
         self.state = float(self.parameters.get("initial_storage", 0.0))
 
-    def simulate(self, subbasin: Subbasin, precipitation: List[float]) -> List[float]:
+    def simulate(self, subbasin: "Subbasin", precipitation: List[float]) -> List[float]:
         flows: List[float] = []
         for p in precipitation:
             self.state = self.state * self.recession + p * self.conversion

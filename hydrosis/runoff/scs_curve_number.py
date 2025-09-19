@@ -1,10 +1,12 @@
 """Implementation of the SCS Curve Number runoff method."""
 from __future__ import annotations
 
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from .base import RunoffModel, RunoffModelConfig
-from ..model import Subbasin
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from ..model import Subbasin
 
 
 class SCSCurveNumber(RunoffModel):
@@ -15,7 +17,7 @@ class SCSCurveNumber(RunoffModel):
         self.cn = float(self.parameters.get("curve_number", 75))
         self.initial_abstraction_ratio = float(self.parameters.get("initial_abstraction_ratio", 0.2))
 
-    def simulate(self, subbasin: Subbasin, precipitation: List[float]) -> List[float]:
+    def simulate(self, subbasin: "Subbasin", precipitation: List[float]) -> List[float]:
         s = max(0.0, (1000.0 / self.cn - 10.0) * 25.4)
         ia = self.initial_abstraction_ratio * s
         runoff: List[float] = []

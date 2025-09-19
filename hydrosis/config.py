@@ -5,7 +5,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, MutableMapping, Optional
 
-import yaml
+try:  # pragma: no cover - optional dependency
+    import yaml
+except ImportError:  # pragma: no cover - fallback for tests without PyYAML
+    yaml = None
 
 from .model import Subbasin
 from .runoff.base import RunoffModelConfig
@@ -55,6 +58,11 @@ class ModelConfig:
 
     @classmethod
     def from_yaml(cls, path: Path) -> "ModelConfig":
+        if yaml is None:
+            raise ImportError(
+                "PyYAML is required to load configuration from YAML files."
+            )
+
         data = yaml.safe_load(Path(path).read_text())
 
         delineation = DelineationConfig.from_dict(data["delineation"])

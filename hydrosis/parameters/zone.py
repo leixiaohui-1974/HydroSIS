@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set
+from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
-from ..model import Subbasin
+if TYPE_CHECKING:  # pragma: no cover - for circular import safety
+    from ..model import Subbasin
 
 
 @dataclass
@@ -50,7 +51,7 @@ class ParameterZoneBuilder:
     @staticmethod
     def from_config(
         configs: Iterable[ParameterZoneConfig],
-        subbasins: Iterable[Subbasin],
+        subbasins: Iterable["Subbasin"],
     ) -> List[ParameterZone]:
         sub_list = list(subbasins)
         sub_dict = {sub.id: sub for sub in sub_list}

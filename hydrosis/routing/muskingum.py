@@ -1,10 +1,12 @@
 """Simplified Muskingum routing implementation."""
 from __future__ import annotations
 
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from .base import RoutingModel, RoutingModelConfig
-from ..model import Subbasin
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from ..model import Subbasin
 
 
 class MuskingumRouting(RoutingModel):
@@ -14,7 +16,7 @@ class MuskingumRouting(RoutingModel):
         self.x = float(self.parameters.get("weighting_factor", 0.2))
         self.dt = float(self.parameters.get("time_step", 1.0))
 
-    def route(self, subbasin: Subbasin, inflow: List[float]) -> List[float]:
+    def route(self, subbasin: "Subbasin", inflow: List[float]) -> List[float]:
         c0 = (-self.k * self.x + 0.5 * self.dt) / (self.k - self.k * self.x + 0.5 * self.dt)
         c1 = (self.k * self.x + 0.5 * self.dt) / (self.k - self.k * self.x + 0.5 * self.dt)
         c2 = (self.k - self.k * self.x - 0.5 * self.dt) / (self.k - self.k * self.x + 0.5 * self.dt)

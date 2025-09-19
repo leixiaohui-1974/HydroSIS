@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, Type
+from typing import TYPE_CHECKING, ClassVar, Dict, List, Mapping, Type
 
-from ..model import Subbasin
+if TYPE_CHECKING:  # pragma: no cover - for typing only
+    from ..model import Subbasin
 
 
 class RunoffModel:
@@ -13,7 +14,7 @@ class RunoffModel:
     def __init__(self, parameters: Mapping[str, float]):
         self.parameters = dict(parameters)
 
-    def simulate(self, subbasin: Subbasin, precipitation: List[float]) -> List[float]:
+    def simulate(self, subbasin: "Subbasin", precipitation: List[float]) -> List[float]:
         raise NotImplementedError
 
 
@@ -25,7 +26,7 @@ class RunoffModelConfig:
     model_type: str
     parameters: Dict[str, float]
 
-    REGISTRY: Dict[str, Type[RunoffModel]] = {}
+    REGISTRY: ClassVar[Dict[str, Type[RunoffModel]]] = {}
 
     @classmethod
     def register(cls, key: str, model: Type[RunoffModel]) -> None:
