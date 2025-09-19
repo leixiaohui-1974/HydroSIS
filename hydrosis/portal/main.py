@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import json
 from datetime import datetime, timezone
-from typing import Dict, Iterable, Optional, Mapping, List, Callable
+from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -22,6 +22,8 @@ from .schemas import (
     ConversationMessageSchema,
     ConversationResponse,
     InputSeriesSummary,
+    MapLayerPayload,
+    MapLayerResponse,
     InputsOverview,
     ProjectConfigPayload,
     ProjectInputsPayload,
@@ -35,6 +37,13 @@ from .schemas import (
     ScenarioCreatePayload,
     ScenarioList,
     ScenarioUpdatePayload,
+    ProjectPermissionList,
+    ProjectPermissionPayload,
+    QueueEntry,
+    QueueSnapshot,
+    UserList,
+    UserPayload,
+    UserResponse,
 )
 from .state import (
     ConversationMessage,
@@ -118,6 +127,70 @@ def create_app(
         workflow_runner=_execute_workflow,
     )
 
+    role_requirements: Dict[str, set[str]] = {
+        "manage_project": {"admin", "modeler"},
+        "manage_inputs": {"admin", "modeler"},
+        "manage_scenarios": {"admin", "modeler"},
+        "trigger_run": {"admin", "operator", "modeler"},
+        "manage_map": {"admin", "gis"},
+        "assign_permission": {"admin"},
+        "view_queue": {"admin", "operator", "viewer"},
+    }
+
+    def _extract_field(
+        raw_value: object | None,
+        payload: object,
+        field: str,
+    ) -> tuple[Optional[str], object]:
+        extracted: Optional[str] = None
+        candidate: object | None = None
+        if isinstance(raw_value, Mapping):
+            candidate = raw_value.get(field)
+        elif isinstance(raw_value, str):
+            candidate = raw_value
+        if candidate is None and isinstance(payload, Mapping):
+            candidate = payload.get(field)
+            if candidate is not None and isinstance(payload, dict):
+                payload = dict(payload)
+                payload.pop(field, None)
+        if candidate is not None and not isinstance(candidate, str):
+            candidate = str(candidate)
+        if isinstance(candidate, str):
+            extracted = candidate
+        return extracted, payload
+
+    def _require_role(
+        action: str,
+        user_id: Optional[str],
+        *,
+        project_id: Optional[str] = None,
+    ) -> None:
+        required_roles = role_requirements.get(action)
+        if not required_roles:
+            return
+        if not portal_state.list_users():
+            return
+        if not user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="user_id is required when role-based permissions are enabled",
+            )
+        try:
+            account = portal_state.get_user(user_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        roles = set(account.roles)
+        if project_id:
+            project_role = account.project_roles.get(project_id)
+            if project_role:
+                roles.add(project_role)
+        if roles.intersection(required_roles):
+            return
+        raise HTTPException(
+            status_code=403,
+            detail=f"User '{user_id}' lacks required role for action '{action}'",
+        )
+
     if STATIC_DIR.exists():
         app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
@@ -178,6 +251,78 @@ def create_app(
         ]
         return ProjectList(projects=projects)
 
+    @app.get("/users", response_model=UserList)
+    def list_users_endpoint() -> UserList:
+        users = [
+            UserResponse.from_state(account.to_dict())
+            for account in portal_state.list_users()
+        ]
+        return UserList(users=users)
+
+    @app.get("/users/{user_id}", response_model=UserResponse)
+    def get_user_endpoint(user_id: str) -> UserResponse:
+        try:
+            account = portal_state.get_user(user_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        return UserResponse.from_state(account.to_dict())
+
+    @app.post("/users", response_model=UserResponse)
+    def create_user_endpoint(
+        payload: UserPayload | dict, actor_id: str | None = None
+    ) -> UserResponse:
+        actor_id, payload = _extract_field(actor_id, payload, "actor_id")
+        _require_role("assign_permission", actor_id)
+        if isinstance(payload, dict):
+            payload = UserPayload.from_dict(payload)
+        account = portal_state.upsert_user(payload.id, payload.name, payload.roles)
+        return UserResponse.from_state(account.to_dict())
+
+    @app.put("/users/{user_id}", response_model=UserResponse)
+    def update_user_endpoint(
+        user_id: str, payload: UserPayload | dict, actor_id: str | None = None
+    ) -> UserResponse:
+        actor_id, payload = _extract_field(actor_id, payload, "actor_id")
+        _require_role("assign_permission", actor_id)
+        if isinstance(payload, dict):
+            payload = UserPayload.from_dict({"id": user_id, **payload})
+        account = portal_state.upsert_user(user_id, payload.name, payload.roles)
+        return UserResponse.from_state(account.to_dict())
+
+    @app.post(
+        "/projects/{project_id}/permissions",
+        response_model=UserResponse,
+    )
+    def assign_project_permission(
+        project_id: str,
+        payload: ProjectPermissionPayload | dict,
+        actor_id: str | None = None,
+    ) -> UserResponse:
+        actor_id, payload = _extract_field(actor_id, payload, "actor_id")
+        _require_role("assign_permission", actor_id, project_id=project_id)
+        if isinstance(payload, dict):
+            payload = ProjectPermissionPayload.from_dict(payload)
+        try:
+            portal_state.get_project(project_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        account = portal_state.set_project_role(
+            payload.user_id, project_id, payload.role
+        )
+        return UserResponse.from_state(account.to_dict())
+
+    @app.get(
+        "/projects/{project_id}/permissions",
+        response_model=ProjectPermissionList,
+    )
+    def list_project_permissions(project_id: str) -> ProjectPermissionList:
+        try:
+            portal_state.get_project(project_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        permissions = portal_state.list_project_roles(project_id)
+        return ProjectPermissionList(project_id=project_id, permissions=permissions)
+
     @app.get("/projects/{project_id}/overview", response_model=ProjectOverview)
     def project_overview(project_id: str) -> ProjectOverview:
         try:
@@ -199,6 +344,13 @@ def create_app(
             if runs and runs[0].result is not None
             else None
         )
+        try:
+            map_layers = portal_state.get_map_layers(project_id)
+        except KeyError:
+            map_layers = None
+        map_layers_updated_at = (
+            map_layers.updated_at.isoformat() if map_layers is not None else None
+        )
 
         return ProjectOverview(
             id=project.id,
@@ -209,6 +361,7 @@ def create_app(
             inputs=inputs_overview,
             latest_run=latest_run,
             latest_summary=latest_summary,
+            map_layers_updated_at=map_layers_updated_at,
         )
 
     @app.post(
@@ -216,8 +369,10 @@ def create_app(
         response_model=ProjectInputsResponse,
     )
     def upsert_inputs(
-        project_id: str, payload: ProjectInputsPayload | dict
+        project_id: str, payload: ProjectInputsPayload | dict, user_id: str | None = None
     ) -> ProjectInputsResponse:
+        user_id, payload = _extract_field(user_id, payload, "user_id")
+        _require_role("manage_inputs", user_id, project_id=project_id)
         if isinstance(payload, dict):
             payload = ProjectInputsPayload.from_dict(payload)
         try:
@@ -253,7 +408,13 @@ def create_app(
         )
 
     @app.post("/projects/{project_id}/config", response_model=ProjectSummary)
-    def upsert_project(project_id: str, payload: ProjectConfigPayload | dict) -> ProjectSummary:
+    def upsert_project(
+        project_id: str,
+        payload: ProjectConfigPayload | dict,
+        user_id: str | None = None,
+    ) -> ProjectSummary:
+        user_id, payload = _extract_field(user_id, payload, "user_id")
+        _require_role("manage_project", user_id, project_id=project_id)
         if isinstance(payload, dict):
             payload = ProjectConfigPayload.from_dict(payload)
         model_config = ModelConfig.from_dict(_remove_none(payload.model))
@@ -284,8 +445,12 @@ def create_app(
 
     @app.post("/projects/{project_id}/scenarios", response_model=ScenarioCreatePayload)
     def create_scenario(
-        project_id: str, payload: ScenarioCreatePayload | dict
+        project_id: str,
+        payload: ScenarioCreatePayload | dict,
+        user_id: str | None = None,
     ) -> ScenarioCreatePayload:
+        user_id, payload = _extract_field(user_id, payload, "user_id")
+        _require_role("manage_scenarios", user_id, project_id=project_id)
         if isinstance(payload, dict):
             payload = ScenarioCreatePayload.from_dict(payload)
         try:
@@ -308,8 +473,13 @@ def create_app(
         response_model=ScenarioCreatePayload,
     )
     def update_scenario(
-        project_id: str, scenario_id: str, payload: ScenarioUpdatePayload | dict
+        project_id: str,
+        scenario_id: str,
+        payload: ScenarioUpdatePayload | dict,
+        user_id: str | None = None,
     ) -> ScenarioCreatePayload:
+        user_id, payload = _extract_field(user_id, payload, "user_id")
+        _require_role("manage_scenarios", user_id, project_id=project_id)
         if isinstance(payload, dict):
             payload = ScenarioUpdatePayload.from_dict(payload)
         try:
@@ -328,15 +498,55 @@ def create_app(
         )
 
     @app.delete("/projects/{project_id}/scenarios/{scenario_id}")
-    def delete_scenario(project_id: str, scenario_id: str) -> Response:
+    def delete_scenario(
+        project_id: str, scenario_id: str, user_id: str | None = None
+    ) -> Response:
+        user_id, _ = _extract_field(user_id, {}, "user_id")
+        _require_role("manage_scenarios", user_id, project_id=project_id)
         try:
             portal_state.remove_scenario(project_id, scenario_id)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         return Response(status_code=204, data=None)
 
+    @app.post("/projects/{project_id}/map", response_model=MapLayerResponse)
+    def update_map_layers(
+        project_id: str, payload: MapLayerPayload | dict, user_id: str | None = None
+    ) -> MapLayerResponse:
+        user_id, payload = _extract_field(user_id, payload, "user_id")
+        _require_role("manage_map", user_id, project_id=project_id)
+        if isinstance(payload, dict):
+            payload = MapLayerPayload.from_dict(payload)
+        try:
+            dataset = portal_state.set_map_layers(project_id, payload.layers)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        return MapLayerResponse(
+            project_id=dataset.project_id,
+            layers=dataset.layers,
+            updated_at=dataset.updated_at.isoformat(),
+        )
+
+    @app.get("/projects/{project_id}/map", response_model=MapLayerResponse)
+    def get_map_layers_endpoint(project_id: str) -> MapLayerResponse:
+        try:
+            dataset = portal_state.get_map_layers(project_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        if dataset is None:
+            raise HTTPException(status_code=404, detail="Map layers not configured")
+        return MapLayerResponse(
+            project_id=dataset.project_id,
+            layers=dataset.layers,
+            updated_at=dataset.updated_at.isoformat(),
+        )
+
     @app.post("/projects/{project_id}/runs", response_model=RunResponse)
-    def create_run(project_id: str, payload: RunRequest | dict) -> RunResponse:
+    def create_run(
+        project_id: str, payload: RunRequest | dict, user_id: str | None = None
+    ) -> RunResponse:
+        user_id, payload = _extract_field(user_id, payload, "user_id")
+        _require_role("trigger_run", user_id, project_id=project_id)
         if isinstance(payload, dict):
             payload = RunRequest.from_dict(payload)
         try:
@@ -405,6 +615,34 @@ def create_app(
         runs = [RunResponse(**run.to_dict()) for run in portal_state.list_runs(project_id)]
         return RunList(runs=runs)
 
+    @app.get("/runs", response_model=RunList)
+    def list_runs() -> RunList:
+        runs = [RunResponse(**run.to_dict()) for run in portal_state.list_runs()]
+        return RunList(runs=runs)
+
+    @app.get("/runs/queue", response_model=QueueSnapshot)
+    def queue_status(user_id: str | None = None) -> QueueSnapshot:
+        _require_role("view_queue", user_id)
+        entries: List[QueueEntry] = []
+        for entry in run_executor.queue_snapshot():
+            scenario_ids = entry.get("scenario_ids") or []
+            if not isinstance(scenario_ids, Sequence) or isinstance(
+                scenario_ids, (str, bytes)
+            ):
+                scenario_ids = [str(scenario_ids)] if scenario_ids else []
+            entries.append(
+                QueueEntry(
+                    run_id=str(entry.get("run_id")),
+                    project_id=str(entry.get("project_id")),
+                    status=str(entry.get("status")),
+                    scenario_ids=list(scenario_ids),
+                    submitted_at=str(entry.get("submitted_at")),
+                    started_at=entry.get("started_at"),
+                    finished_at=entry.get("finished_at"),
+                )
+            )
+        return QueueSnapshot(entries=entries)
+
     @app.get("/runs/{run_id}", response_model=RunResponse)
     def get_run(run_id: str) -> RunResponse:
         try:
@@ -412,11 +650,6 @@ def create_app(
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         return RunResponse(**run.to_dict())
-
-    @app.get("/runs", response_model=RunList)
-    def list_runs() -> RunList:
-        runs = [RunResponse(**run.to_dict()) for run in portal_state.list_runs()]
-        return RunList(runs=runs)
 
     @app.get("/runs/{run_id}/report")
     def fetch_report(run_id: str) -> Dict[str, object]:

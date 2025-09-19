@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional
+from urllib.parse import urlencode
 
 from .app import FastAPI
 
@@ -31,19 +32,39 @@ class TestClient:
     def __init__(self, app: FastAPI) -> None:
         self._app = app
 
-    def get(self, path: str) -> _ClientResponse:
+    def get(self, path: str, params: Optional[Mapping[str, Any]] = None) -> _ClientResponse:
+        if params:
+            path = f"{path}?{urlencode(params, doseq=True)}"
         response = self._app.handle_request("GET", path)
         return _ClientResponse(status_code=response.status_code, data=response.json())
 
-    def post(self, path: str, json: Optional[Mapping[str, Any]] = None) -> _ClientResponse:
+    def post(
+        self,
+        path: str,
+        json: Optional[Mapping[str, Any]] = None,
+        params: Optional[Mapping[str, Any]] = None,
+    ) -> _ClientResponse:
+        if params:
+            path = f"{path}?{urlencode(params, doseq=True)}"
         response = self._app.handle_request("POST", path, body=dict(json or {}))
         return _ClientResponse(status_code=response.status_code, data=response.json())
 
-    def put(self, path: str, json: Optional[Mapping[str, Any]] = None) -> _ClientResponse:
+    def put(
+        self,
+        path: str,
+        json: Optional[Mapping[str, Any]] = None,
+        params: Optional[Mapping[str, Any]] = None,
+    ) -> _ClientResponse:
+        if params:
+            path = f"{path}?{urlencode(params, doseq=True)}"
         response = self._app.handle_request("PUT", path, body=dict(json or {}))
         return _ClientResponse(status_code=response.status_code, data=response.json())
 
-    def delete(self, path: str) -> _ClientResponse:
+    def delete(
+        self, path: str, params: Optional[Mapping[str, Any]] = None
+    ) -> _ClientResponse:
+        if params:
+            path = f"{path}?{urlencode(params, doseq=True)}"
         response = self._app.handle_request("DELETE", path)
         return _ClientResponse(status_code=response.status_code, data=response.json())
 

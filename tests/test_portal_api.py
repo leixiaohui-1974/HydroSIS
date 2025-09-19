@@ -267,3 +267,102 @@ def test_portal_end_to_end_workflow() -> None:
         get_response = client.get(f"/runs/{run_id}")
         assert get_response.status_code == 200
         assert get_response.json()["id"] == run_id
+
+
+def test_portal_role_permissions_and_map_layers() -> None:
+    app = create_app()
+    client = TestClient(app)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config = _build_portal_config(Path(tmpdir) / "results")
+        config_payload = config.to_dict()
+
+        admin_create = client.post("/users", json={"id": "admin", "roles": ["admin"]})
+        assert admin_create.status_code == 200
+
+        unauthorized_user = client.post("/users", json={"id": "guest", "roles": []})
+        assert unauthorized_user.status_code == 403
+
+        modeler_create = client.post(
+            "/users",
+            json={"id": "modeler", "roles": ["modeler"], "actor_id": "admin"},
+        )
+        assert modeler_create.status_code == 200
+
+        config_response = client.post(
+            "/projects/demo/config",
+            json={"model": config_payload, "name": "Permitted", "user_id": "admin"},
+        )
+        assert config_response.status_code == 200
+
+        permission_assign = client.post(
+            "/projects/demo/permissions",
+            json={"user_id": "modeler", "role": "modeler", "actor_id": "admin"},
+        )
+        assert permission_assign.status_code == 200
+        permissions_view = client.get("/projects/demo/permissions")
+        assert permissions_view.status_code == 200
+        assert permissions_view.json()["permissions"].get("modeler") == "modeler"
+
+        map_payload = {
+            "layers": {
+                "subbasins": {"type": "FeatureCollection", "features": []},
+                "stations": {"type": "FeatureCollection", "features": []},
+            }
+        }
+        map_update = client.post(
+            "/projects/demo/map",
+            json={**map_payload, "user_id": "admin"},
+        )
+        assert map_update.status_code == 200
+
+        map_get = client.get("/projects/demo/map")
+        assert map_get.status_code == 200
+        assert set(map_get.json()["layers"].keys()) == {"subbasins", "stations"}
+
+        forcing: Dict[str, List[float]] = {
+            "S1": [0.0, 5.0, 15.0, 5.0],
+            "S2": [1.0, 2.0, 3.0, 4.0],
+            "S3": [0.0, 0.0, 0.0, 0.0],
+        }
+
+        inputs_response = client.post(
+            "/projects/demo/inputs",
+            json={"forcing": forcing, "user_id": "admin"},
+        )
+        assert inputs_response.status_code == 200
+
+        scenario_create = client.post(
+            "/projects/demo/scenarios",
+            json={
+                "id": "perm_test",
+                "description": "Permission controlled scenario",
+                "modifications": {"S1": {"routing_model": "lag_long"}},
+                "user_id": "modeler",
+            },
+        )
+        assert scenario_create.status_code == 200
+
+        queue_forbidden = client.get("/runs/queue")
+        assert queue_forbidden.status_code == 403
+
+        run_response = client.post(
+            "/projects/demo/runs",
+            json={
+                "scenario_ids": ["perm_test"],
+                "persist_outputs": False,
+                "generate_report": False,
+                "user_id": "admin",
+            },
+        )
+        assert run_response.status_code == 200
+        run_id = run_response.json()["id"]
+
+        queue_response = client.get("/runs/queue", params={"user_id": "admin"})
+        assert queue_response.status_code == 200
+        entries = queue_response.json()["entries"]
+        assert any(entry["run_id"] == run_id for entry in entries)
+
+        users_list = client.get("/users")
+        assert users_list.status_code == 200
+        assert any(user["id"] == "admin" for user in users_list.json()["users"])

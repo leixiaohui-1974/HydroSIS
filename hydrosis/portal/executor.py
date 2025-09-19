@@ -164,6 +164,8 @@ class RunExecutor:
         self._broker = broker
         self._workflow_runner = workflow_runner
         self._executor = ThreadPoolExecutor(max_workers=max_workers)
+        self._queue_lock = threading.Lock()
+        self._queue_entries: Dict[str, Dict[str, object]] = {}
 
     def _build_message(self, stage: str, payload: Mapping[str, object]) -> str:
         phase = payload.get("phase")
@@ -238,6 +240,17 @@ class RunExecutor:
         scenario_ids: Sequence[str],
     ) -> None:
         tracker = ProgressTracker(scenario_total=len(list(scenario_ids)))
+        submitted_at = datetime.now(timezone.utc).isoformat()
+        with self._queue_lock:
+            self._queue_entries[run_id] = {
+                "run_id": run_id,
+                "project_id": project_id,
+                "status": "queued",
+                "scenario_ids": list(scenario_ids),
+                "submitted_at": submitted_at,
+                "started_at": None,
+                "finished_at": None,
+            }
         queued_event = RunProgressEvent(
             run_id=run_id,
             stage="queue",
@@ -259,6 +272,11 @@ class RunExecutor:
 
         def task() -> None:
             self._state.start_run(run_id)
+            with self._queue_lock:
+                entry = self._queue_entries.get(run_id)
+                if entry is not None:
+                    entry["status"] = "running"
+                    entry["started_at"] = datetime.now(timezone.utc).isoformat()
             start_event = RunProgressEvent(
                 run_id=run_id,
                 stage="workflow",
@@ -288,6 +306,12 @@ class RunExecutor:
                 tracker.mark_evaluation_complete()
                 summary = summarise_workflow_result(result)
                 self._state.complete_run(run_id, result)
+                with self._queue_lock:
+                    entry = self._queue_entries.get(run_id)
+                    if entry is not None:
+                        entry["status"] = "completed"
+                        entry["finished_at"] = datetime.now(timezone.utc).isoformat()
+                        self._trim_queue_entries()
                 completion_event = RunProgressEvent(
                     run_id=run_id,
                     stage="workflow",
@@ -322,8 +346,31 @@ class RunExecutor:
                     error=str(exc),
                 )
                 self._broker.publish(run_id, failure_event)
+                with self._queue_lock:
+                    entry = self._queue_entries.get(run_id)
+                    if entry is not None:
+                        entry["status"] = "failed"
+                        entry["finished_at"] = datetime.now(timezone.utc).isoformat()
+                        self._trim_queue_entries()
 
         self._executor.submit(task)
+
+    def queue_snapshot(self) -> List[Dict[str, object]]:
+        with self._queue_lock:
+            entries = list(self._queue_entries.values())
+        return sorted(entries, key=lambda item: item["submitted_at"], reverse=True)
+
+    def _trim_queue_entries(self, *, max_entries: int = 50) -> None:
+        if len(self._queue_entries) <= max_entries:
+            return
+        ordered = sorted(
+            self._queue_entries.values(),
+            key=lambda item: item["submitted_at"],
+        )
+        for entry in ordered[:-max_entries]:
+            run_id = entry.get("run_id")
+            if isinstance(run_id, str):
+                self._queue_entries.pop(run_id, None)
 
 
 __all__ = ["RunExecutor", "RunEventBroker", "RunProgressEvent", "ProgressTracker"]

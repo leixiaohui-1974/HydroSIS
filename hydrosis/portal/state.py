@@ -16,6 +16,7 @@ from typing import (
     Any,
     Dict,
     List,
+    Iterable,
     Mapping,
     MutableMapping,
     Optional,
@@ -67,6 +68,55 @@ class Project:
                 scenario["id"] for scenario in config_dict.get("scenarios", [])
             ],
             "evaluation": config_dict.get("evaluation"),
+        }
+
+
+@dataclass
+class UserAccount:
+    """Simplified representation of a portal user."""
+
+    id: str
+    name: Optional[str]
+    roles: List[str] = field(default_factory=list)
+    project_roles: Dict[str, str] = field(default_factory=dict)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    def set_roles(self, roles: Iterable[str]) -> None:
+        self.roles = sorted({role.strip() for role in roles if role})
+        self.updated_at = datetime.now(timezone.utc)
+
+    def assign_project_role(self, project_id: str, role: Optional[str]) -> None:
+        if role:
+            self.project_roles[project_id] = role
+        else:
+            self.project_roles.pop(project_id, None)
+        self.updated_at = datetime.now(timezone.utc)
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "roles": list(self.roles),
+            "project_roles": dict(self.project_roles),
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+        }
+
+
+@dataclass
+class ProjectMapLayers:
+    """GeoJSON layers associated with a project for GIS visualisation."""
+
+    project_id: str
+    layers: Dict[str, Mapping[str, object]]
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "project_id": self.project_id,
+            "layers": {key: dict(value) for key, value in self.layers.items()},
+            "updated_at": self.updated_at.isoformat(),
         }
 
 
@@ -179,6 +229,9 @@ class PortalState(Protocol):
     ) -> RunRecord:
         ...
 
+    def start_run(self, run_id: str) -> RunRecord:
+        ...
+
     def complete_run(self, run_id: str, result: WorkflowResult) -> RunRecord:
         ...
 
@@ -191,6 +244,35 @@ class PortalState(Protocol):
     def list_runs(self, project_id: Optional[str] = None) -> Sequence[RunRecord]:
         ...
 
+    # User helpers ----------------------------------------------------------
+    def upsert_user(
+        self, user_id: str, name: Optional[str], roles: Sequence[str]
+    ) -> UserAccount:
+        ...
+
+    def get_user(self, user_id: str) -> UserAccount:
+        ...
+
+    def list_users(self) -> Sequence[UserAccount]:
+        ...
+
+    def set_project_role(
+        self, user_id: str, project_id: str, role: Optional[str]
+    ) -> UserAccount:
+        ...
+
+    def list_project_roles(self, project_id: str) -> Mapping[str, str]:
+        ...
+
+    # GIS layer helpers -----------------------------------------------------
+    def set_map_layers(
+        self, project_id: str, layers: Mapping[str, Mapping[str, object]]
+    ) -> ProjectMapLayers:
+        ...
+
+    def get_map_layers(self, project_id: str) -> Optional[ProjectMapLayers]:
+        ...
+
 
 class InMemoryPortalState:
     """Centralised in-memory state for the API."""
@@ -200,6 +282,8 @@ class InMemoryPortalState:
         self._projects: Dict[str, Project] = {}
         self._runs: Dict[str, RunRecord] = {}
         self._inputs: Dict[str, ProjectInputs] = {}
+        self._users: Dict[str, UserAccount] = {}
+        self._map_layers: Dict[str, ProjectMapLayers] = {}
         self._run_lock = threading.Lock()
 
     # Conversation helpers -------------------------------------------------
@@ -363,6 +447,58 @@ class InMemoryPortalState:
             key=lambda record: record.created_at,
             reverse=True,
         )
+
+    # User helpers ----------------------------------------------------------
+    def upsert_user(
+        self, user_id: str, name: Optional[str], roles: Sequence[str]
+    ) -> UserAccount:
+        account = self._users.get(user_id)
+        if account is None:
+            account = UserAccount(id=user_id, name=name)
+            self._users[user_id] = account
+        if name is not None:
+            account.name = name
+        account.set_roles(roles)
+        return account
+
+    def get_user(self, user_id: str) -> UserAccount:
+        if user_id not in self._users:
+            raise KeyError(f"User '{user_id}' not found")
+        return self._users[user_id]
+
+    def list_users(self) -> Sequence[UserAccount]:
+        return sorted(self._users.values(), key=lambda account: account.created_at)
+
+    def set_project_role(
+        self, user_id: str, project_id: str, role: Optional[str]
+    ) -> UserAccount:
+        account = self.get_user(user_id)
+        account.assign_project_role(project_id, role)
+        return account
+
+    def list_project_roles(self, project_id: str) -> Mapping[str, str]:
+        permissions: Dict[str, str] = {}
+        for user_id, account in self._users.items():
+            role = account.project_roles.get(project_id)
+            if role:
+                permissions[user_id] = role
+        return permissions
+
+    # GIS helpers -----------------------------------------------------------
+    def set_map_layers(
+        self, project_id: str, layers: Mapping[str, Mapping[str, object]]
+    ) -> ProjectMapLayers:
+        self.get_project(project_id)
+        dataset = ProjectMapLayers(
+            project_id=project_id,
+            layers={key: dict(value) for key, value in layers.items()},
+        )
+        self._map_layers[project_id] = dataset
+        return dataset
+
+    def get_map_layers(self, project_id: str) -> Optional[ProjectMapLayers]:
+        self.get_project(project_id)
+        return self._map_layers.get(project_id)
 
 
 # Serialisation utilities --------------------------------------------------
