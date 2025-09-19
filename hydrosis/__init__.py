@@ -23,3 +23,8 @@ __all__ = [
     "plot_metric_bars",
     "summarise_aggregated_metrics",
 ]
+=======
+from .model import HydroSISModel
+from .config import ModelConfig
+
+__all__ = ["HydroSISModel", "ModelConfig"]
