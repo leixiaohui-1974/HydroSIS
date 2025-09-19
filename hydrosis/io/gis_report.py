@@ -2,10 +2,28 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import base64
 import json
+import mimetypes
 from pathlib import Path
 from typing import Iterable, List, Mapping, Optional, Sequence
 
+try:  # pragma: no cover - optional dependency used only when available
+    import numpy as _np
+except Exception:  # pragma: no cover - keep working without numpy
+    _np = None  # type: ignore
+
+from ..delineation.simple_grid import grid_to_geojson_features, load_dem
+
+if _np is None:  # pragma: no cover - fallback sum implementation
+    def _np_sum(values: Iterable[float]) -> float:
+        total = 0.0
+        for value in values:
+            total += float(value)
+        return total
+else:  # pragma: no cover - delegate to numpy when available
+    def _np_sum(values: Iterable[float]) -> float:
+        return float(_np.sum(list(values)))
 
 @dataclass
 class LayerDefinition:
@@ -134,11 +152,18 @@ layers['{layer.label}'] = {var_name};
     h1 {{ margin-top: 1rem; }}
     #map {{ height: 640px; margin: 1rem 0; border: 1px solid #ccd; }}
     .section {{ margin-bottom: 1.5rem; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
+    .section h2 {{ margin-top: 0; }}
+
     table {{ border-collapse: collapse; width: 100%; }}
     th, td {{ border: 1px solid #dde; padding: 0.35rem 0.5rem; text-align: left; }}
     th {{ background: #eef2f7; }}
     .popup-table {{ border-collapse: collapse; }}
     .popup-table th, .popup-table td {{ border: 1px solid #ccc; padding: 0.25rem 0.35rem; }}
+    ul {{ padding-left: 1.25rem; }}
+    figure {{ margin: 1rem 0; text-align: center; }}
+    figure img {{ max-width: 100%; border: 1px solid #ccd; border-radius: 4px; }}
+    figure figcaption {{ font-size: 0.9rem; color: #555; margin-top: 0.4rem; }}
+    .file-meta {{ font-size: 0.9rem; color: #555; margin-top: 0.3rem; }}
   </style>
 </head>
 <body>
@@ -186,5 +211,214 @@ def write_html(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
 
+def build_card(title: str, body: str) -> str:
+    """Wrap ``body`` HTML inside a styled card with a heading."""
 
-__all__ = ["LeafletReportBuilder", "build_html_table", "write_html"]
+    return f"<div class=\"section\"><h2>{title}</h2>{body}</div>"
+
+
+def build_bullet_list(items: Sequence[str]) -> str:
+    """Create a HTML unordered list from the provided strings."""
+
+    return "<ul>" + "".join(f"<li>{item}</li>" for item in items) + "</ul>"
+
+
+def _format_size(num_bytes: float) -> str:
+    units = ["B", "KB", "MB", "GB"]
+    size = float(num_bytes)
+    for unit in units:
+        if size < 1024 or unit == units[-1]:
+            return f"{size:.1f} {unit}"
+        size /= 1024.0
+    return f"{size:.1f} TB"
+
+
+def summarise_paths(paths: Sequence[Path]) -> List[Sequence[object]]:
+    """Return table rows describing the provided files or directories."""
+
+    rows: List[Sequence[object]] = []
+    for raw in paths:
+        path = Path(raw)
+        kind = "不存在"
+        size_text = "—"
+        details = ""
+        if path.is_file():
+            kind = "文件"
+            size_text = _format_size(path.stat().st_size)
+        elif path.is_dir():
+            kind = "目录"
+            total_size = 0.0
+            file_count = 0
+            try:
+                for entry in path.rglob("*"):
+                    if entry.is_file():
+                        file_count += 1
+                        total_size += entry.stat().st_size
+            except FileNotFoundError:
+                file_count = 0
+            size_text = _format_size(total_size)
+            details = f"包含 {file_count} 个文件"
+        rows.append((path.as_posix(), kind, size_text, details or ""))
+    return rows
+
+
+def encode_image(path: Path) -> str:
+    """Return a ``data:`` URL for embedding the specified image."""
+
+    path = Path(path)
+    mime, _ = mimetypes.guess_type(path)
+    if mime is None:
+        mime = "image/png"
+    data = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:{mime};base64,{data}"
+
+
+def embed_image(path: Path, caption: Optional[str] = None, embed_data: bool = True) -> str:
+    """Create a HTML ``<figure>`` element referencing the image."""
+
+    img_src = encode_image(path) if embed_data else Path(path).as_posix()
+    caption_html = f"<figcaption>{caption}</figcaption>" if caption else ""
+    return f"<figure><img src=\"{img_src}\" alt=\"{Path(path).stem}\" />{caption_html}</figure>"
+
+
+def load_geojson(path: Path) -> Optional[Mapping[str, object]]:
+    """Safely read a GeoJSON file returning ``None`` when missing."""
+
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+
+
+def gather_gis_layers(config, repository_root: Path) -> Mapping[str, Mapping[str, object]]:
+    """Collect DEM, thematic layers and derived products for reporting."""
+
+    repo_root = Path(repository_root)
+    layers: dict[str, Mapping[str, object]] = {}
+
+    dem_path = Path(getattr(config.delineation, "dem_path", ""))
+    if not dem_path.is_absolute():
+        dem_path = repo_root / dem_path
+
+    if dem_path.suffix.lower() == ".json" and dem_path.exists():
+        dem = load_dem(dem_path)
+        values = {(row, col): value for row, col, value in dem.iter_cells()}
+        layers["dem"] = {
+            "type": "FeatureCollection",
+            "features": grid_to_geojson_features(dem, values, "elevation"),
+        }
+        derived_dir = dem_path.parent / "derived"
+    else:
+        # Attempt to fall back to the bundled synthetic grid for richer visuals.
+        fallback_dem = repo_root / "data/sample/gis/dem_grid.json"
+        derived_dir = fallback_dem.parent / "derived"
+        if fallback_dem.exists():
+            dem = load_dem(fallback_dem)
+            values = {(row, col): value for row, col, value in dem.iter_cells()}
+            layers["dem"] = {
+                "type": "FeatureCollection",
+                "features": grid_to_geojson_features(dem, values, "elevation"),
+            }
+
+    base_dirs = [
+        dem_path.parent,
+        Path(getattr(config.delineation, "pour_points_path", "")).resolve().parent
+        if getattr(config.delineation, "pour_points_path", None)
+        else dem_path.parent,
+        repo_root / "data/sample/gis",
+    ]
+
+    def _load_from_candidates(filename: str) -> Optional[Mapping[str, object]]:
+        for directory in base_dirs:
+            candidate = directory / filename
+            geojson = load_geojson(candidate)
+            if geojson:
+                return geojson
+        return None
+
+    layers["soil"] = _load_from_candidates("soil.geojson") or {"type": "FeatureCollection", "features": []}
+    layers["landuse"] = _load_from_candidates("landuse.geojson") or {"type": "FeatureCollection", "features": []}
+    layers["stations"] = _load_from_candidates("stations.geojson") or {"type": "FeatureCollection", "features": []}
+    layers["reservoirs"] = _load_from_candidates("reservoirs.geojson") or {"type": "FeatureCollection", "features": []}
+    layers["streams"] = _load_from_candidates("streams.geojson") or {"type": "FeatureCollection", "features": []}
+
+    subbasins_geojson = None
+    accumulation_geojson = None
+    derived_candidates = [
+        derived_dir,
+        dem_path.parent / "derived",
+        repo_root / "data/sample/gis/derived",
+    ]
+    for directory in derived_candidates:
+        sub_candidate = directory / "subbasins.geojson"
+        acc_candidate = directory / "flow_accumulation.geojson"
+        if sub_candidate.exists() and subbasins_geojson is None:
+            subbasins_geojson = load_geojson(sub_candidate)
+        if acc_candidate.exists() and accumulation_geojson is None:
+            accumulation_geojson = load_geojson(acc_candidate)
+
+    layers["subbasins"] = subbasins_geojson or {"type": "FeatureCollection", "features": []}
+    layers["accumulation"] = accumulation_geojson or {"type": "FeatureCollection", "features": []}
+
+    return layers
+
+
+def build_parameter_zone_geojson(subbasin_geojson: Mapping[str, object], zones: Sequence[object]) -> Mapping[str, object]:
+    """Aggregate subbasin polygons for each parameter zone."""
+
+    features = subbasin_geojson.get("features", []) if isinstance(subbasin_geojson, Mapping) else []
+    polygon_lookup = {}
+    for feature in features:
+        props = feature.get("properties", {}) if isinstance(feature, Mapping) else {}
+        polygon_lookup[props.get("id")] = feature.get("geometry", {}).get("coordinates", [])
+
+    zone_features: List[Mapping[str, object]] = []
+    for zone in zones:
+        zone_id = getattr(zone, "id", None) or zone.get("id")  # type: ignore[attr-defined]
+        description = getattr(zone, "description", None) or zone.get("description", "")  # type: ignore[attr-defined]
+        controlled = getattr(zone, "controlled_subbasins", None) or zone.get("controlled_subbasins", [])  # type: ignore[attr-defined]
+        coords: List[List] = []
+        for sub_id in controlled:
+            coordinates = polygon_lookup.get(sub_id)
+            if coordinates:
+                coords.extend(coordinates)
+        zone_features.append(
+            {
+                "type": "Feature",
+                "geometry": {"type": "MultiPolygon", "coordinates": coords},
+                "properties": {
+                    "id": zone_id,
+                    "description": description,
+                    "subbasins": ", ".join(controlled),
+                },
+            }
+        )
+    return {"type": "FeatureCollection", "features": zone_features}
+
+
+def accumulation_statistics(accumulation_geojson: Mapping[str, object]) -> Mapping[str, float]:
+    """Compute simple statistics of the flow accumulation layer."""
+
+    features = accumulation_geojson.get("features", []) if isinstance(accumulation_geojson, Mapping) else []
+    values = [feature.get("properties", {}).get("accumulation", 0.0) for feature in features]
+    if not values:
+        return {"min": 0.0, "max": 0.0, "mean": 0.0}
+    return {
+        "min": float(min(values)),
+        "max": float(max(values)),
+        "mean": _np_sum(values) / max(len(values), 1),
+    }
+
+
+__all__ = [
+    "LeafletReportBuilder",
+    "build_html_table",
+    "write_html",
+    "build_card",
+    "build_bullet_list",
+    "summarise_paths",
+    "embed_image",
+    "gather_gis_layers",
+    "build_parameter_zone_geojson",
+    "accumulation_statistics",
+]
