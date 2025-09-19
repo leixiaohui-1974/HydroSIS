@@ -168,6 +168,7 @@ def test_portal_end_to_end_workflow() -> None:
         assert overview_after_inputs["inputs"]["forcing"]["max_length"] == 4
         assert overview_after_inputs["inputs"]["observations"]["min_value"] is not None
 
+
         inputs_get = client.get("/projects/demo/inputs")
         assert inputs_get.status_code == 200
         assert inputs_get.json()["observations"]["S1"] == observations["S1"]
@@ -228,6 +229,7 @@ def test_portal_end_to_end_workflow() -> None:
         assert overview_after_run["total_runs"] == 1
         assert overview_after_run["latest_run"]["id"] == run_id
         assert overview_after_run["latest_summary"]["baseline"]["scenario_id"] == "baseline"
+
 
         summary_response = client.get(f"/runs/{run_id}/summary")
         assert summary_response.status_code == 200

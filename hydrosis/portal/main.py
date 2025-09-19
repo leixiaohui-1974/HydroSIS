@@ -89,6 +89,7 @@ def _build_inputs_overview(dataset: Optional[ProjectInputs]) -> Optional[InputsO
     )
 
 
+
 def create_app(state: PortalState | None = None) -> FastAPI:
     app = FastAPI(title="HydroSIS Portal", version="0.1.0")
 
@@ -187,6 +188,7 @@ def create_app(state: PortalState | None = None) -> FastAPI:
             latest_run=latest_run,
             latest_summary=latest_summary,
         )
+
 
     @app.post(
         "/projects/{project_id}/inputs",
