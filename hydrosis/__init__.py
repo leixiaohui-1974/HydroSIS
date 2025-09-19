@@ -25,3 +25,7 @@ __all__ = [
     "summarise_aggregated_metrics",
     "accumulate_subbasin_flows",
 ]
+from .model import HydroSISModel
+from .config import ModelConfig
+
+__all__ = ["HydroSISModel", "ModelConfig"]
