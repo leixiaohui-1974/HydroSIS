@@ -95,7 +95,6 @@ def _build_inputs_overview(dataset: Optional[ProjectInputs]) -> Optional[InputsO
         updated_at=dataset.updated_at.isoformat(),
     )
 
-
 def create_app(state: PortalState | None = None) -> FastAPI:
     app = FastAPI(title="HydroSIS Portal", version="0.1.0")
 
@@ -425,7 +424,6 @@ def create_app(state: PortalState | None = None) -> FastAPI:
                 for outcome in result.evaluation_outcomes
             ],
         }
-
     return app
 
 
