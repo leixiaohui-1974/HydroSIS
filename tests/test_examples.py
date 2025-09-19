@@ -218,6 +218,50 @@ class HydroSISExampleTests(unittest.TestCase):
 
         self.assertNotEqual(baseline["S2"], scenario["S2"])
 
+    def test_extended_runoff_models_are_buildable(self) -> None:
+        """Ensure newly supported runoff models can be instantiated uniformly."""
+
+        subbasin = Subbasin(id="TEST", area_km2=5.0, downstream=None)
+        precipitation = [10.0, 0.0, 5.0]
+
+        configs = [
+            (
+                "xin_an_jiang",
+                {
+                    "wm": 120.0,
+                    "b": 0.4,
+                    "imp": 0.02,
+                    "recession": 0.7,
+                },
+            ),
+            (
+                "wetspa",
+                {
+                    "soil_storage_max": 250.0,
+                    "infiltration_coefficient": 0.5,
+                    "surface_runoff_coefficient": 0.35,
+                },
+            ),
+            (
+                "hymod",
+                {
+                    "max_storage": 90.0,
+                    "beta": 1.2,
+                    "quickflow_ratio": 0.6,
+                    "num_quick_reservoirs": 3,
+                },
+            ),
+        ]
+
+        for idx, (model_type, parameters) in enumerate(configs):
+            config = RunoffModelConfig(
+                id=f"model_{idx}", model_type=model_type, parameters=parameters
+            )
+            model = config.build()
+            flows = model.simulate(subbasin, precipitation)
+            self.assertEqual(len(flows), len(precipitation))
+            self.assertTrue(all(math.isfinite(flow) for flow in flows))
+
 
 if __name__ == "__main__":  # pragma: no cover - allow direct execution
     unittest.main()
