@@ -247,6 +247,7 @@ class HydroSISExampleTests(unittest.TestCase):
         }
 
         routed = model.run(forcing)
+        aggregated = model.accumulate_discharge(routed)
 
         expected_s1 = _lag_route(_scs_runoff(forcing["S1"], 75, 0.2), lag_steps=1)
         expected_s2 = _lag_route(_linear_reservoir_runoff(forcing["S2"], 0.85, 1.0, 0.0), 1)
@@ -263,6 +264,10 @@ class HydroSISExampleTests(unittest.TestCase):
         for actual, expected in zip(routed["S3"], expected_s3):
             self.assertTrue(math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9))
 
+        expected_total_s3 = [a + b + c for a, b, c in zip(expected_s1, expected_s2, expected_s3)]
+        for actual, expected in zip(aggregated["S3"], expected_total_s3):
+            self.assertTrue(math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9))
+
     def test_scenario_modification_updates_routing_choice(self) -> None:
         """Applying a scenario switches routing models and changes outputs."""
 
@@ -274,12 +279,14 @@ class HydroSISExampleTests(unittest.TestCase):
 
         baseline_config = _build_sample_config()
         baseline_model = HydroSISModel.from_config(baseline_config)
-        baseline = baseline_model.run(forcing)
+        baseline_local = baseline_model.run(forcing)
+        baseline_total = baseline_model.accumulate_discharge(baseline_local)
 
         scenario_config = _build_sample_config()
         scenario_model = HydroSISModel.from_config(scenario_config)
         scenario_config.apply_scenario("alternate_routing", scenario_model.subbasins.values())
-        scenario = scenario_model.run(forcing)
+        scenario_local = scenario_model.run(forcing)
+        scenario_total = scenario_model.accumulate_discharge(scenario_local)
 
         expected_baseline_s2 = _lag_route(
             _linear_reservoir_runoff(forcing["S2"], 0.85, 1.0, 0.0), 1
@@ -288,12 +295,24 @@ class HydroSISExampleTests(unittest.TestCase):
             _linear_reservoir_runoff(forcing["S2"], 0.85, 1.0, 0.0), 2
         )
 
+        for actual, expected in zip(baseline_local["S2"], expected_baseline_s2):
+            self.assertTrue(math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9))
+
+        for actual, expected in zip(scenario_local["S2"], expected_scenario_s2):
+            self.assertTrue(math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9))
+
+        self.assertNotEqual(baseline_local["S2"], scenario_local["S2"])
+
+        zone_baseline = baseline_model.parameter_zone_discharge(baseline_local)
+        zone_scenario = scenario_model.parameter_zone_discharge(scenario_local)
+        self.assertIn("Z1", zone_baseline)
+        self.assertIn("Z1", zone_scenario)
+        self.assertIn("S1", zone_baseline["Z1"])
+        self.assertIn("S1", zone_scenario["Z1"])
+        self.assertEqual(zone_baseline["Z1"]["S1"], baseline_total["S1"])
+        self.assertEqual(zone_scenario["Z1"]["S1"], scenario_total["S1"])
         for actual, expected in zip(baseline["S2"], expected_baseline_s2):
             self.assertTrue(math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9))
-
-        for actual, expected in zip(scenario["S2"], expected_scenario_s2):
-            self.assertTrue(math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9))
-
         self.assertNotEqual(baseline["S2"], scenario["S2"])
 
     def test_extended_runoff_models_are_buildable(self) -> None:
@@ -353,17 +372,20 @@ class HydroSISExampleTests(unittest.TestCase):
             "S4": [1.0, 0.0, 2.0, 0.0],
         }
 
-        observations = truth_model.run(forcing)
+        observations = truth_model.accumulate_discharge(truth_model.run(forcing))
 
         calibrated_config = _build_comparison_config()
         calibrated_model = HydroSISModel.from_config(calibrated_config)
-        calibrated_results = calibrated_model.run(forcing)
+        calibrated_results = calibrated_model.accumulate_discharge(
+            calibrated_model.run(forcing)
+        )
 
         biased_config = _build_comparison_config()
         for runoff_cfg in biased_config.runoff_models:
             if runoff_cfg.id == "headwater":
                 runoff_cfg.parameters["curve_number"] = 88
         biased_model = HydroSISModel.from_config(biased_config)
+        biased_results = biased_model.accumulate_discharge(biased_model.run(forcing))
         biased_results = biased_model.run(forcing)
 
         sluggish_config = _build_comparison_config()
@@ -371,6 +393,9 @@ class HydroSISExampleTests(unittest.TestCase):
             if routing_cfg.id == "lag_medium":
                 routing_cfg.parameters["lag_steps"] = 4
         sluggish_model = HydroSISModel.from_config(sluggish_config)
+        sluggish_results = sluggish_model.accumulate_discharge(
+            sluggish_model.run(forcing)
+        )
         sluggish_results = sluggish_model.run(forcing)
 
         simulations = {

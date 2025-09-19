@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Mapping, Optional
 from .parameters.zone import ParameterZone, ParameterZoneBuilder
 from .runoff.base import RunoffModel
 from .routing.base import RoutingModel
+from .utils import accumulate_subbasin_flows
 
 
 @dataclass
@@ -67,7 +68,7 @@ class HydroSISModel:
         return cls(delineated, zones, runoff_models, routing_models)
 
     def run(self, forcing: Mapping[str, List[float]]) -> Dict[str, List[float]]:
-        """Run the distributed hydrological simulation."""
+        """Run the distributed hydrological simulation and return local flows."""
 
         runoff_results: Dict[str, List[float]] = {}
         for sub_id, subbasin in self.subbasins.items():
@@ -89,6 +90,30 @@ class HydroSISModel:
             routed[sub_id] = routing_model.route(subbasin, flows)
 
         return routed
+
+    def accumulate_discharge(self, routed: Mapping[str, List[float]]) -> Dict[str, List[float]]:
+        """Aggregate routed flows downstream to include upstream contributions."""
+
+        return accumulate_subbasin_flows(self.subbasins, routed)
+
+    def parameter_zone_discharge(
+        self, routed: Mapping[str, List[float]]
+    ) -> Dict[str, Dict[str, List[float]]]:
+        """Return aggregated discharge time-series for each parameter zone controller."""
+
+        aggregated = self.accumulate_discharge(routed)
+        zone_flows: Dict[str, Dict[str, List[float]]] = {}
+        for zone_id, zone in self.parameter_zones.items():
+            controller_series: Dict[str, List[float]] = {}
+            for controller in zone.controllers:
+                if controller not in aggregated:
+                    raise KeyError(
+                        f"Controller {controller} not present in aggregated discharge"
+                    )
+                controller_series[controller] = list(aggregated[controller])
+            zone_flows[zone_id] = controller_series
+        return zone_flows
+
 
 
 __all__ = ["HydroSISModel", "Subbasin"]

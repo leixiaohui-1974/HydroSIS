@@ -10,6 +10,7 @@ from .reporting import (
     summarise_aggregated_metrics,
 )
 from .model import HydroSISModel
+from .utils import accumulate_subbasin_flows
 
 __all__ = [
     "HydroSISModel",
@@ -22,8 +23,8 @@ __all__ = [
     "plot_hydrograph",
     "plot_metric_bars",
     "summarise_aggregated_metrics",
+    "accumulate_subbasin_flows",
 ]
-=======
 from .model import HydroSISModel
 from .config import ModelConfig
 
