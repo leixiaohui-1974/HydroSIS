@@ -49,7 +49,6 @@ class ComparisonPlanConfig:
             "reference": self.reference,
             "subbasins": list(self.subbasins) if self.subbasins else None,
             "ranking_metric": self.ranking_metric,
-
         }
 
 

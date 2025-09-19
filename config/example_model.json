@@ -1,0 +1,184 @@
+{
+  "delineation": {
+    "dem_path": "data/sample/dem/dem.tif",
+    "pour_points_path": "data/sample/gis/pour_points.geojson",
+    "accumulation_threshold": 1500,
+    "burn_streams_path": "data/sample/gis/streams.geojson",
+    "precomputed_subbasins": [
+      {
+        "id": "SB1",
+        "area_km2": 120.5,
+        "downstream": "SB3",
+        "parameters": {
+          "runoff_model": "upland",
+          "routing_model": "muskingum_main"
+        }
+      },
+      {
+        "id": "SB2",
+        "area_km2": 80.2,
+        "downstream": "SB3",
+        "parameters": {
+          "runoff_model": "upland",
+          "routing_model": "muskingum_main"
+        }
+      },
+      {
+        "id": "SB3",
+        "area_km2": 210.7,
+        "downstream": "SB4",
+        "parameters": {
+          "runoff_model": "midland",
+          "routing_model": "muskingum_main"
+        }
+      },
+      {
+        "id": "SB4",
+        "area_km2": 540.0,
+        "downstream": null,
+        "parameters": {
+          "runoff_model": "floodplain",
+          "routing_model": "muskingum_outlet"
+        }
+      }
+    ]
+  },
+  "runoff_models": [
+    {
+      "id": "upland",
+      "model_type": "scs_curve_number",
+      "parameters": {
+        "curve_number": 68,
+        "initial_abstraction_ratio": 0.05
+      }
+    },
+    {
+      "id": "upland_adjusted",
+      "model_type": "scs_curve_number",
+      "parameters": {
+        "curve_number": 70,
+        "initial_abstraction_ratio": 0.05
+      }
+    },
+    {
+      "id": "midland",
+      "model_type": "xin_an_jiang",
+      "parameters": {
+        "wm": 150,
+        "b": 0.35,
+        "imp": 0.03,
+        "recession": 0.65
+      }
+    },
+    {
+      "id": "lowland",
+      "model_type": "wetspa",
+      "parameters": {
+        "soil_storage_max": 260,
+        "infiltration_coefficient": 0.55,
+        "surface_runoff_coefficient": 0.4,
+        "percolation_coefficient": 0.08,
+        "baseflow_constant": 0.05
+      }
+    },
+    {
+      "id": "floodplain",
+      "model_type": "hymod",
+      "parameters": {
+        "max_storage": 120,
+        "beta": 1.1,
+        "quickflow_ratio": 0.65,
+        "num_quick_reservoirs": 3,
+        "quick_k": 0.45,
+        "slow_k": 0.04
+      }
+    }
+  ],
+  "routing_models": [
+    {
+      "id": "muskingum_main",
+      "model_type": "muskingum",
+      "parameters": {
+        "travel_time": 10,
+        "weighting_factor": 0.2,
+        "time_step": 1
+      }
+    },
+    {
+      "id": "muskingum_outlet",
+      "model_type": "muskingum",
+      "parameters": {
+        "travel_time": 14,
+        "weighting_factor": 0.15,
+        "time_step": 1
+      }
+    }
+  ],
+  "parameter_zones": [
+    {
+      "id": "Z1",
+      "description": "Upstream mountain catchments controlled by gauge G1",
+      "control_points": ["SB1"],
+      "parameters": {
+        "runoff_model": "upland",
+        "routing_model": "muskingum_main"
+      }
+    },
+    {
+      "id": "Z2",
+      "description": "Midstream reservoir R1 control zone",
+      "control_points": ["SB3"],
+      "parameters": {
+        "runoff_model": "midland",
+        "routing_model": "muskingum_main"
+      }
+    },
+    {
+      "id": "Z3",
+      "description": "Downstream hydrological station G2 controlling the outlet",
+      "control_points": ["SB4"],
+      "parameters": {
+        "runoff_model": "floodplain",
+        "routing_model": "muskingum_outlet"
+      }
+    }
+  ],
+  "io": {
+    "precipitation": "data/sample/forcing",
+    "discharge_observations": "data/sample/observations",
+    "results_directory": "results/example_run",
+    "figures_directory": "results/example_run/figures",
+    "reports_directory": "results/example_run/reports"
+  },
+  "scenarios": [
+    {
+      "id": "reservoir_reoperation",
+      "description": "Adjust reservoir routing to evaluate flood control capacity",
+      "modifications": {
+        "SB3": {
+          "routing_model": "muskingum_outlet"
+        },
+        "SB4": {
+          "routing_model": "muskingum_outlet",
+          "runoff_model": "floodplain"
+        },
+        "SB1": {
+          "runoff_model": "upland_adjusted"
+        }
+      }
+    }
+  ],
+  "evaluation": {
+    "metrics": ["rmse", "mae", "pbias", "nse"],
+    "comparisons": [
+      {
+        "id": "baseline_vs_reoperation",
+        "description": "Compare baseline and reservoir scenario at key gauges",
+        "reference": "observed",
+        "models": ["baseline", "reservoir_reoperation"],
+        "subbasins": ["SB3", "SB4"],
+        "ranking_metric": "rmse"
+      }
+    ]
+  }
+}

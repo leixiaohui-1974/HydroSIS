@@ -312,7 +312,6 @@ class HydroSISExampleTests(unittest.TestCase):
         self.assertEqual(zone_baseline["Z1"]["S1"], baseline_total["S1"])
         self.assertEqual(zone_scenario["Z1"]["S1"], scenario_total["S1"])
 
-
     def test_extended_runoff_models_are_buildable(self) -> None:
         """Ensure newly supported runoff models can be instantiated uniformly."""
 
@@ -394,7 +393,6 @@ class HydroSISExampleTests(unittest.TestCase):
             sluggish_model.run(forcing)
         )
 
-
         simulations = {
             "calibrated": calibrated_results,
             "biased": biased_results,
@@ -411,8 +409,6 @@ class HydroSISExampleTests(unittest.TestCase):
         aggregated = {score.model_id: score.aggregated for score in scores}
         self.assertLess(aggregated["calibrated"]["rmse"], aggregated["sluggish"]["rmse"])
         self.assertLess(abs(aggregated["calibrated"]["pbias"]), abs(aggregated["biased"]["pbias"]))
-
-
 
 if __name__ == "__main__":  # pragma: no cover - allow direct execution
     unittest.main()

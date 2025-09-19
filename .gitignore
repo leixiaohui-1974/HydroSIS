@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
-results/
+results/*
+!results/example_run/
+!results/example_run/**
+

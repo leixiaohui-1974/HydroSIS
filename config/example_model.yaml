@@ -1,10 +1,10 @@
 # Example HydroSIS configuration
 
 delineation:
-  dem_path: data/dem/dem.tif
-  pour_points_path: data/gis/pour_points.geojson
+  dem_path: data/sample/dem/dem.tif
+  pour_points_path: data/sample/gis/pour_points.geojson
   accumulation_threshold: 1500
-  burn_streams_path: data/gis/streams.geojson
+  burn_streams_path: data/sample/gis/streams.geojson
   precomputed_subbasins:
     - id: SB1
       area_km2: 120.5
@@ -37,6 +37,12 @@ runoff_models:
     parameters:
       curve_number: 68
       initial_abstraction_ratio: 0.05
+  - id: upland_adjusted
+    model_type: scs_curve_number
+    parameters:
+      curve_number: 70
+      initial_abstraction_ratio: 0.05
+
   - id: midland
     model_type: xin_an_jiang
     parameters:
@@ -97,12 +103,12 @@ parameter_zones:
       routing_model: muskingum_outlet
 
 io:
-  precipitation: data/forcing/precipitation
-  evaporation: data/forcing/evaporation.csv
-  discharge_observations: data/observations/discharge.csv
-  results_directory: results/scenario_baseline
-  figures_directory: results/figures
-  reports_directory: results/reports
+
+  precipitation: data/sample/forcing
+  discharge_observations: data/sample/observations
+  results_directory: results/example_run
+  figures_directory: results/example_run/figures
+  reports_directory: results/example_run/reports
 
 scenarios:
   - id: reservoir_reoperation
@@ -114,7 +120,7 @@ scenarios:
         routing_model: muskingum_outlet
         runoff_model: floodplain
       SB1:
-        curve_number: 70
+        runoff_model: upland_adjusted
 
 evaluation:
   metrics: [rmse, mae, pbias, nse]

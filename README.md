@@ -78,6 +78,35 @@ result = run_workflow(
 print(result.overall_scores[0].aggregated)  # 输出基准情景的指标
 for outcome in result.evaluation_outcomes:
     print(outcome.plan.id, [score.model_id for score in outcome.ranking])
+```
+
+### 示例运行与输出
+
+仓库在 `config/example_model.yaml` 中提供了一份可直接运行的配置，并在
+`data/sample/forcing` 与 `data/sample/observations` 下准备了合成的降雨、径流观测
+数据。执行以下命令即可运行完整流程、生成精度评估与 Markdown 报告：
+
+```bash
+python examples/run_sample_workflow.py
+```
+
+脚本会自动：
+
+- 根据示例配置加载模型、运行基准情景与水库调度情景；
+- 在 `results/example_run/baseline` 与 `results/example_run/reservoir_reoperation`
+  下保存累积径流结果；
+- 输出各参数分区控制点的汇流过程，并在 `results/example_run/reports`
+  中生成 Markdown 格式的评估报告；
+- 若缺少观测数据，将以基准情景结果为基础生成轻微扰动的合成观测，写入
+  `data/sample/observations` 以便复现实验。
+
+若运行环境未安装 PyYAML，脚本会自动改用 `config/example_model.json`
+加载同等配置，因此无需额外依赖即可复现示例流程。
+
+运行结束后可直接查看 `results/example_run` 目录下的 CSV、图表与报告，
+用于快速了解模型参数、情景配置及准确性分析的效果。
+
+=======
 
 ```
 
