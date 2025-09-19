@@ -32,6 +32,12 @@ except Exception:  # pragma: no cover - keep working without numpy
     np = None  # type: ignore
 
 from ..model import Subbasin
+from .simple_grid import (
+    build_subbasin_polygons,
+    delineate_from_json,
+    grid_to_geojson_features,
+    watershed_area,
+)
 
 Coordinates = Tuple[float, float]
 GridLocation = Tuple[int, int]
@@ -70,15 +76,75 @@ class DelineationConfig:
         if self.precomputed_subbasins is not None:
             return self._from_precomputed(self.precomputed_subbasins)
 
+        if (
+            (rasterio is None or rd is None or np is None)
+            and self.dem_path.suffix.lower() == ".json"
+        ):
+            return self._delineate_from_json()
+
         if rasterio is None or rd is None or np is None:
             raise RuntimeError(
                 "Automatic DEM delineation requires the optional rasterio, richdem"
                 " and numpy"
                 " dependencies.  Install them or provide `precomputed_subbasins` in"
-                " the configuration."
+                " the configuration.  The demonstration configuration ships with"
+                " a JSON DEM that exercises the lightweight fallback delineator."
             )
 
         return self._delineate_from_dem()
+
+    def _delineate_from_json(self) -> List[Subbasin]:
+        dem, watersheds, downstream_map, accumulation = delineate_from_json(
+            self.dem_path,
+            self.pour_points_path,
+            float(self.accumulation_threshold),
+        )
+
+        cell_area_km2 = abs(
+            dem.transform.pixel_width * dem.transform.pixel_height
+        ) / 1_000_000.0
+        subbasins: List[Subbasin] = []
+        for basin_id, cells in watersheds.items():
+            area = watershed_area(cell_area_km2, cells)
+            subbasins.append(
+                Subbasin(
+                    id=basin_id,
+                    area_km2=area,
+                    downstream=downstream_map.get(basin_id),
+                    parameters={},
+                )
+            )
+
+        # Store intermediate artefacts for the GIS report helper.  The
+        # lightweight delineator saves them next to the DEM to avoid changing
+        # the broader configuration interface.
+        artifacts_dir = self.dem_path.parent / "derived"
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+        geojson = {
+            "type": "FeatureCollection",
+            "features": grid_to_geojson_features(dem, accumulation, "accumulation"),
+        }
+        (artifacts_dir / "flow_accumulation.geojson").write_text(
+            json.dumps(geojson, indent=2),
+            encoding="utf-8",
+        )
+
+        polygons = build_subbasin_polygons(dem, watersheds)
+        features = []
+        for basin_id, polygon in polygons.items():
+            features.append(
+                {
+                    "type": "Feature",
+                    "geometry": {"type": "MultiPolygon", "coordinates": [polygon]},
+                    "properties": {"id": basin_id},
+                }
+            )
+        (artifacts_dir / "subbasins.geojson").write_text(
+            json.dumps({"type": "FeatureCollection", "features": features}, indent=2),
+            encoding="utf-8",
+        )
+
+        return subbasins
 
     @staticmethod
     def _from_precomputed(entries: Iterable[Mapping[str, object]]) -> List[Subbasin]:

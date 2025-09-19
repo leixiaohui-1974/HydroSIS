@@ -1,0 +1,71 @@
+{
+  "delineation": {
+    "dem_path": "data/sample/gis/dem_grid.json",
+    "pour_points_path": "data/sample/gis/pour_points.geojson",
+    "accumulation_threshold": 1,
+    "burn_streams_path": "data/sample/gis/streams.geojson"
+  },
+  "runoff_models": [
+    {
+      "id": "upland",
+      "model_type": "scs_curve_number",
+      "parameters": {"curve_number": 68, "initial_abstraction_ratio": 0.05}
+    },
+    {
+      "id": "midland",
+      "model_type": "xin_an_jiang",
+      "parameters": {"wm": 150, "b": 0.35, "imp": 0.03, "recession": 0.65}
+    },
+    {
+      "id": "floodplain",
+      "model_type": "hymod",
+      "parameters": {
+        "max_storage": 120,
+        "beta": 1.1,
+        "quickflow_ratio": 0.65,
+        "num_quick_reservoirs": 3,
+        "quick_k": 0.45,
+        "slow_k": 0.04
+      }
+    }
+  ],
+  "routing_models": [
+    {
+      "id": "muskingum_main",
+      "model_type": "muskingum",
+      "parameters": {"travel_time": 10, "weighting_factor": 0.2, "time_step": 1}
+    },
+    {
+      "id": "muskingum_outlet",
+      "model_type": "muskingum",
+      "parameters": {"travel_time": 14, "weighting_factor": 0.15, "time_step": 1}
+    }
+  ],
+  "parameter_zones": [
+    {
+      "id": "Z1",
+      "description": "Upstream mountain catchments",
+      "control_points": ["SB1"],
+      "parameters": {"runoff_model": "upland", "routing_model": "muskingum_main"}
+    },
+    {
+      "id": "Z2",
+      "description": "Reservoir controlled middle reach",
+      "control_points": ["SB3"],
+      "parameters": {"runoff_model": "midland", "routing_model": "muskingum_main"}
+    },
+    {
+      "id": "Z3",
+      "description": "Downstream floodplain",
+      "control_points": ["SB4"],
+      "parameters": {"runoff_model": "floodplain", "routing_model": "muskingum_outlet"}
+    }
+  ],
+  "io": {
+    "precipitation": "data/sample/forcing",
+    "discharge_observations": "data/sample/observations",
+    "results_directory": "results/gis_demo",
+    "figures_directory": "results/gis_demo/figures",
+    "reports_directory": "results/gis_demo/reports"
+  }
+}
