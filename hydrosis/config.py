@@ -128,7 +128,10 @@ class ModelConfig:
             )
 
         data = yaml.safe_load(Path(path).read_text())
+        return cls.from_dict(data)
 
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> "ModelConfig":
         delineation = DelineationConfig.from_dict(data["delineation"])
         runoff_models = [RunoffModelConfig.from_dict(cfg) for cfg in data.get("runoff_models", [])]
         routing_models = [RoutingModelConfig.from_dict(cfg) for cfg in data.get("routing_models", [])]

@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [500000.0, 3500000.0],
+          [506000.0, 3500000.0],
+          [506000.0, 3497000.0],
+          [500000.0, 3497000.0],
+          [500000.0, 3500000.0]
+        ]]
+      },
+      "properties": {"landuse": "Forest"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [500000.0, 3497000.0],
+          [506000.0, 3497000.0],
+          [506000.0, 3494000.0],
+          [500000.0, 3494000.0],
+          [500000.0, 3497000.0]
+        ]]
+      },
+      "properties": {"landuse": "Agriculture"}
+    }
+  ]
+}

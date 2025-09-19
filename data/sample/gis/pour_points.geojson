@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [501500.0, 3498500.0]},
+      "properties": {"id": "SB1", "name": "Gauge G1"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [504500.0, 3498500.0]},
+      "properties": {"id": "SB2", "name": "Gauge G2"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [503500.0, 3496500.0]},
+      "properties": {"id": "SB3", "name": "Reservoir R1"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [503500.0, 3494500.0]},
+      "properties": {"id": "SB4", "name": "Outlet Station"}
+    }
+  ]
+}

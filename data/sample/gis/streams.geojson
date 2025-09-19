@@ -1,0 +1,17 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [500500.0, 3499500.0],
+          [502500.0, 3497500.0],
+          [502500.0, 3494500.0]
+        ]
+      },
+      "properties": {"name": "Main stem"}
+    }
+  ]
+}

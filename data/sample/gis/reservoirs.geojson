@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [503500.0, 3496500.0]},
+      "properties": {"name": "R1", "storage_mcm": 35.0}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [504000.0, 3495200.0]},
+      "properties": {"name": "R2", "storage_mcm": 18.0}
+    }
+  ]
+}
