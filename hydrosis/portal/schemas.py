@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
 
 def _normalise_modifications(mods: Mapping[str, Mapping[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -72,6 +72,70 @@ class ProjectSummary:
 
     def to_dict(self) -> Dict[str, object]:
         return asdict(self)
+
+
+@dataclass
+class UserPayload:
+    id: str
+    name: Optional[str]
+    roles: List[str]
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> "UserPayload":
+        roles = data.get("roles", [])
+        if isinstance(roles, (str, bytes)):
+            roles = [part.strip() for part in str(roles).split(",") if part.strip()]
+        if not isinstance(roles, Sequence) or isinstance(roles, (str, bytes)):
+            raise ValueError("roles must be provided as a list or comma separated string")
+        parsed_roles = [str(role).strip() for role in roles if str(role).strip()]
+        name = data.get("name")
+        return cls(
+            id=str(data.get("id")),
+            name=str(name) if name is not None else None,
+            roles=parsed_roles,
+        )
+
+    def to_dict(self) -> Dict[str, object]:
+        return {"id": self.id, "name": self.name, "roles": list(self.roles)}
+
+
+@dataclass
+class UserResponse:
+    id: str
+    name: Optional[str]
+    roles: List[str]
+    project_roles: Mapping[str, str]
+    created_at: str
+    updated_at: str
+
+    @classmethod
+    def from_state(cls, data: Mapping[str, object]) -> "UserResponse":
+        return cls(
+            id=str(data.get("id")),
+            name=data.get("name"),
+            roles=list(data.get("roles", [])),
+            project_roles=dict(data.get("project_roles", {})),
+            created_at=str(data.get("created_at")),
+            updated_at=str(data.get("updated_at")),
+        )
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "roles": list(self.roles),
+            "project_roles": dict(self.project_roles),
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
+
+
+@dataclass
+class UserList:
+    users: List[UserResponse]
+
+    def to_dict(self) -> Dict[str, object]:
+        return {"users": [user.to_dict() for user in self.users]}
 
 
 @dataclass
@@ -221,6 +285,35 @@ class ProjectInputsResponse:
 
 
 @dataclass
+class ProjectPermissionPayload:
+    user_id: str
+    role: Optional[str]
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> "ProjectPermissionPayload":
+        role = data.get("role")
+        return cls(
+            user_id=str(data.get("user_id")),
+            role=str(role) if role is not None else None,
+        )
+
+    def to_dict(self) -> Dict[str, object]:
+        return {"user_id": self.user_id, "role": self.role}
+
+
+@dataclass
+class ProjectPermissionList:
+    project_id: str
+    permissions: Mapping[str, str]
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "project_id": self.project_id,
+            "permissions": dict(self.permissions),
+        }
+
+
+@dataclass
 class ScenarioList:
     scenarios: List[ScenarioCreatePayload]
 
@@ -269,6 +362,7 @@ class ProjectOverview:
     inputs: Optional[InputsOverview]
     latest_run: Optional["RunResponse"]
     latest_summary: Optional[Dict[str, object]]
+    map_layers_updated_at: Optional[str] = None
 
     def to_dict(self) -> Dict[str, object]:
         return {
@@ -280,6 +374,7 @@ class ProjectOverview:
             "inputs": self.inputs.to_dict() if self.inputs else None,
             "latest_run": self.latest_run.to_dict() if self.latest_run else None,
             "latest_summary": self.latest_summary,
+            "map_layers_updated_at": self.map_layers_updated_at,
         }
 
 
@@ -289,6 +384,70 @@ class RunList:
 
     def to_dict(self) -> Dict[str, object]:
         return {"runs": [run.to_dict() for run in self.runs]}
+
+
+@dataclass
+class MapLayerPayload:
+    layers: Mapping[str, Mapping[str, Any]]
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> "MapLayerPayload":
+        layers = data.get("layers")
+        if not isinstance(layers, Mapping):
+            raise ValueError("layers must be provided as a mapping of GeoJSON objects")
+        payload: Dict[str, Dict[str, Any]] = {}
+        for name, layer in layers.items():
+            if not isinstance(layer, Mapping):
+                raise ValueError("each layer must be a mapping")
+            payload[str(name)] = dict(layer)
+        return cls(layers=payload)
+
+    def to_dict(self) -> Dict[str, object]:
+        return {"layers": {key: dict(value) for key, value in self.layers.items()}}
+
+
+@dataclass
+class MapLayerResponse:
+    project_id: str
+    layers: Mapping[str, Mapping[str, Any]]
+    updated_at: str
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "project_id": self.project_id,
+            "layers": {key: dict(value) for key, value in self.layers.items()},
+            "updated_at": self.updated_at,
+        }
+
+
+@dataclass
+class QueueEntry:
+    run_id: str
+    project_id: str
+    status: str
+    scenario_ids: Sequence[str]
+    submitted_at: str
+    started_at: Optional[str]
+    finished_at: Optional[str]
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "run_id": self.run_id,
+            "project_id": self.project_id,
+            "status": self.status,
+            "scenario_ids": list(self.scenario_ids),
+            "submitted_at": self.submitted_at,
+            "started_at": self.started_at,
+            "finished_at": self.finished_at,
+        }
+
+
+@dataclass
+class QueueSnapshot:
+    entries: Sequence[QueueEntry]
+
+    def to_dict(self) -> Dict[str, object]:
+        return {"entries": [entry.to_dict() for entry in self.entries]}
 
 
 __all__ = [
@@ -308,4 +467,13 @@ __all__ = [
     "InputSeriesSummary",
     "InputsOverview",
     "ProjectOverview",
+    "UserPayload",
+    "UserResponse",
+    "UserList",
+    "ProjectPermissionPayload",
+    "ProjectPermissionList",
+    "MapLayerPayload",
+    "MapLayerResponse",
+    "QueueEntry",
+    "QueueSnapshot",
 ]

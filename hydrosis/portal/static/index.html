@@ -4,6 +4,11 @@
     <meta charset="utf-8" />
     <title>HydroSIS Portal</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
       body {
         font-family: "Segoe UI", Roboto, sans-serif;
@@ -122,6 +127,17 @@
         font-size: 0.85rem;
         white-space: pre-wrap;
       }
+      #map {
+        width: 100%;
+        height: 360px;
+        margin-top: 1rem;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+      }
+      .section-note {
+        font-size: 0.85rem;
+        color: #475569;
+      }
     </style>
   </head>
   <body>
@@ -144,6 +160,8 @@
         <form id="config-form">
           <label for="project-id">项目 ID</label>
           <input id="project-id" value="demo" />
+          <label for="actor-id">操作用户 ID（可选，用于受控操作）</label>
+          <input id="actor-id" placeholder="当前用户 ID" />
           <label for="config-json">模型配置（JSON）</label>
           <textarea id="config-json" rows="10" placeholder="粘贴 ModelConfig JSON"></textarea>
           <button type="submit">保存配置</button>
@@ -198,6 +216,63 @@
         <pre id="scenario-list">尚无情景</pre>
       </section>
       <section>
+        <h2>用户与权限</h2>
+        <p class="section-note">配置角色后，敏感操作需要提供具备权限的用户 ID。</p>
+        <form id="user-create-form">
+          <label for="user-id">用户 ID</label>
+          <input id="user-id" placeholder="alice" />
+          <label for="user-name">姓名（可选）</label>
+          <input id="user-name" placeholder="Alice" />
+          <label for="user-roles">全局角色（逗号分隔）</label>
+          <input id="user-roles" placeholder="admin,modeler" />
+          <label for="user-actor">执行用户 ID（可选）</label>
+          <input id="user-actor" placeholder="当前操作人 ID" />
+          <button type="submit">创建 / 更新用户</button>
+        </form>
+        <form id="project-permission-form">
+          <label for="permission-user-id">目标用户 ID</label>
+          <input id="permission-user-id" placeholder="alice" />
+          <label for="permission-role">项目角色（留空则移除）</label>
+          <input id="permission-role" placeholder="modeler" />
+          <label for="permission-actor">执行用户 ID（可选）</label>
+          <input id="permission-actor" placeholder="当前操作人 ID" />
+          <button type="submit">设置项目角色</button>
+        </form>
+        <div class="actions">
+          <button type="button" id="refresh-users">刷新用户列表</button>
+          <button type="button" id="refresh-permissions">刷新项目权限</button>
+        </div>
+        <div id="user-feedback"></div>
+        <pre id="users-list">尚无用户</pre>
+        <pre id="project-permissions">尚无项目权限</pre>
+      </section>
+      <section>
+        <h2>任务队列监控</h2>
+        <p class="section-note">需要具备 operator/viewer/admin 角色才能查看完整队列。</p>
+        <label for="queue-user-id">查询用户 ID（可选）</label>
+        <input id="queue-user-id" placeholder="operator" />
+        <button type="button" id="refresh-queue">刷新队列状态</button>
+        <pre id="queue-status">尚无任务</pre>
+      </section>
+      <section>
+        <h2>GIS 地图展示</h2>
+        <p class="section-note">上传 GeoJSON 图层后，可在地图上查看子流域与工程信息。</p>
+        <form id="map-form">
+          <label for="map-layers-json">图层配置（JSON，键为图层名，值为 GeoJSON）</label>
+          <textarea
+            id="map-layers-json"
+            rows="8"
+            placeholder='{"subbasins": {"type": "FeatureCollection", "features": []}}'
+          ></textarea>
+          <label for="map-user-id">操作用户 ID（可选）</label>
+          <input id="map-user-id" placeholder="gis" />
+          <button type="submit">保存图层</button>
+        </form>
+        <div id="map-feedback"></div>
+        <div id="map" aria-label="流域地图"></div>
+        <pre id="map-layers-meta">尚未加载地图图层</pre>
+      </section>
+      <section>
         <h2>触发模拟</h2>
         <form id="run-form">
           <label for="forcing-json">输入流量（JSON，键为子流域，值为数组）</label>
@@ -237,13 +312,112 @@
     <script>
       const messagesEl = document.getElementById("messages");
       const projectInput = document.getElementById("project-id");
+      const actorInput = document.getElementById("actor-id");
       const overviewEl = document.getElementById("project-overview");
       const scenarioFeedback = document.getElementById("scenario-feedback");
       const inputsFeedback = document.getElementById("inputs-feedback");
       const progressStatusEl = document.getElementById("run-progress-status");
       const progressBarEl = document.getElementById("run-progress-bar");
       const progressLogEl = document.getElementById("run-progress-log");
+      const usersListEl = document.getElementById("users-list");
+      const userFeedbackEl = document.getElementById("user-feedback");
+      const permissionsEl = document.getElementById("project-permissions");
+      const queueStatusEl = document.getElementById("queue-status");
+      const mapLayersMetaEl = document.getElementById("map-layers-meta");
+      const mapFeedbackEl = document.getElementById("map-feedback");
       let runEventSource = null;
+      let mapInstance = null;
+      let mapLayerGroup = null;
+      const defaultMapView = { lat: 30, lng: 105, zoom: 4 };
+
+      function buildQuery(params) {
+        const search = new URLSearchParams();
+        Object.entries(params || {}).forEach(([key, value]) => {
+          if (value === undefined || value === null || value === "") {
+            return;
+          }
+          search.append(key, value);
+        });
+        const queryString = search.toString();
+        return queryString ? `?${queryString}` : "";
+      }
+
+      function ensureMap() {
+        if (typeof L === "undefined") {
+          mapFeedbackEl.textContent = "Leaflet 库未加载，无法展示地图。";
+          return null;
+        }
+        if (!mapInstance) {
+          mapInstance = L.map("map");
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap 贡献者",
+          }).addTo(mapInstance);
+          mapLayerGroup = L.layerGroup().addTo(mapInstance);
+          mapInstance.setView(
+            [defaultMapView.lat, defaultMapView.lng],
+            defaultMapView.zoom
+          );
+        }
+        if (!mapLayerGroup) {
+          mapLayerGroup = L.layerGroup().addTo(mapInstance);
+        }
+        return mapInstance;
+      }
+
+      function renderMapLayers(layers) {
+        const map = ensureMap();
+        if (!map || !mapLayerGroup) {
+          return;
+        }
+        mapLayerGroup.clearLayers();
+        let bounds = null;
+        let hasData = false;
+        Object.entries(layers || {}).forEach(([name, geojson]) => {
+          if (!geojson || typeof geojson !== "object") {
+            return;
+          }
+          try {
+            const layer = L.geoJSON(geojson, {
+              style: () => ({
+                color: name.includes("stream") ? "#2563eb" : "#0f766e",
+                weight: name.includes("stream") ? 2 : 1.5,
+                fillOpacity: 0.25,
+              }),
+              pointToLayer: (feature, latlng) =>
+                L.circleMarker(latlng, {
+                  radius: 6,
+                  color: "#f97316",
+                  fillColor: "#fb923c",
+                  fillOpacity: 0.9,
+                  weight: 1,
+                }),
+            });
+            layer.bindTooltip(name);
+            mapLayerGroup.addLayer(layer);
+            if (typeof layer.getBounds === "function") {
+              const layerBounds = layer.getBounds();
+              if (layerBounds && layerBounds.isValid()) {
+                bounds = bounds ? bounds.extend(layerBounds) : layerBounds;
+                hasData = true;
+              }
+            }
+          } catch (err) {
+            console.warn("渲染图层失败", name, err);
+          }
+        });
+        if (hasData && bounds) {
+          map.fitBounds(bounds, { padding: [20, 20] });
+        } else {
+          map.setView(
+            [defaultMapView.lat, defaultMapView.lng],
+            defaultMapView.zoom
+          );
+        }
+      }
+
+      function currentActorId() {
+        return actorInput ? actorInput.value.trim() : "";
+      }
 
       function resetProgressDisplay() {
         progressBarEl.style.width = "0%";
@@ -296,6 +470,7 @@
           try {
             const payload = JSON.parse(event.data || "{}");
             updateProgressDisplay(payload);
+            loadQueue();
             if (payload.status === "completed") {
               closeRunStream();
               loadRuns();
@@ -328,6 +503,9 @@
           document.getElementById("projects-list").textContent = JSON.stringify(data.projects || [], null, 2);
           await loadInputs();
           await loadOverview();
+          await loadProjectPermissions();
+          await loadMapLayers();
+          await loadRuns();
         } catch (err) {
           document.getElementById("projects-list").textContent = `项目列表加载失败: ${err}`;
         }
@@ -398,6 +576,75 @@
         }
       }
 
+      async function loadUsers() {
+        try {
+          const response = await fetch(`/users`);
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          usersListEl.textContent = JSON.stringify(data.users || [], null, 2);
+        } catch (err) {
+          usersListEl.textContent = `用户列表加载失败: ${err}`;
+        }
+      }
+
+      async function loadProjectPermissions() {
+        const projectId = currentProjectId();
+        try {
+          const response = await fetch(`/projects/${projectId}/permissions`);
+          if (response.status === 404) {
+            permissionsEl.textContent = "项目不存在或尚未配置权限";
+            return;
+          }
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          permissionsEl.textContent = JSON.stringify(data.permissions || {}, null, 2);
+        } catch (err) {
+          permissionsEl.textContent = `权限加载失败: ${err}`;
+        }
+      }
+
+      async function loadQueue() {
+        const queueUser = document.getElementById("queue-user-id").value.trim();
+        try {
+          const response = await fetch(`/runs/queue${buildQuery({ user_id: queueUser || undefined })}`);
+          if (response.status === 403) {
+            queueStatusEl.textContent = `无权限查看队列: ${await response.text()}`;
+            return;
+          }
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          queueStatusEl.textContent = JSON.stringify(data.entries || [], null, 2);
+        } catch (err) {
+          queueStatusEl.textContent = `队列状态加载失败: ${err}`;
+        }
+      }
+
+      async function loadMapLayers() {
+        const projectId = currentProjectId();
+        try {
+          const response = await fetch(`/projects/${projectId}/map`);
+          if (response.status === 404) {
+            mapLayersMetaEl.textContent = "尚未配置地图图层";
+            renderMapLayers({});
+            return;
+          }
+          if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+          const data = await response.json();
+          mapLayersMetaEl.textContent = JSON.stringify(
+            {
+              updated_at: data.updated_at,
+              layers: Object.keys(data.layers || {}),
+            },
+            null,
+            2
+          );
+          renderMapLayers(data.layers || {});
+          mapFeedbackEl.textContent = "";
+        } catch (err) {
+          mapLayersMetaEl.textContent = `地图图层加载失败: ${err}`;
+        }
+      }
+
       document.getElementById("chat-form").addEventListener("submit", async (event) => {
         event.preventDefault();
         const content = document.getElementById("chat-input").value;
@@ -428,7 +675,8 @@
         const configText = document.getElementById("config-json").value;
         try {
           const model = JSON.parse(configText);
-          const response = await fetch(`/projects/${projectId}/config`, {
+          const actorId = currentActorId();
+          const response = await fetch(`/projects/${projectId}/config${buildQuery({ user_id: actorId || undefined })}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ model }),
@@ -476,7 +724,8 @@
         if (observations !== undefined) {
           payload.observations = observations;
         }
-        const response = await fetch(`/projects/${projectId}/inputs`, {
+        const actorId = currentActorId();
+        const response = await fetch(`/projects/${projectId}/inputs${buildQuery({ user_id: actorId || undefined })}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -510,7 +759,8 @@
           description: document.getElementById("scenario-description").value,
           modifications,
         };
-        const response = await fetch(`/projects/${projectId}/scenarios`, {
+        const actorId = currentActorId();
+        const response = await fetch(`/projects/${projectId}/scenarios${buildQuery({ user_id: actorId || undefined })}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -543,7 +793,8 @@
           description: document.getElementById("scenario-update-description").value || undefined,
           modifications,
         };
-        const response = await fetch(`/projects/${projectId}/scenarios/${scenarioId}`, {
+        const actorId = currentActorId();
+        const response = await fetch(`/projects/${projectId}/scenarios/${scenarioId}${buildQuery({ user_id: actorId || undefined })}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -566,7 +817,8 @@
           scenarioFeedback.textContent = "请先填写情景 ID";
           return;
         }
-        const response = await fetch(`/projects/${projectId}/scenarios/${scenarioId}`, {
+        const actorId = currentActorId();
+        const response = await fetch(`/projects/${projectId}/scenarios/${scenarioId}${buildQuery({ user_id: actorId || undefined })}`, {
           method: "DELETE",
         });
         if (!response.ok) {
@@ -582,6 +834,126 @@
       document.getElementById("refresh-scenarios").addEventListener("click", (event) => {
         event.preventDefault();
         loadScenarios();
+      });
+
+      document.getElementById("user-create-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const userId = document.getElementById("user-id").value.trim();
+        if (!userId) {
+          userFeedbackEl.textContent = "请输入用户 ID";
+          return;
+        }
+        const name = document.getElementById("user-name").value.trim();
+        const rolesText = document.getElementById("user-roles").value.trim();
+        const roles = rolesText
+          ? rolesText
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean)
+          : [];
+        const actorId = document.getElementById("user-actor").value.trim();
+        const payload = { id: userId, roles };
+        if (name) {
+          payload.name = name;
+        }
+        try {
+          const response = await fetch(`/users${buildQuery({ actor_id: actorId || undefined })}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!response.ok) {
+            userFeedbackEl.textContent = `保存用户失败: ${await response.text()}`;
+            return;
+          }
+          userFeedbackEl.textContent = "用户信息已保存";
+          await loadUsers();
+        } catch (err) {
+          userFeedbackEl.textContent = `保存用户失败: ${err}`;
+        }
+      });
+
+      document.getElementById("project-permission-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const projectId = currentProjectId();
+        const targetUser = document.getElementById("permission-user-id").value.trim();
+        if (!targetUser) {
+          userFeedbackEl.textContent = "请输入目标用户 ID";
+          return;
+        }
+        const roleText = document.getElementById("permission-role").value.trim();
+        const actorId = document.getElementById("permission-actor").value.trim();
+        const payload = { user_id: targetUser };
+        if (roleText) {
+          payload.role = roleText;
+        }
+        try {
+          const response = await fetch(
+            `/projects/${projectId}/permissions${buildQuery({ actor_id: actorId || undefined })}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            }
+          );
+          if (!response.ok) {
+            userFeedbackEl.textContent = `设置项目角色失败: ${await response.text()}`;
+            return;
+          }
+          userFeedbackEl.textContent = "项目角色已更新";
+          await loadProjectPermissions();
+        } catch (err) {
+          userFeedbackEl.textContent = `设置项目角色失败: ${err}`;
+        }
+      });
+
+      document.getElementById("refresh-users").addEventListener("click", (event) => {
+        event.preventDefault();
+        loadUsers();
+      });
+
+      document.getElementById("refresh-permissions").addEventListener("click", (event) => {
+        event.preventDefault();
+        loadProjectPermissions();
+      });
+
+      document.getElementById("refresh-queue").addEventListener("click", (event) => {
+        event.preventDefault();
+        loadQueue();
+      });
+
+      document.getElementById("map-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const projectId = currentProjectId();
+        const text = document.getElementById("map-layers-json").value.trim();
+        if (!text) {
+          mapFeedbackEl.textContent = "请输入有效的图层 JSON";
+          return;
+        }
+        let layers;
+        try {
+          layers = JSON.parse(text);
+        } catch (err) {
+          mapFeedbackEl.textContent = `图层 JSON 解析失败: ${err}`;
+          return;
+        }
+        const mapUser = document.getElementById("map-user-id").value.trim() || currentActorId();
+        try {
+          const response = await fetch(`/projects/${projectId}/map${buildQuery({ user_id: mapUser || undefined })}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ layers }),
+          });
+          if (!response.ok) {
+            mapFeedbackEl.textContent = `保存图层失败: ${await response.text()}`;
+            return;
+          }
+          mapFeedbackEl.textContent = "地图图层已保存";
+          await loadMapLayers();
+          await loadOverview();
+        } catch (err) {
+          mapFeedbackEl.textContent = `保存图层失败: ${err}`;
+        }
       });
 
       document.getElementById("run-form").addEventListener("submit", async (event) => {
@@ -610,7 +982,8 @@
         if (forcing !== undefined) {
           body.forcing = forcing;
         }
-        const response = await fetch(`/projects/${projectId}/runs`, {
+        const actorId = currentActorId();
+        const response = await fetch(`/projects/${projectId}/runs${buildQuery({ user_id: actorId || undefined })}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -623,6 +996,7 @@
         }
         loadRuns();
         loadOverview();
+        loadQueue();
       });
 
       document.getElementById("refresh-runs").addEventListener("click", (event) => {
@@ -689,9 +1063,8 @@
       resetProgressDisplay();
       loadProjects();
       loadScenarios();
-      loadInputs();
-      loadOverview();
-      loadRuns();
+      loadUsers();
+      loadQueue();
     </script>
   </body>
 </html>

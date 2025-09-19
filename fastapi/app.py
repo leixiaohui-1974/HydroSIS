@@ -5,6 +5,7 @@ import inspect
 import re
 from dataclasses import dataclass, asdict, is_dataclass
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
+from urllib.parse import parse_qs
 
 try:
     from pydantic import BaseModel
@@ -104,14 +105,19 @@ class FastAPI:
 
     # Request handling ---------------------------------------------------
     def handle_request(self, method: str, path: str, body: Any | None = None) -> "Response":
+        path_only, _, query_string = path.partition("?")
+        query_params = {
+            key: values[0] if values else None
+            for key, values in parse_qs(query_string, keep_blank_values=True).items()
+        }
         for route in self._routes:
             if route.method != method:
                 continue
-            path_params = route.match(path)
+            path_params = route.match(path_only)
             if path_params is None:
                 continue
             try:
-                payload = self._build_payload(route.handler, path_params, body)
+                payload = self._build_payload(route.handler, {**query_params, **path_params}, body)
                 result = route.handler(**payload)
                 return _normalise_response(result, route.response_class)
             except HTTPException as exc:
