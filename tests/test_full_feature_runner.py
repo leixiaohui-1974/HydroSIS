@@ -28,7 +28,6 @@ def test_full_feature_runner_generates_markdown(tmp_path: Path) -> None:
     for required_phrase in ["断言结论", "测试输入", "关键输出与校验"]:
         assert required_phrase in content
 
-
 def test_committed_feature_report_is_current(tmp_path: Path) -> None:
     """Regenerated feature report should match the committed documentation."""
 

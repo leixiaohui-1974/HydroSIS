@@ -79,13 +79,13 @@ def _format_mapping_items(items: Mapping[str, Any]) -> Iterable[str]:
             pretty = str(serialised)
         yield f"**{key}**：{pretty}"
 
-
 def _build_markdown(
     results: Sequence[FeatureTestResult],
     output_path: Path,
     *,
     generated_at: datetime | None = None,
 ) -> str:
+
     """Render the collected feature checks into Markdown content."""
 
     builder = MarkdownReportBuilder("HydroSIS 功能测试报告")
@@ -546,6 +546,7 @@ def run_full_feature_checks(
         output_path,
         generated_at=generated_at or datetime.now(timezone.utc),
     )
+
     output_path.write_text(markdown_content, encoding="utf-8")
 
     return results, output_path
