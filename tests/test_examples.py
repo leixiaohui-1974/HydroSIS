@@ -3,202 +3,19 @@ from __future__ import annotations
 
 import math
 import unittest
-from pathlib import Path
 from typing import Dict, List
 
-from hydrosis import HydroSISModel, ModelComparator, ModelConfig, SimulationEvaluator
-from hydrosis.config import IOConfig, ScenarioConfig
-from hydrosis.delineation.dem_delineator import DelineationConfig
+from hydrosis import HydroSISModel, ModelComparator, SimulationEvaluator
 from hydrosis.model import Subbasin
 from hydrosis.parameters.zone import ParameterZoneBuilder, ParameterZoneConfig
 from hydrosis.runoff.base import RunoffModelConfig
-from hydrosis.routing.base import RoutingModelConfig
-
-
-def _build_sample_config() -> ModelConfig:
-    """Construct a minimal yet comprehensive configuration for examples."""
-
-    delineation = DelineationConfig(
-        dem_path=Path("dem.tif"),
-        pour_points_path=Path("pour_points.geojson"),
-        precomputed_subbasins=[
-            {"id": "S1", "area_km2": 1.0, "downstream": "S3", "parameters": {}},
-            {"id": "S2", "area_km2": 1.0, "downstream": "S3", "parameters": {}},
-            {"id": "S3", "area_km2": 1.0, "downstream": None, "parameters": {}},
-        ],
-    )
-
-    runoff_models = [
-        RunoffModelConfig(
-            id="curve",
-            model_type="scs_curve_number",
-            parameters={"curve_number": 75, "initial_abstraction_ratio": 0.2},
-        ),
-        RunoffModelConfig(
-            id="reservoir",
-            model_type="linear_reservoir",
-            parameters={"recession": 0.85, "conversion": 1.0},
-        ),
-    ]
-
-    routing_models = [
-        RoutingModelConfig(
-            id="lag_short",
-            model_type="lag",
-            parameters={"lag_steps": 1},
-        ),
-        RoutingModelConfig(
-            id="lag_long",
-            model_type="lag",
-            parameters={"lag_steps": 2},
-        ),
-    ]
-
-    parameter_zones = [
-        ParameterZoneConfig(
-            id="Z1",
-            description="Headwater zone controlled by gauge G1",
-            control_points=["S1"],
-            parameters={"runoff_model": "curve", "routing_model": "lag_short"},
-        ),
-        ParameterZoneConfig(
-            id="Z2",
-            description="Outlet control at station G2",
-            control_points=["S3"],
-            parameters={"runoff_model": "reservoir", "routing_model": "lag_short"},
-        ),
-    ]
-
-    io_config = IOConfig(
-        precipitation=Path("data/forcing/precipitation.csv"),
-        results_directory=Path("results"),
-    )
-
-    scenarios = [
-        ScenarioConfig(
-            id="alternate_routing",
-            description="Increase lag time for middle catchment",
-            modifications={"S2": {"routing_model": "lag_long"}},
-        )
-    ]
-
-    return ModelConfig(
-        delineation=delineation,
-        runoff_models=runoff_models,
-        routing_models=routing_models,
-        parameter_zones=parameter_zones,
-        io=io_config,
-        scenarios=scenarios,
-    )
-
-
-def _build_comparison_config() -> ModelConfig:
-    """Configuration with multiple parameter zones for comparison tests."""
-
-    delineation = DelineationConfig(
-        dem_path=Path("dem.tif"),
-        pour_points_path=Path("pour_points.geojson"),
-        precomputed_subbasins=[
-            {"id": "S1", "area_km2": 1.5, "downstream": "S3", "parameters": {}},
-            {"id": "S2", "area_km2": 2.0, "downstream": "S3", "parameters": {}},
-            {"id": "S3", "area_km2": 3.0, "downstream": "S4", "parameters": {}},
-            {"id": "S4", "area_km2": 4.0, "downstream": None, "parameters": {}},
-        ],
-    )
-
-    runoff_models = [
-        RunoffModelConfig(
-            id="headwater",
-            model_type="scs_curve_number",
-            parameters={"curve_number": 70, "initial_abstraction_ratio": 0.1},
-        ),
-        RunoffModelConfig(
-            id="headwater_wet",
-            model_type="scs_curve_number",
-            parameters={"curve_number": 82, "initial_abstraction_ratio": 0.05},
-        ),
-        RunoffModelConfig(
-            id="mid_storage",
-            model_type="linear_reservoir",
-            parameters={"recession": 0.82, "conversion": 0.9},
-        ),
-        RunoffModelConfig(
-            id="lowland_storage",
-            model_type="linear_reservoir",
-            parameters={"recession": 0.9, "conversion": 0.75},
-        ),
-    ]
-
-    routing_models = [
-        RoutingModelConfig(id="lag_fast", model_type="lag", parameters={"lag_steps": 1}),
-        RoutingModelConfig(id="lag_medium", model_type="lag", parameters={"lag_steps": 2}),
-        RoutingModelConfig(id="lag_slow", model_type="lag", parameters={"lag_steps": 3}),
-    ]
-
-    parameter_zones = [
-        ParameterZoneConfig(
-            id="ZU",
-            description="Upstream gauge",
-            control_points=["S1"],
-            parameters={"runoff_model": "headwater", "routing_model": "lag_fast"},
-        ),
-        ParameterZoneConfig(
-            id="ZM",
-            description="Mid catchment reservoir",
-            control_points=["S2"],
-            parameters={"runoff_model": "mid_storage", "routing_model": "lag_medium"},
-        ),
-        ParameterZoneConfig(
-            id="ZD",
-            description="Downstream station",
-            control_points=["S4"],
-            parameters={"runoff_model": "lowland_storage", "routing_model": "lag_medium"},
-        ),
-    ]
-
-    io_config = IOConfig(
-        precipitation=Path("data/forcing/precipitation.csv"),
-        results_directory=Path("results"),
-    )
-
-    return ModelConfig(
-        delineation=delineation,
-        runoff_models=runoff_models,
-        routing_models=routing_models,
-        parameter_zones=parameter_zones,
-        io=io_config,
-    )
-
-
-def _lag_route(values: List[float], lag_steps: int) -> List[float]:
-    if lag_steps >= len(values):
-        return [0.0] * lag_steps
-    return [0.0] * lag_steps + values[:-lag_steps]
-
-
-def _scs_runoff(precip: List[float], curve_number: float, ia_ratio: float) -> List[float]:
-    s = max(0.0, (1000.0 / curve_number - 10.0) * 25.4)
-    ia = ia_ratio * s
-    runoff: List[float] = []
-    for p in precip:
-        if p <= ia:
-            runoff.append(0.0)
-        else:
-            q = (p - ia) ** 2 / (p - ia + s)
-            runoff.append(q)
-    return runoff
-
-
-def _linear_reservoir_runoff(
-    precip: List[float], recession: float, conversion: float, initial_storage: float
-) -> List[float]:
-    state = initial_storage
-    flows: List[float] = []
-    for p in precip:
-        state = state * recession + p * conversion
-        direct = (1.0 - recession) * state
-        flows.append(direct)
-    return flows
+from hydrosis.testing.example_documenter import (
+    build_comparison_config,
+    build_sample_config,
+    lag_route,
+    linear_reservoir_runoff,
+    scs_runoff,
+)
 
 
 class HydroSISExampleTests(unittest.TestCase):
@@ -237,7 +54,7 @@ class HydroSISExampleTests(unittest.TestCase):
     def test_model_run_matches_hand_calculated_results(self) -> None:
         """Full model run reproduces analytical expectations for simple inputs."""
 
-        config = _build_sample_config()
+        config = build_sample_config()
         model = HydroSISModel.from_config(config)
 
         forcing: Dict[str, List[float]] = {
@@ -249,9 +66,9 @@ class HydroSISExampleTests(unittest.TestCase):
         routed = model.run(forcing)
         aggregated = model.accumulate_discharge(routed)
 
-        expected_s1 = _lag_route(_scs_runoff(forcing["S1"], 75, 0.2), lag_steps=1)
-        expected_s2 = _lag_route(_linear_reservoir_runoff(forcing["S2"], 0.85, 1.0, 0.0), 1)
-        expected_s3 = _lag_route(_linear_reservoir_runoff(forcing["S3"], 0.85, 1.0, 0.0), 1)
+        expected_s1 = lag_route(scs_runoff(forcing["S1"], 75, 0.2), lag_steps=1)
+        expected_s2 = lag_route(linear_reservoir_runoff(forcing["S2"], 0.85, 1.0, 0.0), 1)
+        expected_s3 = lag_route(linear_reservoir_runoff(forcing["S3"], 0.85, 1.0, 0.0), 1)
 
         self.assertEqual(set(routed), {"S1", "S2", "S3"})
 
@@ -277,22 +94,22 @@ class HydroSISExampleTests(unittest.TestCase):
             "S3": [0.0, 0.0, 0.0],
         }
 
-        baseline_config = _build_sample_config()
+        baseline_config = build_sample_config()
         baseline_model = HydroSISModel.from_config(baseline_config)
         baseline_local = baseline_model.run(forcing)
         baseline_total = baseline_model.accumulate_discharge(baseline_local)
 
-        scenario_config = _build_sample_config()
+        scenario_config = build_sample_config()
         scenario_model = HydroSISModel.from_config(scenario_config)
         scenario_config.apply_scenario("alternate_routing", scenario_model.subbasins.values())
         scenario_local = scenario_model.run(forcing)
         scenario_total = scenario_model.accumulate_discharge(scenario_local)
 
-        expected_baseline_s2 = _lag_route(
-            _linear_reservoir_runoff(forcing["S2"], 0.85, 1.0, 0.0), 1
+        expected_baseline_s2 = lag_route(
+            linear_reservoir_runoff(forcing["S2"], 0.85, 1.0, 0.0), 1
         )
-        expected_scenario_s2 = _lag_route(
-            _linear_reservoir_runoff(forcing["S2"], 0.85, 1.0, 0.0), 2
+        expected_scenario_s2 = lag_route(
+            linear_reservoir_runoff(forcing["S2"], 0.85, 1.0, 0.0), 2
         )
 
         for actual, expected in zip(baseline_local["S2"], expected_baseline_s2):
@@ -359,7 +176,7 @@ class HydroSISExampleTests(unittest.TestCase):
     def test_multi_model_comparison_identifies_best_performer(self) -> None:
         """Model comparator ranks multi-zone simulations by accuracy metrics."""
 
-        config = _build_comparison_config()
+        config = build_comparison_config()
         truth_model = HydroSISModel.from_config(config)
 
         forcing: Dict[str, List[float]] = {
@@ -371,20 +188,20 @@ class HydroSISExampleTests(unittest.TestCase):
 
         observations = truth_model.accumulate_discharge(truth_model.run(forcing))
 
-        calibrated_config = _build_comparison_config()
+        calibrated_config = build_comparison_config()
         calibrated_model = HydroSISModel.from_config(calibrated_config)
         calibrated_results = calibrated_model.accumulate_discharge(
             calibrated_model.run(forcing)
         )
 
-        biased_config = _build_comparison_config()
+        biased_config = build_comparison_config()
         for runoff_cfg in biased_config.runoff_models:
             if runoff_cfg.id == "headwater":
                 runoff_cfg.parameters["curve_number"] = 88
         biased_model = HydroSISModel.from_config(biased_config)
         biased_results = biased_model.accumulate_discharge(biased_model.run(forcing))
 
-        sluggish_config = _build_comparison_config()
+        sluggish_config = build_comparison_config()
         for routing_cfg in sluggish_config.routing_models:
             if routing_cfg.id == "lag_medium":
                 routing_cfg.parameters["lag_steps"] = 4
