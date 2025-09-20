@@ -12,6 +12,7 @@ from .reporting import (
     render_template,
     EvaluationReportTemplate,
     ReportSection,
+    qwen_narrative,
 )
 from .model import HydroSISModel
 from .utils import accumulate_subbasin_flows
@@ -38,6 +39,7 @@ __all__ = [
     "render_template",
     "EvaluationReportTemplate",
     "ReportSection",
+    "qwen_narrative",
     "accumulate_subbasin_flows",
     "ObjectiveDefinition",
     "OptimizationResult",

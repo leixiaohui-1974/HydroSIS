@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence
@@ -175,6 +176,8 @@ def run_workflow(
     narrative_callback: Callable[[str], str] | None = None,
     report_template: EvaluationReportTemplate | None = None,
     template_context: Mapping[str, str] | None = None,
+    llm_provider: str | None = None,
+    llm_model: str | None = None,
     progress_callback: Callable[[str, Mapping[str, object]], None] | None = None,
 ) -> WorkflowResult:
     """Run baseline and scenario simulations and optionally evaluate them.
@@ -202,6 +205,13 @@ def run_workflow(
         Custom evaluation report template. Defaults to :func:`default_evaluation_template`.
     template_context:
         Pre-filled段落文本，当提供时优先使用而不会触发 ``narrative_callback``。
+    llm_provider:
+        当未显式提供 ``narrative_callback`` 时，可指定自动注入的大模型提供方。
+        支持从配置或 ``HYDROSIS_LLM_PROVIDER`` 环境变量中读取，当前实现内置
+        了对千问 (Qwen) 的兼容。
+    llm_model:
+        当 ``llm_provider`` 为千问时，可用于覆盖默认模型名称。若未提供，则
+        会尝试使用 ``HYDROSIS_LLM_MODEL`` 环境变量或回退至 ``qwen-plus``。
     progress_callback:
         可选回调函数，用于实时接收阶段性进度更新。回调的第一个参数为阶段
         名称，第二个参数为包含阶段信息的字典。
@@ -279,6 +289,21 @@ def run_workflow(
 
         report_context: Dict[str, str] = dict(template_context or {})
 
+        provider_hint = (
+            llm_provider
+            or config.evaluation.llm_provider
+            or os.environ.get("HYDROSIS_LLM_PROVIDER")
+        )
+        model_hint = (
+            llm_model
+            or config.evaluation.llm_model
+            or os.environ.get("HYDROSIS_LLM_MODEL")
+        )
+        if provider_hint:
+            report_context.setdefault("llm_provider", provider_hint)
+        if model_hint:
+            report_context.setdefault("llm_model", model_hint)
+
         if config.evaluation is not None:
             total_plans = len(config.evaluation.comparisons)
             for index, plan in enumerate(config.evaluation.comparisons, start=1):
@@ -299,27 +324,34 @@ def run_workflow(
                     total=total_plans,
                 )
 
-            if overall_scores:
-                model_ids = ", ".join(score.model_id for score in overall_scores)
-                metrics = ", ".join(name.upper() for name in comparator.evaluator.metric_names())
-                report_context.setdefault(
-                    "模型运行概述",
-                    f"本次评估比较了 {len(overall_scores)} 套模拟方案（{model_ids}），"
-                    f"评价指标包括 {metrics}。",
-                )
-            if evaluation_outcomes:
-                primary = evaluation_outcomes[0]
-                ranking_ids = [score.model_id for score in primary.ranking]
-                if ranking_ids:
-                    report_context.setdefault(
-                        "关键发现",
-                        f"在 {primary.plan.description or primary.plan.id} 中，排序为 "
-                        f"{' > '.join(ranking_ids)}。",
+            if not provider_hint:
+                if overall_scores:
+                    model_ids = ", ".join(score.model_id for score in overall_scores)
+                    metrics = ", ".join(
+                        name.upper() for name in comparator.evaluator.metric_names()
                     )
-            report_context.setdefault(
-                "后续建议",
-                "可继续针对关键指标开展参数分区校准或扩展新的情景对比。",
-            )
+                    report_context.setdefault(
+                        "模型运行概述",
+                        (
+                            f"本次评估比较了 {len(overall_scores)} 套模拟方案（{model_ids}），"
+                            f"评价指标包括 {metrics}。"
+                        ),
+                    )
+                if evaluation_outcomes:
+                    primary = evaluation_outcomes[0]
+                    ranking_ids = [score.model_id for score in primary.ranking]
+                    if ranking_ids:
+                        report_context.setdefault(
+                            "关键发现",
+                            (
+                                f"在 {primary.plan.description or primary.plan.id} 中，排序为 "
+                                f"{' > '.join(ranking_ids)}。"
+                            ),
+                        )
+                report_context.setdefault(
+                    "后续建议",
+                    "可继续针对关键指标开展参数分区校准或扩展新的情景对比。",
+                )
 
             if generate_report:
                 _notify("report", phase="start")
@@ -344,6 +376,7 @@ def run_workflow(
                     template=report_template,
                     narrative_callback=narrative_callback,
                     template_context=report_context,
+                    llm_provider=provider_hint,
                 )
                 _notify("report", phase="complete", path=str(report_path))
 

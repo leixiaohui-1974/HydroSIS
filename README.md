@@ -91,10 +91,21 @@ workflow = run_workflow(
     persist_outputs=True,
     generate_report=True,
     report_template=default_evaluation_template(),
-    narrative_callback=lambda prompt: f"（示例 LLM 输出）{prompt}",
+    llm_provider="qwen",  # 需提前设置千问 API 凭据
 )
 print("Markdown 报告：", workflow.report_path)
 ```
+
+要启用千问（Qwen）生成摘要，请在执行前设置以下环境变量：
+
+```bash
+export DASHSCOPE_API_KEY="<你的千问 API Key>"
+export HYDROSIS_LLM_PROVIDER=qwen
+```
+
+随后调用 `run_workflow(..., llm_provider="qwen")` 或在配置文件/模板上下文中写入
+`llm_provider: qwen` 即可自动注入大模型回调。若仅希望使用本地示例占位，可省略
+上述变量，框架会退回到固定的演示文本。
 
 ### 示例运行与输出
 
@@ -228,7 +239,8 @@ summary = analyzer.analyse({"Z1": bootstrap_sampler}, draws=200)
 ## 报告模板与大模型说明
 
 - `hydrosis.reporting.templates` 提供默认的“模型运行概述—关键发现—后续建议”结构，可按需自定义。
-- 将 `narrative_callback` 指向大模型调用函数，即可把模板提示词转换为自然语言段落，实现自动撰写摘要。
+- 提供 `hydrosis.reporting.narratives.qwen_narrative`，可直接接入千问 API。
+- 将 `llm_provider` 设置为 `qwen`（支持环境变量 `HYDROSIS_LLM_PROVIDER`、配置字段或模板上下文）后，无需手动传入回调即可自动调用千问生成摘要。
 - `template_context` 支持预填固定文本，结合模型指标自动生成简明结论，再用大模型补充细节。
 
 ## 与大模型集成
