@@ -5,16 +5,24 @@ import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
 from hydrosis import HydroSISModel, ModelComparator, SimulationEvaluator
 from hydrosis.config import IOConfig, ModelConfig, ScenarioConfig
 from hydrosis.delineation.dem_delineator import DelineationConfig
+from hydrosis.delineation.simple_grid import delineate_from_json
 from hydrosis.model import Subbasin
 from hydrosis.parameters.zone import ParameterZoneBuilder, ParameterZoneConfig
 from hydrosis.reporting.markdown import MarkdownReportBuilder
 from hydrosis.runoff.base import RunoffModelConfig
 from hydrosis.routing.base import RoutingModelConfig
+from hydrosis.testing.synthetic_datasets import (
+    SYNTHETIC_DEM_GRID,
+    SYNTHETIC_POUR_POINTS,
+    write_synthetic_delineation_inputs,
+)
+
 
 
 @dataclass
@@ -267,6 +275,76 @@ def linear_reservoir_runoff(
         direct = (1.0 - recession) * state
         flows.append(direct)
     return flows
+
+
+def _watershed_partition_example() -> ExampleDocumentation:
+    """Validate watershed delineation areas and downstream relations."""
+
+    with TemporaryDirectory() as tmpdir:
+        base = Path(tmpdir)
+        dem_path, pour_path = write_synthetic_delineation_inputs(base)
+        delineation = DelineationConfig(
+            dem_path=dem_path,
+            pour_points_path=pour_path,
+            accumulation_threshold=1.0,
+        )
+        subbasins = sorted(delineation.to_subbasins(), key=lambda sub: sub.id)
+        dem_grid, _, downstream_map, _ = delineate_from_json(
+            dem_path,
+            pour_path,
+            accumulation_threshold=1.0,
+        )
+
+        cell_area_km2 = abs(
+            dem_grid.transform.pixel_width * dem_grid.transform.pixel_height
+        ) / 1_000_000.0
+        area_map = {sub.id: round(sub.area_km2, 3) for sub in subbasins}
+        cell_counts = {
+            sub.id: int(round(sub.area_km2 / cell_area_km2))
+            for sub in subbasins
+        }
+        downstream_summary = {sub.id: downstream_map.get(sub.id) for sub in subbasins}
+
+    expected_cells = {"S1": 3, "S2": 14, "S3": 16}
+    if cell_counts != expected_cells:
+        raise AssertionError(f"Unexpected watershed cell counts: {cell_counts}")
+
+    expected_downstream = {"S1": "S2", "S2": "S3", "S3": None}
+    if downstream_summary != expected_downstream:
+        raise AssertionError(f"Unexpected downstream relations: {downstream_summary}")
+
+    pour_ids = [
+        feature["properties"]["id"] for feature in SYNTHETIC_POUR_POINTS["features"]
+    ]
+    grid_rows = len(SYNTHETIC_DEM_GRID["grid"])
+    grid_cols = len(SYNTHETIC_DEM_GRID["grid"][0]) if grid_rows else 0
+    cell_text = ", ".join(
+        f"{basin}:{cell_counts[basin]}格" for basin in cell_counts
+    )
+    downstream_text = ", ".join(
+        f"{basin}->{downstream_summary[basin] or '终点'}" for basin in downstream_summary
+    )
+
+    return ExampleDocumentation(
+        slug="watershed_partition",
+        title="流域划分示例：面积与下游关系验证",
+        description="使用轻量 DEM 验证自动划分的子流域面积与下游拓扑。",
+        inputs={
+            "pour_points": pour_ids,
+            "grid_shape": [grid_rows, grid_cols],
+            "accumulation_threshold": 1.0,
+            "cell_area_km2": round(cell_area_km2, 3),
+        },
+        outputs={
+            "subbasin_areas_km2": area_map,
+            "cell_counts": cell_counts,
+            "downstream_relations": downstream_summary,
+        },
+        assertions=[
+            f"面积单元格统计一致：{cell_text}",
+            f"下游关系链：{downstream_text}",
+        ],
+    )
 
 
 def _parameter_zone_assignment_example() -> ExampleDocumentation:
@@ -590,6 +668,7 @@ def generate_example_documentation(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     documents = [
+        _watershed_partition_example(),
         _parameter_zone_assignment_example(),
         _hand_calculated_run_example(),
         _scenario_modification_example(),

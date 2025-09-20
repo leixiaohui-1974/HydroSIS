@@ -25,12 +25,14 @@ from hydrosis.config import (
     ScenarioConfig,
 )
 from hydrosis.delineation.dem_delineator import DelineationConfig
+from hydrosis.delineation.simple_grid import delineate_from_json
 from hydrosis.io.inputs import load_forcing
 from hydrosis.io.outputs import write_time_series
 from hydrosis.parameters.zone import ParameterZoneConfig
 from hydrosis.reporting.markdown import MarkdownReportBuilder
 from hydrosis.runoff.base import RunoffModelConfig
 from hydrosis.routing.base import RoutingModelConfig
+from hydrosis.testing.synthetic_datasets import write_synthetic_delineation_inputs
 
 
 @dataclass
@@ -63,6 +65,8 @@ def _serialise(value: Any) -> Any:
         return _serialise(value._asdict())
     if hasattr(value, "__dict__") and not isinstance(value, type):
         return _serialise(vars(value))
+    if isinstance(value, float):
+        return round(value, 6)
     return value
 
 
@@ -75,8 +79,13 @@ def _format_mapping_items(items: Mapping[str, Any]) -> Iterable[str]:
             pretty = str(serialised)
         yield f"**{key}**：{pretty}"
 
+def _build_markdown(
+    results: Sequence[FeatureTestResult],
+    output_path: Path,
+    *,
+    generated_at: datetime | None = None,
+) -> str:
 
-def _build_markdown(results: Sequence[FeatureTestResult], output_path: Path) -> str:
     """Render the collected feature checks into Markdown content."""
 
     builder = MarkdownReportBuilder("HydroSIS 功能测试报告")
@@ -85,9 +94,10 @@ def _build_markdown(results: Sequence[FeatureTestResult], output_path: Path) -> 
         "输入输出与报告生成等核心功能。每个章节列出了用于校验的输入、关键输出"
         "以及断言结果，便于快速了解产品能力的完整性。"
     )
-    builder.add_paragraph(
-        f"报告生成时间：{datetime.now(timezone.utc).isoformat(timespec='seconds')}"
+    timestamp = (generated_at or datetime.now(timezone.utc)).strftime(
+        "%Y-%m-%d %H:%M UTC"
     )
+    builder.add_paragraph(f"报告生成时间：{timestamp}")
 
     for result in results:
         builder.add_heading(result.name, level=2)
@@ -140,14 +150,13 @@ def _build_config(base_directory: Path) -> ModelConfig:
     figures_directory = base_directory / "figures"
     reports_directory = base_directory / "reports"
 
+    delineation_dir = base_directory / "delineation"
+    dem_path, pour_points_path = write_synthetic_delineation_inputs(delineation_dir)
+
     delineation = DelineationConfig(
-        dem_path=base_directory / "dem.tif",
-        pour_points_path=base_directory / "pour_points.geojson",
-        precomputed_subbasins=[
-            {"id": "S1", "area_km2": 10.0, "downstream": "S3", "parameters": {}},
-            {"id": "S2", "area_km2": 12.0, "downstream": "S3", "parameters": {}},
-            {"id": "S3", "area_km2": 25.0, "downstream": None, "parameters": {}},
-        ],
+        dem_path=dem_path,
+        pour_points_path=pour_points_path,
+        accumulation_threshold=1.0,
     )
 
     runoff_models = [
@@ -231,7 +240,11 @@ def _build_config(base_directory: Path) -> ModelConfig:
     )
 
 
-def run_full_feature_checks(output_path: Path | str | None = None) -> Tuple[
+def run_full_feature_checks(
+    output_path: Path | str | None = None,
+    *,
+    generated_at: datetime | None = None,
+) -> Tuple[
     List[FeatureTestResult],
     Path,
 ]:
@@ -254,23 +267,86 @@ def run_full_feature_checks(output_path: Path | str | None = None) -> Tuple[
         for zone_cfg in config_dict.get("parameter_zones", []):
             if zone_cfg.get("explicit_subbasins") is None:
                 zone_cfg.pop("explicit_subbasins")
+        delineation_dict = config_dict.get("delineation")
+        if isinstance(delineation_dict, dict) and delineation_dict.get(
+            "precomputed_subbasins"
+        ) is None:
+            delineation_dict.pop("precomputed_subbasins")
         config_roundtrip = ModelConfig.from_dict(config_dict)
+        roundtrip_dict = config_roundtrip.to_dict()
+        for zone_cfg in roundtrip_dict.get("parameter_zones", []):
+            if zone_cfg.get("explicit_subbasins") is None:
+                zone_cfg.pop("explicit_subbasins")
+        delineation_roundtrip = roundtrip_dict.get("delineation")
+        if isinstance(delineation_roundtrip, dict) and delineation_roundtrip.get(
+            "precomputed_subbasins"
+        ) is None:
+            delineation_roundtrip.pop("precomputed_subbasins")
+
+        dem_grid, _, downstream_map, _ = delineate_from_json(
+            config.delineation.dem_path,
+            config.delineation.pour_points_path,
+            float(config.delineation.accumulation_threshold),
+        )
+        cell_area_km2 = abs(
+            dem_grid.transform.pixel_width * dem_grid.transform.pixel_height
+        ) / 1_000_000.0
+        cell_counts = {
+            sub.id: int(round(sub.area_km2 / cell_area_km2))
+            for sub in delineated_subbasins
+        }
+        ordered_cells = dict(sorted(cell_counts.items()))
+        expected_cells = {"S1": 3, "S2": 14, "S3": 16}
+        if ordered_cells != expected_cells:
+            raise AssertionError(
+                f"Synthetic delineation coverage mismatch: {ordered_cells}"
+            )
+        downstream_summary = {
+            basin: downstream_map.get(basin) for basin in expected_cells
+        }
+        expected_downstream = {"S1": "S2", "S2": "S3", "S3": None}
+        if downstream_summary != expected_downstream:
+            raise AssertionError(
+                f"Unexpected downstream mapping: {downstream_summary}"
+            )
+
+        subbasin_summary = [
+            {
+                "id": sub.id,
+                "area_km2": round(sub.area_km2, 3),
+                "downstream": sub.downstream,
+            }
+            for sub in sorted(delineated_subbasins, key=lambda item: item.id)
+        ]
+        roundtrip_ok = config_dict == roundtrip_dict
+        cell_text = ", ".join(
+            f"{basin}:{count}格" for basin, count in ordered_cells.items()
+        )
+        downstream_text = ", ".join(
+            f"{basin}->{downstream_summary[basin] or '终点'}"
+            for basin in ordered_cells
+        )
 
         results.append(
             FeatureTestResult(
                 name="模型配置解析与流域划分验证",
-                description="验证 ModelConfig 各子配置解析、序列化与预定义子流域划分逻辑。",
+                description="验证 ModelConfig 各子配置解析、序列化与基于合成 DEM 的子流域划分逻辑。",
                 inputs={
                     "runoff_models": [cfg.id for cfg in config.runoff_models],
                     "routing_models": [cfg.id for cfg in config.routing_models],
                     "parameter_zones": [cfg.id for cfg in config.parameter_zones],
+                    "accumulation_threshold": config.delineation.accumulation_threshold,
                 },
                 outputs={
-                    "subbasins": [sub.id for sub in delineated_subbasins],
-                    "roundtrip_consistency": config.to_dict() == config_roundtrip.to_dict(),
+                    "subbasins": subbasin_summary,
+                    "cell_counts": ordered_cells,
+                    "downstream_relations": downstream_summary,
+                    "roundtrip_consistency": roundtrip_ok,
                 },
                 assertions=[
                     f"成功解析 {len(delineated_subbasins)} 个子流域，并保持配置往返一致",
+                    f"单元格计数验证面积合理：{cell_text}",
+                    f"下游关系映射为 {downstream_text}",
                 ],
             )
         )
@@ -279,21 +355,41 @@ def run_full_feature_checks(output_path: Path | str | None = None) -> Tuple[
 
         zone_assignments: MutableMapping[str, Sequence[str]] = {}
         for zone in model.parameter_zones.values():
-            zone_assignments[zone.id] = list(zone.controlled_subbasins)
+            zone_assignments[zone.id] = sorted(zone.controlled_subbasins)
+        ordered_zone_assignments = dict(sorted(zone_assignments.items()))
+        expected_zone_assignments = {"Z1": ["S1"], "Z2": ["S2", "S3"]}
+        if ordered_zone_assignments != expected_zone_assignments:
+            raise AssertionError(
+                f"Parameter zone coverage mismatch: {ordered_zone_assignments}"
+            )
+
+        zone_definitions = {
+            cfg.id: {
+                "control_points": list(cfg.control_points),
+                "parameters": dict(sorted(cfg.parameters.items())),
+            }
+            for cfg in config.parameter_zones
+        }
+        assignment_text = ", ".join(
+            f"{zone}:{'/'.join(ordered_zone_assignments[zone])}"
+            for zone in ordered_zone_assignments
+        )
 
         results.append(
             FeatureTestResult(
                 name="参数分区控制与模型实例化",
                 description="校验参数分区将控制点及下游子流域正确绑定到模型实例。",
-                inputs={"zones": zone_assignments},
+                inputs={"zone_definitions": zone_definitions},
                 outputs={
+                    "zone_assignments": ordered_zone_assignments,
                     "subbasin_parameters": {
-                        sub_id: dict(sub.parameters)
-                        for sub_id, sub in model.subbasins.items()
+                        sub_id: dict(sorted(sub.parameters.items()))
+                        for sub_id, sub in sorted(model.subbasins.items())
                     }
                 },
                 assertions=[
                     "所有子流域均自动继承了对应的产流与汇流模型标识",
+                    f"参数控制区覆盖结果：{assignment_text}",
                 ],
             )
         )
@@ -309,11 +405,12 @@ def run_full_feature_checks(output_path: Path | str | None = None) -> Tuple[
                 inputs={"forcing_samples": synthetic_forcing},
                 outputs={
                     "local_flow_keys": sorted(local_flows),
-                    "aggregated_series_lengths": {
-                        sid: len(series) for sid, series in aggregated_flows.items()
-                    },
+                    "aggregated_series_lengths": dict(
+                        sorted((sid, len(series)) for sid, series in aggregated_flows.items())
+                    ),
                     "zone_discharge_controllers": {
-                        zone: sorted(series) for zone, series in zone_discharge.items()
+                        zone: sorted(controllers)
+                        for zone, controllers in sorted(zone_discharge.items())
                     },
                 },
                 assertions=[
@@ -332,19 +429,66 @@ def run_full_feature_checks(output_path: Path | str | None = None) -> Tuple[
             generate_report=True,
         )
 
+        metric_order: Sequence[str] = (
+            list(config.evaluation.metrics)
+            if getattr(config, "evaluation", None) is not None
+            else []
+        )
+
         score_summary: Dict[str, Mapping[str, float]] = {}
         if workflow_result.overall_scores:
             for score in workflow_result.overall_scores:
-                score_summary[score.model_id] = {
-                    metric: round(value, 6)
-                    for metric, value in score.aggregated.items()
-                }
+                metrics: Dict[str, float] = {}
+                if metric_order:
+                    for metric in metric_order:
+                        if metric in score.aggregated:
+                            metrics[metric] = round(score.aggregated[metric], 6)
+                    for metric, value in sorted(score.aggregated.items()):
+                        if metric not in metrics:
+                            metrics[metric] = round(value, 6)
+                else:
+                    for metric, value in sorted(score.aggregated.items()):
+                        metrics[metric] = round(value, 6)
+                score_summary[score.model_id] = metrics
+
+        model_order: List[str] = ["baseline"]
+        model_order.extend(
+            scenario_id
+            for scenario_id in workflow_result.scenarios.keys()
+            if scenario_id not in model_order
+        )
+        for model_id in score_summary:
+            if model_id not in model_order:
+                model_order.append(model_id)
+
+        ordered_scores: Dict[str, Mapping[str, float]] = {}
+        for model_id in model_order:
+            if model_id in score_summary:
+                ordered_scores[model_id] = score_summary[model_id]
+        for model_id in sorted(score_summary):
+            if model_id not in ordered_scores:
+                ordered_scores[model_id] = score_summary[model_id]
+        score_summary = ordered_scores
 
         ranking_summary: Dict[str, List[str]] = {}
         for outcome in workflow_result.evaluation_outcomes:
             ranking_summary[outcome.plan.id] = [
                 score.model_id for score in outcome.ranking
             ]
+
+        plan_order: Sequence[str] = (
+            [plan.id for plan in getattr(config, "evaluation", None).comparisons]
+            if getattr(config, "evaluation", None) is not None
+            else []
+        )
+        ordered_rankings: Dict[str, List[str]] = {}
+        for plan_id in plan_order:
+            if plan_id in ranking_summary:
+                ordered_rankings[plan_id] = ranking_summary[plan_id]
+        for plan_id in sorted(ranking_summary):
+            if plan_id not in ordered_rankings:
+                ordered_rankings[plan_id] = ranking_summary[plan_id]
+        ranking_summary = ordered_rankings
 
         results.append(
             FeatureTestResult(
@@ -372,23 +516,24 @@ def run_full_feature_checks(output_path: Path | str | None = None) -> Tuple[
         persistence_checks: Dict[str, bool] = {}
         for scenario_id in ["baseline", "alternate_routing"]:
             file_path = config.io.results_directory / scenario_id / "S3.csv"
-            persistence_checks[file_path.as_posix()] = file_path.exists()
+            persistence_checks[scenario_id] = file_path.exists()
 
         report_path = workflow_result.report_path
+        report_reference = report_path.name if report_path else None
 
         results.append(
             FeatureTestResult(
                 name="输入输出与报告生成",
                 description="验证降雨输入加载、结果持久化及 Markdown 报告生成流程。",
                 inputs={
-                    "forcing_directory": forcing_directory,
-                    "loaded_series_lengths": {
-                        sid: len(series) for sid, series in loaded_forcing.items()
-                    },
+                    "forcing_directory": forcing_directory.name,
+                    "loaded_series_lengths": dict(
+                        sorted((sid, len(series)) for sid, series in loaded_forcing.items())
+                    ),
                 },
                 outputs={
                     "results_files": persistence_checks,
-                    "report_path": report_path,
+                    "report_path": report_reference,
                 },
                 assertions=[
                     "CSV 输出按情景与子流域成功写入", "评估报告已生成"
@@ -396,7 +541,12 @@ def run_full_feature_checks(output_path: Path | str | None = None) -> Tuple[
             )
         )
 
-    markdown_content = _build_markdown(results, output_path)
+    markdown_content = _build_markdown(
+        results,
+        output_path,
+        generated_at=generated_at or datetime.now(timezone.utc),
+    )
+
     output_path.write_text(markdown_content, encoding="utf-8")
 
     return results, output_path
