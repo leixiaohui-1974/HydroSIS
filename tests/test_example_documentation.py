@@ -32,7 +32,6 @@ def test_generate_example_documentation(tmp_path: Path) -> None:
         assert "测试输入" in content
         assert "该文档由自动化示例验证程序生成" in content
 
-
 def test_committed_example_docs_are_current(tmp_path: Path) -> None:
     """Ensure committed example Markdown matches regenerated output."""
 
@@ -44,3 +43,4 @@ def test_committed_example_docs_are_current(tmp_path: Path) -> None:
         generated = generated_path.read_text(encoding="utf-8")
         committed = committed_path.read_text(encoding="utf-8")
         assert generated == committed
+

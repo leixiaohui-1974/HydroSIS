@@ -24,6 +24,7 @@ from hydrosis.testing.synthetic_datasets import (
 )
 
 
+
 @dataclass
 class ExampleDocumentation:
     """Structured details describing a single example validation."""

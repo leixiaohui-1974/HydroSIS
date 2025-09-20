@@ -8,6 +8,7 @@
 
 验证 ModelConfig 各子配置解析、序列化与基于合成 DEM 的子流域划分逻辑。
 
+
 ### 测试输入
 
 - **runoff_models**：[
@@ -23,6 +24,7 @@
   "Z2"
 ]
 - **accumulation_threshold**：1.0
+
 
 ### 关键输出与校验
 
@@ -53,6 +55,7 @@
   "S2": "S3",
   "S3": null
 }
+
 - **roundtrip_consistency**：True
 
 ### 断言结论
@@ -120,6 +123,7 @@
 
 - 所有子流域均自动继承了对应的产流与汇流模型标识
 - 参数控制区覆盖结果：Z1:S1, Z2:S2/S3
+
 
 ---
 
@@ -241,6 +245,7 @@
   "alternate_routing": true
 }
 - **report_path**：evaluation.md
+
 
 ### 断言结论
 

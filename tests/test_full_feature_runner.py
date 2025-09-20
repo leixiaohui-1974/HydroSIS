@@ -1,10 +1,7 @@
 """Tests for the comprehensive feature runner and documentation generator."""
 from __future__ import annotations
-
 from pathlib import Path
-
 from datetime import datetime, timezone
-
 from hydrosis.testing.full_feature_runner import run_full_feature_checks
 
 
@@ -28,7 +25,6 @@ def test_full_feature_runner_generates_markdown(tmp_path: Path) -> None:
     for required_phrase in ["断言结论", "测试输入", "关键输出与校验"]:
         assert required_phrase in content
 
-
 def test_committed_feature_report_is_current(tmp_path: Path) -> None:
     """Regenerated feature report should match the committed documentation."""
 
@@ -45,3 +41,4 @@ def test_committed_feature_report_is_current(tmp_path: Path) -> None:
 
     expected = Path("docs/test_documentation.md").read_text(encoding="utf-8")
     assert normalised == expected
+
