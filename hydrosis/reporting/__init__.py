@@ -6,6 +6,7 @@ from .markdown import (
     generate_evaluation_report,
     summarise_aggregated_metrics,
 )
+from .narratives import qwen_narrative
 from .templates import (
     EvaluationReportTemplate,
     ReportSection,
@@ -23,4 +24,5 @@ __all__ = [
     "ReportSection",
     "default_evaluation_template",
     "render_template",
+    "qwen_narrative",
 ]

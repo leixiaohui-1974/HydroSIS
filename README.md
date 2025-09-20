@@ -83,9 +83,33 @@ for outcome in result.evaluation_outcomes:
 
 # HydroSIS 项目全景文档
 
+workflow = run_workflow(
+    config,
+    forcing,
+    observations=observed,
+    persist_outputs=True,
+    generate_report=True,
+    report_template=default_evaluation_template(),
+    llm_provider="qwen",  # 需提前设置千问 API 凭据
+)
+print("Markdown 报告：", workflow.report_path)
+```
+
+要启用千问（Qwen）生成摘要，请在执行前设置以下环境变量：
+
+```bash
+export DASHSCOPE_API_KEY="<你的千问 API Key>"
+export HYDROSIS_LLM_PROVIDER=qwen
+```
+
+随后调用 `run_workflow(..., llm_provider="qwen")` 或在配置文件/模板上下文中写入
+`llm_provider: qwen` 即可自动注入大模型回调。若仅希望使用本地示例占位，可省略
+上述变量，框架会退回到固定的演示文本。
+
+### 示例运行与输出
+
 HydroSIS 是一个面向多情景建模与调度分析的分布式水文模拟框架。项目以结构化配置驱动，涵盖流域划分、产流与汇流模块、参数分区、情景模拟、精度评价、可视化与自然语言报告生成，并提供轻量的 Web 门户与大模型接入能力。本文档从原理、代码实现逻辑、接口形式、调用方式、前端界面和大模型入口等方面，对各功能模块进行逐一说明。
 
----
 
 ## 1. 总体架构
 
@@ -546,12 +570,18 @@ PY
 
 ## 19. 扩展建议
 
+- `hydrosis.reporting.templates` 提供默认的“模型运行概述—关键发现—后续建议”结构，可按需自定义。
+- 提供 `hydrosis.reporting.narratives.qwen_narrative`，可直接接入千问 API。
+- 将 `llm_provider` 设置为 `qwen`（支持环境变量 `HYDROSIS_LLM_PROVIDER`、配置字段或模板上下文）后，无需手动传入回调即可自动调用千问生成摘要。
+- `template_context` 支持预填固定文本，结合模型指标自动生成简明结论，再用大模型补充细节。
+
 - 如需引入真实 FastAPI，可在 `requirements` 中添加并替换兼容层。
 - 大模型集成可扩展为：
   - 将 `IntentParser` 替换为调用 LLM 的服务。
   - 在报告模板中加入更多业务段落。
   - 通过 LLM 生成参数优化策略（如自动设定目标权重、采样范围）。
 - GIS 层可与真实 DEM/河网数据集对接，结合 `rasterio`/`richdem` 的自动划分能力。
+
 
 ---
 

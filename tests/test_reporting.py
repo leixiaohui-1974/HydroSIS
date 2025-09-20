@@ -2,16 +2,19 @@
 from __future__ import annotations
 
 import tempfile
+import json
 from pathlib import Path
 
 import unittest
 from unittest import mock
+from urllib import error as urllib_error
 
 from hydrosis import (
     MarkdownReportBuilder,
     ModelScore,
     SimulationEvaluator,
     generate_evaluation_report,
+    qwen_narrative,
     plot_hydrograph,
     plot_metric_bars,
     summarise_aggregated_metrics,
@@ -127,6 +130,58 @@ class ReportingTests(unittest.TestCase):
             content = report_path.read_text(encoding="utf-8")
             self.assertIn("![metric_rmse](../figures/metric_rmse.svg)", content)
             self.assertIn("![hydrograph_S1](../figures/hydrograph_S1.svg)", content)
+
+    def test_generate_report_auto_injects_qwen_callback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir, mock.patch(
+            "hydrosis.reporting.markdown.qwen_narrative", return_value="QWEN OUTPUT"
+        ) as mocked_qwen:
+            report_path = Path(tmpdir) / "report.md"
+            with mock.patch.dict("os.environ", {"DASHSCOPE_API_KEY": "dummy"}, clear=False):
+                generate_evaluation_report(
+                    report_path,
+                    self.scores,
+                    self.evaluator,
+                    template_context={"llm_provider": "qwen", "llm_model": "qwen-turbo"},
+                )
+            content = report_path.read_text(encoding="utf-8")
+            self.assertIn("QWEN OUTPUT", content)
+            self.assertNotIn("llm_provider", content)
+            mocked_qwen.assert_called()
+            self.assertTrue(
+                any("请根据模型" in call.args[0] for call in mocked_qwen.call_args_list)
+            )
+            for call in mocked_qwen.call_args_list:
+                self.assertEqual(call.kwargs.get("model"), "qwen-turbo")
+
+
+class NarrativeClientTests(unittest.TestCase):
+    def test_qwen_narrative_posts_prompt(self) -> None:
+        fake_response = mock.MagicMock()
+        fake_response.__enter__.return_value = fake_response
+        fake_response.read.return_value = json.dumps(
+            {"choices": [{"message": {"content": "回答"}}]}
+        ).encode("utf-8")
+        with mock.patch("urllib.request.urlopen", return_value=fake_response) as mocked:
+            with mock.patch.dict("os.environ", {"DASHSCOPE_API_KEY": "token"}, clear=False):
+                result = qwen_narrative("测试提示", model="qwen-custom")
+
+        self.assertEqual(result, "回答")
+        request_obj = mocked.call_args.args[0]
+        payload = json.loads(request_obj.data.decode("utf-8"))
+        self.assertEqual(payload["model"], "qwen-custom")
+        self.assertEqual(payload["messages"][0]["content"], "测试提示")
+
+    def test_qwen_narrative_wraps_network_errors(self) -> None:
+        with mock.patch(
+            "urllib.request.urlopen",
+            side_effect=urllib_error.URLError("boom"),
+        ):
+            with mock.patch.dict(
+                "os.environ", {"DASHSCOPE_API_KEY": "token"}, clear=False
+            ):
+                with self.assertRaises(RuntimeError) as exc:
+                    qwen_narrative("prompt")
+        self.assertIn("Qwen API request failed", str(exc.exception))
 
 
 if __name__ == "__main__":  # pragma: no cover
