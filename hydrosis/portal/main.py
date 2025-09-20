@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
-import json
 from datetime import datetime, timezone
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
@@ -55,6 +55,7 @@ from .state import (
     serialize_scenario_run,
 )
 
+LOGGER = logging.getLogger(__name__)
 
 
 def _remove_none(obj):
@@ -118,8 +119,44 @@ def create_app(
 ) -> FastAPI:
     app = FastAPI(title="HydroSIS Portal", version="0.1.0")
 
-    portal_state = _initialise_state(state, database_url=database_url, config_path=config_path)
-    intent_parser = IntentParser()
+    portal_state = _initialise_state(
+        state, database_url=database_url, config_path=config_path
+    )
+
+    portal_config = _load_portal_config(config_path=config_path)
+    raw_qwen_settings = (
+        portal_config.get("qwen") if isinstance(portal_config, Mapping) else None
+    )
+    qwen_settings = raw_qwen_settings if isinstance(raw_qwen_settings, Mapping) else {}
+
+    def _get_qwen_setting(key: str) -> str | None:
+        value = os.environ.get(f"QWEN_{key.upper()}")
+        if value:
+            return value
+        if isinstance(qwen_settings, Mapping):
+            candidate = qwen_settings.get(key)
+            if isinstance(candidate, str):
+                return candidate
+        return None
+
+    llm_client = None
+    qwen_api_key = _get_qwen_setting("api_key")
+    if qwen_api_key:
+        qwen_model = _get_qwen_setting("model") or "qwen-turbo"
+        qwen_base_url = _get_qwen_setting("base_url")
+        try:
+            from .providers import QwenClient
+
+            llm_client = QwenClient(
+                api_key=qwen_api_key,
+                model=qwen_model,
+                base_url=qwen_base_url,
+            )
+        except Exception as exc:  # pragma: no cover - defensive fallback
+            LOGGER.warning("Failed to initialise Qwen client: %s", exc)
+            llm_client = None
+
+    intent_parser = IntentParser(llm_client=llm_client)
     event_broker = RunEventBroker()
     run_executor = RunExecutor(
         portal_state,
@@ -211,7 +248,11 @@ def create_app(
         user_message = ConversationMessage(role=payload.role, content=payload.content)
         conversation.add(user_message)
 
-        intent = intent_parser.parse(payload.content)
+        prior_messages = [
+            {"role": msg.role, "content": msg.content}
+            for msg in conversation.messages[:-1]
+        ]
+        intent = intent_parser.parse(payload.content, context=prior_messages)
 
         reply = _render_assistant_reply(intent, conversation_id)
         assistant_message = ConversationMessage(role="assistant", content=reply, intent=intent)
@@ -737,6 +778,32 @@ def _initialise_state(
     return InMemoryPortalState()
 
 
+def _load_portal_config(
+    *, config_path: str | Path | None = None
+) -> Dict[str, object]:
+    config_location = config_path or os.environ.get("HYDROSIS_PORTAL_CONFIG")
+    if not config_location:
+        return {}
+
+    config_file = Path(config_location)
+    if not config_file.exists():
+        raise FileNotFoundError(f"Portal configuration file '{config_file}' not found")
+
+    try:
+        data = json.loads(config_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            f"Portal configuration file '{config_file}' must be valid JSON"
+        ) from exc
+
+    if not isinstance(data, dict):
+        raise ValueError(
+            f"Portal configuration file '{config_file}' must contain a JSON object"
+        )
+
+    return data
+
+
 def _resolve_database_url(
     *,
     database_url: str | None = None,
@@ -749,26 +816,12 @@ def _resolve_database_url(
     if env_url:
         return env_url
 
-    config_location = config_path or os.environ.get("HYDROSIS_PORTAL_CONFIG")
-    if not config_location:
-        return None
-
-    config_file = Path(config_location)
-    if not config_file.exists():
-        raise FileNotFoundError(f"Portal configuration file '{config_file}' not found")
-
-    try:
-        config_data = json.loads(config_file.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        raise ValueError(
-            f"Portal configuration file '{config_file}' must be valid JSON"
-        ) from exc
-
+    config_data = _load_portal_config(config_path=config_path)
     url = config_data.get("database_url")
-    if url and not isinstance(url, str):
-        raise ValueError(
-            f"database_url in '{config_file}' must be a string if provided"
-        )
+    if url is None:
+        return None
+    if not isinstance(url, str):
+        raise ValueError("database_url in portal configuration must be a string")
     return url
 
 
