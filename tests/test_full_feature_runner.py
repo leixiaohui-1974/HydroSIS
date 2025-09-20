@@ -1,7 +1,10 @@
 """Tests for the comprehensive feature runner and documentation generator."""
 from __future__ import annotations
+
 from pathlib import Path
+
 from datetime import datetime, timezone
+
 from hydrosis.testing.full_feature_runner import run_full_feature_checks
 
 
@@ -41,4 +44,3 @@ def test_committed_feature_report_is_current(tmp_path: Path) -> None:
 
     expected = Path("docs/test_documentation.md").read_text(encoding="utf-8")
     assert normalised == expected
-
