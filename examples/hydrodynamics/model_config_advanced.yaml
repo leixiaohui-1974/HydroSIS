@@ -1,0 +1,77 @@
+routing_models:
+  # 矩形断面 + 固定步长
+  - id: simple_routing
+    model_type: hydrodynamic_1d
+    parameters:
+      section_type: rectangle
+      width: 30
+      length: 10000
+      bed_slope: 0.001
+      manning_n: 0.03
+      num_sections: 25
+      time_step: 300
+  
+  # 梯形断面 + 自适应步长
+  - id: adaptive_routing
+    model_type: hydrodynamic_1d
+    parameters:
+      section_type: trapezoid
+      bottom_width: 12
+      side_slope: 2.0
+      length: 15000
+      bed_slope: 0.0008
+      manning_n: 0.035
+      num_sections: 30
+      time_step: 300
+      adaptive_timestep: true  # 启用自适应
+      min_dt: 60
+      max_dt: 600
+  
+  # 复合断面（考虑漫滩）
+  - id: floodplain_routing
+    model_type: hydrodynamic_1d
+    parameters:
+      section_type: compound
+      main_bottom_width: 8
+      main_side_slope: 1.5
+      floodplain_height: 2.5
+      left_fp_width: 15
+      right_fp_width: 15
+      length: 8000
+      bed_slope: 0.0005
+      manning_n: 0.04
+      num_sections: 20
+      time_step: 180
+  
+  # GPU加速（大规模）
+  - id: gpu_routing
+    model_type: hydrodynamic_1d
+    parameters:
+      section_type: trapezoid
+      bottom_width: 10
+      side_slope: 2.5
+      length: 25000
+      bed_slope: 0.0012
+      manning_n: 0.03
+      num_sections: 100  # 大网格
+      time_step: 120
+      use_gpu: true      # 启用GPU
+
+parameter_zones:
+  - id: Z_headwater
+    control_points: ["S1", "S2"]
+    parameters:
+      runoff_model: "curve"
+      routing_model: "simple_routing"
+  
+  - id: Z_middle
+    control_points: ["S3"]
+    parameters:
+      runoff_model: "reservoir"
+      routing_model: "adaptive_routing"  # 中游使用自适应
+  
+  - id: Z_lowland
+    control_points: ["S4"]
+    parameters:
+      runoff_model: "xin_an_jiang"
+      routing_model: "floodplain_routing"  # 下游考虑漫滩

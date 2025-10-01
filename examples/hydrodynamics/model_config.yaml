@@ -1,0 +1,18 @@
+routing_models:
+  - id: hydrodynamic_main
+    model_type: saint_venant_1d
+    parameters:
+      reach_id: main_channel
+      length: 15000          # 河段长度 (m)
+      bed_slope: 0.0005      # 河床坡度
+      manning_n: 0.035       # 曼宁系数
+      width: 40              # 河宽 (m)
+      num_sections: 30       # 计算断面数
+      time_step: 300         # 时间步长 (s)
+
+parameter_zones:
+  - id: Z1
+    control_points: ["S1"]
+    parameters:
+      runoff_model: "curve"
+      routing_model: "hydrodynamic_main"  # ← 使用水动力路由

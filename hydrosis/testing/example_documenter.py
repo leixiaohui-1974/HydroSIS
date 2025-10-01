@@ -23,6 +23,7 @@ from hydrosis.testing.synthetic_datasets import (
     write_synthetic_delineation_inputs,
 )
 
+from hydrosis.testing.flood_validation import generate_flood_validation_case
 
 @dataclass
 class ExampleDocumentation:
@@ -658,6 +659,78 @@ def _multi_model_comparison_example() -> ExampleDocumentation:
     )
 
 
+def _flood_model_validation_example() -> ExampleDocumentation:
+    case = generate_flood_validation_case()
+
+    if case.ranking[0] != "reference_hymod_dynamic":
+        raise AssertionError("Reference HYMOD + dynamic wave combination should rank first by NSE")
+
+    reference_metrics = case.aggregated_metrics.get("reference_hymod_dynamic", {})
+    if reference_metrics.get("nse") != 1.0:
+        raise AssertionError("Reference NSE should equal 1.0")
+
+    lag_peak = case.hydro_stats["scs_lag"]["discharge_time_to_peak"]
+    reference_peak = case.hydro_stats["reference_hymod_dynamic"]["discharge_time_to_peak"]
+    if lag_peak >= reference_peak:
+        raise AssertionError("Lag-only routing should yield an earlier peak than the reference")
+
+    xin_peak = case.hydro_stats["xinan_dynamic"]["discharge_peak"]
+    if xin_peak <= case.hydro_stats["reference_hymod_dynamic"]["discharge_peak"]:
+        raise AssertionError("XinAnJiang pairing should overshoot the reference peak")
+
+    observed_summary = {
+        key: (round(value, 3) if isinstance(value, float) else value)
+        for key, value in case.observed_summary.items()
+    }
+
+    discharge_stats = {
+        name: {
+            "peak": round(stats["discharge_peak"], 3),
+            "time_to_peak": int(stats["discharge_time_to_peak"]),
+            "volume": round(stats["discharge_volume"], 3),
+        }
+        for name, stats in case.hydro_stats.items()
+    }
+
+    aggregated_metrics = {
+        name: {metric: round(value, 6) for metric, value in metrics.items()}
+        for name, metrics in case.aggregated_metrics.items()
+    }
+
+    inputs = {
+        "降雨序列(mm/step)": case.rainfall,
+        "集水面积(km^2)": round(case.subbasin.area_km2, 3),
+        "总降雨量(mm)": round(case.rainfall_total, 3),
+        "降雨体积(面积加权)": round(case.rainfall_volume, 3),
+    }
+
+    outputs = {
+        "参考洪水统计": observed_summary,
+        "模型洪水峰值对比": discharge_stats,
+        "误差指标": aggregated_metrics,
+        "NSE 排名(由好到差)": case.ranking,
+    }
+
+    assertions = [
+        "HYMOD + 动态波组合与观测一致 (NSE = 1.0)",
+        "仅调整汇流 (Muskingum) 导致峰值推迟且 NSE 降至约 0.79",
+        "纯延时 (lag) 方案峰现时间比参考更早",
+        "XinAnJiang 组合产生显著峰值高估与正偏差",
+    ]
+
+    return ExampleDocumentation(
+        slug="flood_model_validation",
+        title="洪水过程验证示例：产流与汇流耦合对比",
+        description="基于合成暴雨事件生成完整洪水过程，将多种产流-汇流组合与参考结果对比验证模型正确性。",
+        inputs=inputs,
+        outputs=outputs,
+        assertions=assertions,
+    )
+
+
+
+
+
 def generate_example_documentation(
     output_directory: Optional[Path | str] = None,
 ) -> List[Path]:
@@ -673,6 +746,7 @@ def generate_example_documentation(
         _scenario_modification_example(),
         _extended_runoff_models_example(),
         _multi_model_comparison_example(),
+        _flood_model_validation_example(),
     ]
 
     written: List[Path] = []

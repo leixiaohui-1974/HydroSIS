@@ -18,6 +18,7 @@ from hydrosis.testing.example_documenter import (
 )
 
 
+from hydrosis.testing.flood_validation import generate_flood_validation_case
 class HydroSISExampleTests(unittest.TestCase):
     """High-level examples showcasing and validating HydroSIS behaviour."""
 
@@ -227,6 +228,41 @@ class HydroSISExampleTests(unittest.TestCase):
         self.assertLess(aggregated["calibrated"]["rmse"], aggregated["sluggish"]["rmse"])
         self.assertLess(abs(aggregated["calibrated"]["pbias"]), abs(aggregated["biased"]["pbias"]))
 
+
+    def test_flood_validation_case_produces_expected_behaviour(self) -> None:
+        case = generate_flood_validation_case()
+
+        self.assertEqual(case.ranking, [
+            "reference_hymod_dynamic",
+            "hymod_muskingum",
+            "scs_dynamic",
+            "scs_lag",
+            "xinan_dynamic",
+        ])
+
+        reference_metrics = case.aggregated_metrics["reference_hymod_dynamic"]
+        self.assertEqual(reference_metrics["nse"], 1.0)
+        self.assertAlmostEqual(reference_metrics["rmse"], 0.0)
+
+        muskingum_peak_time = case.hydro_stats["hymod_muskingum"]["discharge_time_to_peak"]
+        reference_peak_time = case.hydro_stats["reference_hymod_dynamic"]["discharge_time_to_peak"]
+        self.assertGreater(muskingum_peak_time, reference_peak_time)
+
+        lag_peak_time = case.hydro_stats["scs_lag"]["discharge_time_to_peak"]
+        self.assertLess(lag_peak_time, reference_peak_time)
+
+        xin_peak = case.hydro_stats["xinan_dynamic"]["discharge_peak"]
+        self.assertGreater(xin_peak, case.hydro_stats["reference_hymod_dynamic"]["discharge_peak"])
+
+        xin_bias = case.aggregated_metrics["xinan_dynamic"]["pbias"]
+        self.assertGreater(xin_bias, 100.0)
+
+        self.assertAlmostEqual(case.observed_summary["peak"], 1403.8882122656626, places=6)
+        self.assertEqual(case.observed_summary["time_to_peak"], 17)
+        self.assertAlmostEqual(case.observed_summary["volume"], 14788.555883662071, places=6)
+
+        self.assertAlmostEqual(case.rainfall_total, 679.0)
+        self.assertAlmostEqual(case.rainfall_volume, case.rainfall_total * case.subbasin.area_km2)
 
 if __name__ == "__main__":  # pragma: no cover - allow direct execution
     unittest.main()

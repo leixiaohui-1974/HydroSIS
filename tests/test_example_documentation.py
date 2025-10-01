@@ -18,6 +18,7 @@ def test_generate_example_documentation(tmp_path: Path) -> None:
         "scenario_modification",
         "extended_runoff_models",
         "multi_model_comparison",
+        "flood_model_validation",
     }
 
     generated = {path.name for path in paths}
