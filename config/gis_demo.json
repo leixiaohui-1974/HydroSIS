@@ -3,7 +3,8 @@
     "dem_path": "data/sample/gis/dem_grid.json",
     "pour_points_path": "data/sample/gis/pour_points.geojson",
     "accumulation_threshold": 1,
-    "burn_streams_path": "data/sample/gis/streams.geojson"
+    "burn_streams_path": "data/sample/gis/streams.geojson",
+    "boundaries_path": "data/sample/gis/watershed_boundaries.geojson"
   },
   "runoff_models": [
     {

@@ -50,6 +50,9 @@ class DelineationConfig:
     accumulation_threshold: float = 1000.0
     burn_streams_path: Optional[Path] = None
     precomputed_subbasins: Optional[List[Mapping[str, object]]] = None
+    # Optional external subbasin boundary layer (GeoJSON). When provided,
+    # report helpers can prefer this geometry over derived outlines.
+    boundaries_path: Optional[Path] = None
 
     @classmethod
     def from_dict(cls, data: Mapping[str, object]) -> "DelineationConfig":
@@ -59,6 +62,7 @@ class DelineationConfig:
             accumulation_threshold=float(data.get("accumulation_threshold", 1000.0)),
             burn_streams_path=Path(data["burn_streams_path"]) if data.get("burn_streams_path") else None,
             precomputed_subbasins=list(data.get("precomputed_subbasins", [])) or None,
+            boundaries_path=Path(data["boundaries_path"]) if data.get("boundaries_path") else None,
         )
 
     def to_dict(self) -> Dict[str, object]:
@@ -68,6 +72,7 @@ class DelineationConfig:
             "accumulation_threshold": self.accumulation_threshold,
             "burn_streams_path": str(self.burn_streams_path) if self.burn_streams_path else None,
             "precomputed_subbasins": list(self.precomputed_subbasins) if self.precomputed_subbasins else None,
+            "boundaries_path": str(self.boundaries_path) if self.boundaries_path else None,
         }
 
     def to_subbasins(self) -> List[Subbasin]:
@@ -215,6 +220,136 @@ class DelineationConfig:
                     parameters={},
                 )
             )
+        # Export derived artefacts for GIS reporting (parity with JSON delineation)
+        try:
+            derived_dir = Path(self.dem_path).parent / "derived"
+            derived_dir.mkdir(parents=True, exist_ok=True)
+
+            # --- Flow accumulation as GeoJSON grid ---
+            def _cell_bounds(transform, row: int, col: int):
+                a, b, c, d, e, f = transform.a, transform.b, transform.c, transform.d, transform.e, transform.f
+                x0 = c + a * col + b * row
+                y0 = f + d * col + e * row
+                x1 = c + a * (col + 1) + b * (row + 1)
+                y1 = f + d * (col + 1) + e * (row + 1)
+                xmin, xmax = (x0, x1) if x0 <= x1 else (x1, x0)
+                ymin, ymax = (y0, y1) if y0 <= y1 else (y1, y0)
+                return (xmin, ymin), (xmax, ymax)
+
+            acc_features: List[Dict[str, object]] = []
+            rows, cols = accumulation_array.shape
+            for r in range(rows):
+                for cidx in range(cols):
+                    val = float(accumulation_array[r, cidx])
+                    if np.isfinite(val):
+                        (xmin, ymin), (xmax, ymax) = _cell_bounds(transform, r, cidx)
+                        acc_features.append(
+                            {
+                                "type": "Feature",
+                                "geometry": {
+                                    "type": "Polygon",
+                                    "coordinates": [
+                                        [
+                                            [xmin, ymin],
+                                            [xmax, ymin],
+                                            [xmax, ymax],
+                                            [xmin, ymax],
+                                            [xmin, ymin],
+                                        ]
+                                    ],
+                                },
+                                "properties": {"accumulation": val, "row": r, "col": cidx},
+                            }
+                        )
+            (derived_dir / "flow_accumulation.geojson").write_text(
+                json.dumps({"type": "FeatureCollection", "features": acc_features}, indent=2),
+                encoding="utf-8",
+            )
+
+            # --- Subbasin polygons constructed from masks by cancelling shared edges ---
+            def _mask_to_rings(mask: np.ndarray) -> List[List[Tuple[float, float]]]:
+                edge_count: Dict[frozenset, int] = {}
+                rows_m, cols_m = mask.shape
+                for r in range(rows_m):
+                    for cidx in range(cols_m):
+                        if not bool(mask[r, cidx]):
+                            continue
+                        (xmin, ymin), (xmax, ymax) = _cell_bounds(transform, r, cidx)
+                        edges = [
+                            ((xmin, ymin), (xmax, ymin)),
+                            ((xmax, ymin), (xmax, ymax)),
+                            ((xmax, ymax), (xmin, ymax)),
+                            ((xmin, ymax), (xmin, ymin)),
+                        ]
+                        for a, b in edges:
+                            key = frozenset((a, b))
+                            edge_count[key] = edge_count.get(key, 0) + 1
+
+                boundary_edges: List[Tuple[Tuple[float, float], Tuple[float, float]]] = []
+                for key, count in edge_count.items():
+                    if count == 1:
+                        a, b = tuple(key)
+                        if a <= b:
+                            boundary_edges.append((a, b))
+                        else:
+                            boundary_edges.append((b, a))
+
+                from collections import defaultdict
+                adjacency: Dict[Tuple[float, float], List[Tuple[float, float]]] = defaultdict(list)
+                for a, b in boundary_edges:
+                    adjacency[a].append(b)
+                    adjacency[b].append(a)
+
+                rings: List[List[Tuple[float, float]]] = []
+                visited: set[Tuple[Tuple[float, float], Tuple[float, float]]] = set()
+                for a, b in boundary_edges:
+                    if (a, b) in visited or (b, a) in visited:
+                        continue
+                    ring: List[Tuple[float, float]] = [a, b]
+                    prev, curr = a, b
+                    visited.add((a, b))
+                    while True:
+                        neighbours = adjacency[curr]
+                        next_pt = None
+                        for n in neighbours:
+                            if n != prev and ((curr, n) not in visited):
+                                next_pt = n
+                                break
+                        if next_pt is None:
+                            if curr != ring[0]:
+                                ring.append(ring[0])
+                            break
+                        ring.append(next_pt)
+                        visited.add((curr, next_pt))
+                        prev, curr = curr, next_pt
+                        if curr == ring[0]:
+                            break
+                    if ring[-1] != ring[0]:
+                        ring.append(ring[0])
+                    if len(ring) >= 4:
+                        rings.append(ring)
+                return rings
+
+            sb_features: List[Dict[str, object]] = []
+            for basin_id, mask in id_to_mask.items():
+                rings = _mask_to_rings(mask)
+                if not rings:
+                    continue
+                sb_features.append(
+                    {
+                        "type": "Feature",
+                        "geometry": {"type": "MultiPolygon", "coordinates": [rings]},
+                        "properties": {"id": basin_id},
+                    }
+                )
+            (derived_dir / "subbasins.geojson").write_text(
+                json.dumps({"type": "FeatureCollection", "features": sb_features}, indent=2),
+                encoding="utf-8",
+            )
+        except Exception:
+            # Optional export; ignore failures
+            pass
+
         return subbasins
 
     def _load_pour_points(self, path: Path) -> Iterator[Tuple[str, GridLocation]]:

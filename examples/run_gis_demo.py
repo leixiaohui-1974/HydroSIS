@@ -30,6 +30,7 @@ from hydrosis.io.gis_report import (
     summarise_paths,
     write_html,
 )
+from hydrosis.io.spatial_db import init_db, write_layers, write_subbasins, write_zones
 from hydrosis.io.inputs import load_forcing
 from hydrosis.io.outputs import write_simulation_results
 from hydrosis.parameters.zone import ParameterZoneBuilder
@@ -192,6 +193,17 @@ def run_workflow() -> None:
     output_html = ROOT / config.io.reports_directory / "gis_report.html"
     write_html(output_html, report.build())
     print(f"GIS 报告已生成: {output_html}")
+
+    # Persist layers and attributes into the lightweight spatial DB (optional capability)
+    db_path = ROOT / config.io.results_directory / "gis_data.sqlite"
+    try:
+        init_db(db_path)
+        write_layers(db_path, layers)
+        write_subbasins(db_path, delineated, layers.get("subbasins"))
+        write_zones(db_path, zones, zone_geojson)
+        print(f"空间/属性数据库已更新: {db_path}")
+    except Exception as exc:  # pragma: no cover - non-critical optional step
+        print(f"更新空间数据库失败: {exc}")
 
 
 if __name__ == "__main__":

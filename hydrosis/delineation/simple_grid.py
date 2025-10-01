@@ -201,31 +201,117 @@ def build_subbasin_polygons(
     dem: SimpleGridDEM,
     watersheds: Mapping[str, Sequence[GridLocation]],
 ) -> Dict[str, List[List[Tuple[float, float]]]]:
-    """Return simple polygon outlines for each watershed.
+    """Return polygon outlines that follow the union of contributing cells.
 
-    The polygons are generated as bounding boxes covering the contributing
-    cells.  While simplistic, the approach keeps the representation light weight
-    and sufficient for producing schematic GIS figures in documentation.
+    Previous versions returned a single bounding box for each子流域，导致示意图
+    呈现为“方块”。这里改为：
+    - 为每个栅格单元生成四条边；
+    - 去除与相邻单元共享的边，仅保留外边界；
+    - 将剩余边按连通性串联成闭合环，得到一个或多个外轮廓。
+
+    该实现不依赖第三方几何库，生成的多边形为正交折线，能真实反映栅格集合形状。
     """
 
+    # Helper: return the four directed edges of a cell.
+    def _cell_edges(row: int, col: int) -> List[Tuple[Tuple[float, float], Tuple[float, float]]]:
+        (xmin, ymin), (xmax, ymax) = dem.transform.cell_bounds(row, col)
+        return [
+            ((xmin, ymin), (xmax, ymin)),
+            ((xmax, ymin), (xmax, ymax)),
+            ((xmax, ymax), (xmin, ymax)),
+            ((xmin, ymax), (xmin, ymin)),
+        ]
+
     polygons: Dict[str, List[List[Tuple[float, float]]]] = {}
+
     for basin_id, cells in watersheds.items():
         if not cells:
             continue
-        min_row = min(row for row, _ in cells)
-        max_row = max(row for row, _ in cells)
-        min_col = min(col for _, col in cells)
-        max_col = max(col for _, col in cells)
-        (xmin, ymin), _ = dem.transform.cell_bounds(min_row, min_col)
-        _, (xmax, ymax) = dem.transform.cell_bounds(max_row, max_col)
-        polygon = [
-            (xmin, ymin),
-            (xmax, ymin),
-            (xmax, ymax),
-            (xmin, ymax),
-            (xmin, ymin),
-        ]
-        polygons[basin_id] = [polygon]
+
+        # Step 1: collect undirected boundary edges by cancelling shared edges.
+        edge_count: Dict[frozenset, int] = {}
+        for row, col in cells:
+            for a, b in _cell_edges(row, col):
+                key = frozenset((a, b))
+                edge_count[key] = edge_count.get(key, 0) + 1
+
+        boundary_edges: List[Tuple[Tuple[float, float], Tuple[float, float]]] = []
+        for key, count in edge_count.items():
+            # keep only edges that appear once (i.e., on the outer boundary)
+            if count == 1:
+                a, b = tuple(key)
+                # choose a deterministic direction: sort by (x, y)
+                if a <= b:
+                    boundary_edges.append((a, b))
+                else:
+                    boundary_edges.append((b, a))
+
+        # Step 2: stitch boundary edges into closed rings.
+        # Build adjacency map: start point -> set(next points)
+        from collections import defaultdict
+
+        adjacency: Dict[Tuple[float, float], List[Tuple[float, float]]] = defaultdict(list)
+        for a, b in boundary_edges:
+            adjacency[a].append(b)
+            adjacency[b].append(a)  # undirected for traversal
+
+        rings: List[List[Tuple[float, float]]] = []
+        visited_edges: set[Tuple[Tuple[float, float], Tuple[float, float]]] = set()
+
+        for a, b in boundary_edges:
+            if (a, b) in visited_edges or (b, a) in visited_edges:
+                continue
+            # start a new ring from edge (a, b)
+            ring: List[Tuple[float, float]] = [a, b]
+            prev, current = a, b
+            visited_edges.add((a, b))
+            while True:
+                # choose the next point that continues the chain
+                neighbours = adjacency[current]
+                next_pt = None
+                for n in neighbours:
+                    if n != prev and ((current, n) not in visited_edges):
+                        next_pt = n
+                        break
+                if next_pt is None:
+                    # If no forward edge available, attempt closure
+                    if current != ring[0]:
+                        # close explicitly when adjacency forced us to stop
+                        ring.append(ring[0])
+                    break
+                ring.append(next_pt)
+                visited_edges.add((current, next_pt))
+                prev, current = current, next_pt
+                if current == ring[0]:
+                    # closed loop
+                    break
+
+            # ensure first==last for GeoJSON ring semantics
+            if ring[-1] != ring[0]:
+                ring.append(ring[0])
+            # Skip degenerate rings
+            if len(ring) >= 4:
+                rings.append(ring)
+
+        if rings:
+            polygons[basin_id] = rings
+        else:
+            # Fallback: as a last resort keep the bounding box
+            min_row = min(row for row, _ in cells)
+            max_row = max(row for row, _ in cells)
+            min_col = min(col for _, col in cells)
+            max_col = max(col for _, col in cells)
+            (xmin, ymin), _ = dem.transform.cell_bounds(min_row, min_col)
+            _, (xmax, ymax) = dem.transform.cell_bounds(max_row, max_col)
+            polygon = [
+                (xmin, ymin),
+                (xmax, ymin),
+                (xmax, ymax),
+                (xmin, ymax),
+                (xmin, ymin),
+            ]
+            polygons[basin_id] = [polygon]
+
     return polygons
 
 

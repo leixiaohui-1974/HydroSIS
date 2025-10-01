@@ -16,25 +16,39 @@
 2. reservoir_reoperation: 161.3881941190155
 3. vic_hbv_tuning: 1587.4879887180691
 
+## GIS地图展示
+
+### 子流域划分图
+
+![subbasin_map](../figures/professional_subbasin_map.png)
+
+### 参数分区划分图
+
+![parameter_zone_map](../figures/professional_zone_map.png)
+
+### 综合对比仪表板
+
+![gis_dashboard](../figures/gis_comparison_dashboard.png)
+
 ## 指标图表
 
-![metric_rmse](../figures/metric_rmse.svg)
+![metric_rmse](../figures/metric_rmse.png)
 
-![metric_mae](../figures/metric_mae.svg)
+![metric_mae](../figures/metric_mae.png)
 
-![metric_pbias](../figures/metric_pbias.svg)
+![metric_pbias](../figures/metric_pbias.png)
 
-![metric_nse](../figures/metric_nse.svg)
+![metric_nse](../figures/metric_nse.png)
 
 ## 子流域径流过程对比
 
-![hydrograph_SB1](../figures/hydrograph_SB1.svg)
+![hydrograph_SB1](../figures/hydrograph_SB1.png)
 
-![hydrograph_SB2](../figures/hydrograph_SB2.svg)
+![hydrograph_SB2](../figures/hydrograph_SB2.png)
 
-![hydrograph_SB3](../figures/hydrograph_SB3.svg)
+![hydrograph_SB3](../figures/hydrograph_SB3.png)
 
-![hydrograph_SB4](../figures/hydrograph_SB4.svg)
+![hydrograph_SB4](../figures/hydrograph_SB4.png)
 
 ## 模型运行概述
 

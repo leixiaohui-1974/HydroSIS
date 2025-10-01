@@ -349,6 +349,15 @@ def gather_gis_layers(config, repository_root: Path) -> Mapping[str, Mapping[str
         dem_path.parent / "derived",
         repo_root / "data/sample/gis/derived",
     ]
+    # Prefer external boundaries when provided in the configuration.
+    boundaries_path = getattr(getattr(config, "delineation", None), "boundaries_path", None)
+    if boundaries_path:
+        bpath = Path(boundaries_path)
+        if not bpath.is_absolute():
+            bpath = repo_root / bpath
+        if bpath.exists():
+            subbasins_geojson = load_geojson(bpath)
+
     for directory in derived_candidates:
         sub_candidate = directory / "subbasins.geojson"
         acc_candidate = directory / "flow_accumulation.geojson"
