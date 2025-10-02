@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import sys
 from typing import Dict, List, Mapping, Sequence
@@ -182,14 +183,25 @@ def main() -> None:
     if observations is None:
         observations = _load_observations(config.io.discharge_observations)
 
+    workflow_kwargs: dict[str, object] = {
+        "persist_outputs": True,
+        "generate_report": True,
+        "report_template": default_evaluation_template(),
+    }
+    provider_env = os.environ.get("HYDROSIS_LLM_PROVIDER")
+    if provider_env:
+        workflow_kwargs["llm_provider"] = provider_env
+    else:
+        workflow_kwargs["narrative_callback"] = (
+            lambda prompt: f"（示例 LLM 输出）{prompt}"
+        )
+
     workflow_result = run_workflow(
         config,
         forcing,
         observations=observations,
-        persist_outputs=True,
-        generate_report=True,
-        report_template=default_evaluation_template(),
-        narrative_callback=lambda prompt: f"（示例 LLM 输出）{prompt}",
+        template_context=None,
+        **workflow_kwargs,
     )
 
     print("Baseline aggregated discharge (first 5 values):")

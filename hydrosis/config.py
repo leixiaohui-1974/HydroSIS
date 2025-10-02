@@ -58,6 +58,8 @@ class EvaluationConfig:
         default_factory=lambda: ["rmse", "mae", "pbias", "nse"]
     )
     comparisons: List[ComparisonPlanConfig] = field(default_factory=list)
+    llm_provider: Optional[str] = None
+    llm_model: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Mapping[str, object]) -> "EvaluationConfig":
@@ -67,12 +69,16 @@ class EvaluationConfig:
                 ComparisonPlanConfig.from_dict(item)
                 for item in data.get("comparisons", [])
             ],
+            llm_provider=data.get("llm_provider"),
+            llm_model=data.get("llm_model"),
         )
 
     def to_dict(self) -> Dict[str, object]:
         return {
             "metrics": list(self.metrics),
             "comparisons": [cfg.to_dict() for cfg in self.comparisons],
+            "llm_provider": self.llm_provider,
+            "llm_model": self.llm_model,
         }
 
 

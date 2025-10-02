@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import Dict, List
+from unittest import mock
 
 from hydrosis import HydroSISModel, run_workflow
 from hydrosis.config import (
@@ -166,6 +167,38 @@ class WorkflowIntegrationTests(unittest.TestCase):
 
             if result.report_path is not None:
                 self.assertTrue(result.report_path.exists())
+
+    def test_run_workflow_injects_qwen_via_environment(self) -> None:
+        forcing: Dict[str, List[float]] = {
+            "S1": [0.0, 1.0, 2.0],
+            "S2": [0.0, 1.0, 2.0],
+            "S3": [0.0, 1.0, 2.0],
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = _build_workflow_config(Path(tmpdir) / "results")
+            baseline_model = HydroSISModel.from_config(config)
+            observations = baseline_model.accumulate_discharge(baseline_model.run(forcing))
+
+            with mock.patch(
+                "hydrosis.reporting.markdown.qwen_narrative",
+                return_value="LLM narrative",
+            ) as mocked_qwen, mock.patch.dict(
+                "os.environ",
+                {"HYDROSIS_LLM_PROVIDER": "qwen", "DASHSCOPE_API_KEY": "token"},
+                clear=False,
+            ):
+                result = run_workflow(
+                    config,
+                    forcing,
+                    observations=observations,
+                    scenario_ids=["alternate_routing"],
+                    generate_report=True,
+                )
+
+            self.assertIsNotNone(result.report_path)
+            self.assertTrue(result.report_path and result.report_path.exists())
+            mocked_qwen.assert_called()
 
 
 if __name__ == "__main__":  # pragma: no cover

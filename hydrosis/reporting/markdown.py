@@ -10,6 +10,7 @@ from hydrosis.evaluation import ModelComparator, ModelScore, SimulationEvaluator
 
 from .charts import plot_hydrograph, plot_metric_bars
 from .templates import EvaluationReportTemplate, render_template, default_evaluation_template
+from .narratives import qwen_narrative
 
 
 @dataclass
@@ -150,6 +151,41 @@ def _generate_hydrograph_figures(
     return figures
 
 
+_QWEN_ALIASES = {"qwen", "dashscope", "qwen-plus", "qianwen"}
+
+
+def _resolve_narrator(
+    narrative_callback: Callable[[str], str] | None,
+    template_context: Mapping[str, str] | None,
+    llm_provider: str | None,
+) -> tuple[Callable[[str], str] | None, Mapping[str, str]]:
+    context: dict[str, str] = dict(template_context or {})
+
+    provider = (
+        llm_provider
+        or context.pop("llm_provider", None)
+        or os.environ.get("HYDROSIS_LLM_PROVIDER")
+    )
+    model_override = context.pop("llm_model", None)
+    api_key_override = context.pop("llm_api_key", None)
+
+    if narrative_callback is None and provider:
+        provider_normalised = str(provider).lower()
+        if provider_normalised in _QWEN_ALIASES:
+            chosen_model = (
+                model_override
+                or os.environ.get("HYDROSIS_LLM_MODEL")
+                or "qwen-plus"
+            )
+
+            def _call(prompt: str) -> str:
+                return qwen_narrative(prompt, api_key=api_key_override, model=chosen_model)
+
+            narrative_callback = _call
+
+    return narrative_callback, context
+
+
 def generate_evaluation_report(
     output_path: Path,
     scores: Sequence[ModelScore],
@@ -162,6 +198,7 @@ def generate_evaluation_report(
     template: EvaluationReportTemplate | None = None,
     narrative_callback: Callable[[str], str] | None = None,
     template_context: Mapping[str, str] | None = None,
+    llm_provider: str | None = None,
 ) -> Path:
     """Create a markdown report summarising model evaluation results."""
 
@@ -229,10 +266,16 @@ def generate_evaluation_report(
 
     if template is None:
         template = default_evaluation_template()
+
+    narrative_callback, resolved_context = _resolve_narrator(
+        narrative_callback,
+        template_context,
+        llm_provider,
+    )
     render_template(
         builder,
         template,
-        template_context or {},
+        resolved_context,
         narrator=narrative_callback,
     )
 
