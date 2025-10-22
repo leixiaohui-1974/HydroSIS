@@ -1,6 +1,6 @@
-"""简化包装 - 保持向后兼容
+"""Simplified wrapper - maintain backward compatibility
 
-建议新代码使用 hydrosis.hydrodynamics 模块
+New code should use the hydrosis.hydrodynamics module
 """
 
 import warnings
@@ -12,7 +12,7 @@ from hydrosis.hydrodynamics import (
 )
 
 warnings.warn(
-    "routing.hydrodynamic_1d 已废弃，请使用 hydrosis.hydrodynamics",
+    "routing.hydrodynamic_1d is deprecated, please use hydrosis.hydrodynamics",
     DeprecationWarning,
     stacklevel=2
 )

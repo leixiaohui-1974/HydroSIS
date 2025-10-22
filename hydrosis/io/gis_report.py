@@ -239,14 +239,14 @@ def summarise_paths(paths: Sequence[Path]) -> List[Sequence[object]]:
     rows: List[Sequence[object]] = []
     for raw in paths:
         path = Path(raw)
-        kind = "不存在"
+        kind = "Not Found"
         size_text = "—"
         details = ""
         if path.is_file():
-            kind = "文件"
+            kind = "File"
             size_text = _format_size(path.stat().st_size)
         elif path.is_dir():
-            kind = "目录"
+            kind = "Directory"
             total_size = 0.0
             file_count = 0
             try:
@@ -257,7 +257,7 @@ def summarise_paths(paths: Sequence[Path]) -> List[Sequence[object]]:
             except FileNotFoundError:
                 file_count = 0
             size_text = _format_size(total_size)
-            details = f"包含 {file_count} 个文件"
+            details = f"Contains {file_count} files"
         rows.append((path.as_posix(), kind, size_text, details or ""))
     return rows
 

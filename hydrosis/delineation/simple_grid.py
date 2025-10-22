@@ -203,13 +203,14 @@ def build_subbasin_polygons(
 ) -> Dict[str, List[List[Tuple[float, float]]]]:
     """Return polygon outlines that follow the union of contributing cells.
 
-    Previous versions returned a single bounding box for each子流域，导致示意图
-    呈现为“方块”。这里改为：
-    - 为每个栅格单元生成四条边；
-    - 去除与相邻单元共享的边，仅保留外边界；
-    - 将剩余边按连通性串联成闭合环，得到一个或多个外轮廓。
+    Previous versions returned a single bounding box for each subbasin, resulting in
+    diagrams appearing as "square blocks". This implementation instead:
+    - Generates four edges for each raster cell
+    - Removes edges shared with adjacent cells, keeping only outer boundaries
+    - Chains remaining edges by connectivity into closed rings, producing one or more outer contours
 
-    该实现不依赖第三方几何库，生成的多边形为正交折线，能真实反映栅格集合形状。
+    This implementation does not depend on third-party geometry libraries and generates
+    polygons as orthogonal polylines that accurately reflect the shape of raster cell collections.
     """
 
     # Helper: return the four directed edges of a cell.
