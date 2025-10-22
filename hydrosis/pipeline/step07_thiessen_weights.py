@@ -202,20 +202,20 @@ def run_step07_thiessen_weights(config_path: Path | str) -> Dict[str, Path]:
     report_path = build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 07 – Thiessen Weights")
     builder.add_paragraph(
-        "根据雨量站布设与子流域形状计算泰森多边形及站点权重，为后续面雨量插值提供输入。"
+        "Compute Thiessen polygons and station weights based on gauge layout and subbasin geometry for areal precipitation interpolation."
     )
-    builder.add_heading("统计概览", level=2)
+    builder.add_heading("Statistical Overview", level=2)
     top_rows = weights_df.sort_values("weight", ascending=False).head(10)
     builder.add_table(
         TableData(
-            headers=["子流域", "雨量站", "权重"],
+            headers=["Subbasin", "Station", "Weight"],
             rows=[
                 [row["subbasin_id"], row["station_id"], f"{row['weight']:.3f}"]
                 for _, row in top_rows.iterrows()
             ],
         )
     )
-    builder.add_paragraph(f"权重计算时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Weight computation time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     rainfall_cfg["weights_json"] = context.to_relative(weights_json_path)
@@ -235,3 +235,5 @@ def run_step07_thiessen_weights(config_path: Path | str) -> Dict[str, Path]:
 
 
 def run_step08_areal_precipitation(config_path: Path | str) -> Dict[str, Path]:
+    """Placeholder - implemented in step08_areal_precipitation.py module."""
+    raise NotImplementedError("See step08_areal_precipitation.py")

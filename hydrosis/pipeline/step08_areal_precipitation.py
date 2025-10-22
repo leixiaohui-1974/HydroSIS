@@ -339,13 +339,13 @@ def run_step08_areal_precipitation(config_path: Path | str) -> Dict[str, Path]:
     report_path = build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 08 – Areal Precipitation")
     builder.add_paragraph(
-        "使用泰森权重将雨量站时序插值到参数子流域，生成面雨量表、热力图、累积过程及动画。"
+        "Interpolate gauge time series to parameter subbasins using Thiessen weights, generating areal precipitation tables, heatmaps, cumulative plots, and animations."
     )
-    builder.add_heading("统计摘要", level=2)
+    builder.add_heading("Statistical Summary", level=2)
     summary_preview = areal_summary_df.sort_values("total_depth_mm", ascending=False).head(10)
     builder.add_table(
         TableData(
-            headers=["子流域", "总雨量 (mm)", "峰值强度 (mm/hr)"],
+            headers=["Subbasin", "Total Rainfall (mm)", "Peak Intensity (mm/hr)"],
             rows=[
                 [
                     row["subbasin_id"],
@@ -356,7 +356,7 @@ def run_step08_areal_precipitation(config_path: Path | str) -> Dict[str, Path]:
             ],
         )
     )
-    builder.add_paragraph(f"面雨量插值时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Areal precipitation interpolation time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     rainfall_cfg["areal_precip_path"] = context.to_relative(subbasin_csv)
@@ -379,3 +379,5 @@ def run_step08_areal_precipitation(config_path: Path | str) -> Dict[str, Path]:
 
 
 def run_step09_hydrologic_run(config_path: Path | str) -> Dict[str, Path]:
+    """Placeholder - implemented in step09_hydrologic_run.py module."""
+    raise NotImplementedError("See step09_hydrologic_run.py")
