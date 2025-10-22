@@ -172,19 +172,22 @@ def run_step03_partitioning(config_path: Path | str) -> Dict[str, Path]:
 
             report_path = build_report_path(context, step_index, step_name)
             builder = MarkdownReportBuilder("Step 03 – Parameter Partitioning")
-            builder.add_paragraph("本步骤复用既有参数分区成果，对主要统计与文件结构进行验证。")
-            builder.add_heading("总体概览", level=2)
+            builder.add_paragraph(
+                "This step reuses existing parameter zone results and validates key statistics and file structure."
+            )
+            builder.add_heading("Overview", level=2)
             highlight_items = [
                 f"Parameter zones: {total_zones}",
                 f"Parameter subzones: {total_subzones}",
             ]
             if largest_zone is not None:
                 highlight_items.append(
-                    f"最大分区：{largest_zone['zone_id']} ({largest_zone['area_km2']:.2f} km²，{largest_zone['subzone_count']} 个子分区)"
+                    f"Largest zone: {largest_zone['zone_id']} "
+                    f"({largest_zone['area_km2']:.2f} km², {largest_zone['subzone_count']} subzones)"
                 )
             builder.add_list(highlight_items)
 
-            builder.add_heading("区域预览", level=2)
+            builder.add_heading("Zone Preview", level=2)
             preview = zones_df.head(min(6, len(zones_df)))
             if not preview.empty:
                 builder.add_table(
@@ -203,7 +206,7 @@ def run_step03_partitioning(config_path: Path | str) -> Dict[str, Path]:
                     )
                 )
 
-            builder.add_heading("成果文件", level=2)
+            builder.add_heading("Output Files", level=2)
             builder.add_list(
                 [
                     f"Parameter zones GeoJSON: `{context.to_relative(parameter_zones_geojson)}`",
@@ -211,7 +214,7 @@ def run_step03_partitioning(config_path: Path | str) -> Dict[str, Path]:
                     f"Parameter channels GeoJSON: `{context.to_relative(parameter_channels_geojson)}`",
                 ]
             )
-            builder.add_paragraph(f"验证时间：{timestamp.isoformat()}")
+            builder.add_paragraph(f"Validation time: {timestamp.isoformat()}")
             report_path.parent.mkdir(parents=True, exist_ok=True)
             builder.write(report_path)
 
@@ -522,3 +525,14 @@ def run_step03_partitioning(config_path: Path | str) -> Dict[str, Path]:
 
 
 def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
+    """Placeholder for step 04 - channel profile processing.
+
+    This function is defined in step04_channel_profile.py module.
+
+    Args:
+        config_path: Path to configuration file
+
+    Returns:
+        Dictionary mapping output types to file paths
+    """
+    raise NotImplementedError("This function is implemented in step04_channel_profile.py")
