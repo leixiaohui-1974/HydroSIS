@@ -463,7 +463,7 @@ class SaintVenantSolver:
         try:
             # 使用断面几何的反函数
             return self.cross_section.compute_depth_from_area(area)
-        except:
+        except (AttributeError, ValueError, ZeroDivisionError, RuntimeError):
             # 如果失败，使用简单近似
             if hasattr(self.cross_section, 'width'):
                 return max(area / self.cross_section.width, 0.01)

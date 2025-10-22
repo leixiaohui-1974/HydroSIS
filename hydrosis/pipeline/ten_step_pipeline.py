@@ -633,6 +633,11 @@ def run_step02_pour_points(config_path: Path | str) -> Dict[str, Path]:
     source_entry = pour_cfg.get("source_geojson")
     use_existing = False
     pour_points: List[Any]
+
+    # Load transform early in case we need it for coordinate conversion
+    with rasterio.open(flow_acc_path) as acc_ds:
+        transform = acc_ds.transform
+
     if source_entry:
         source_path = _resolve_input_path(context, str(source_entry))
         if source_path.exists():
@@ -693,9 +698,9 @@ def run_step02_pour_points(config_path: Path | str) -> Dict[str, Path]:
     if not pour_points:
         raise RuntimeError("Pour point generation produced no outputs.")
 
+    # Read accumulation data (transform was already loaded earlier)
     with rasterio.open(flow_acc_path) as acc_ds:
         accumulation = acc_ds.read(1)
-        transform = acc_ds.transform
     with rasterio.open(dem_path) as dem_ds:
         dem_array = dem_ds.read(1, masked=True).filled(np.nan)
         dem_transform = dem_ds.transform

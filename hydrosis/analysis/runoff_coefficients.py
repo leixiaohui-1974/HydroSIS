@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Mapping, Set, Tuple
+from typing import Dict, List, Mapping, Sequence, Set, Tuple
 
 import numpy as np
 import pandas as pd

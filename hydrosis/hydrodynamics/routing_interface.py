@@ -1,5 +1,11 @@
 # ============ HydroSIS 集成接口 ============
 
+import math
+from typing import List, Mapping
+
+from .core import SaintVenantSolver, BoundaryCondition, RiverReach
+
+
 class HydrodynamicRoutingModel:
     """作为 HydroSIS RoutingModel 的水动力路由实现"""
     

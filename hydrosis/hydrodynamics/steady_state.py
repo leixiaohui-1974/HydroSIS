@@ -54,7 +54,7 @@ class SteadyStateCalculator:
         try:
             h_normal = fsolve(manning_residual, h_guess, xtol=tolerance)[0]
             return max(h_normal, 0.1)
-        except:
+        except (ValueError, RuntimeError, ZeroDivisionError):
             # 如果求解失败，使用迭代方法
             return self._iterative_normal_depth(discharge, tolerance)
     
@@ -108,7 +108,7 @@ class SteadyStateCalculator:
         try:
             h_critical = fsolve(froude_residual, 0.5, xtol=tolerance)[0]
             return max(h_critical, 0.1)
-        except:
+        except (ValueError, RuntimeError, ZeroDivisionError):
             return 0.5  # 默认值
     
     def compute_steady_profile(self, 
@@ -198,7 +198,7 @@ class SteadyStateCalculator:
         try:
             h_upstream = fsolve(energy_residual, h_guess, xtol=1e-6)[0]
             return max(h_upstream, 0.1)
-        except:
+        except (ValueError, RuntimeError, ZeroDivisionError):
             # 如果求解失败，使用简单近似
             return h_downstream + self.reach.bed_slope * dx
     
