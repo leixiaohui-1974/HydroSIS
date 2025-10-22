@@ -108,7 +108,7 @@ class HydroSHEDSPipeline:
                 filtered2 = [f for f in fc.get("features", []) if _in_allowed2(f)]
                 fc = {"type": "FeatureCollection", "features": filtered2}
                 process_log["steps"].append({"filter_states": list(allowed)})
-        # 将候选子流域写入结果目录，便于前端图层加载
+        # Write candidate subbasins to results directory for frontend layer loading
         try:
             (self.results_root / "wbd_candidates.geojson").write_text(json.dumps(fc, ensure_ascii=False), encoding="utf-8")
             process_log["steps"].append({"write_wbd_candidates": str(self.results_root / "wbd_candidates.geojson")})
@@ -144,7 +144,7 @@ class HydroSHEDSPipeline:
         if dem_path:
             dem_out_dir = self.results_root / "dem"
             try:
-                # 提高自动降采样阈值，尽量避免 DEM 过度降采样导致“直边”
+                # Increase auto-downsample threshold to avoid excessive DEM decimation causing "straight edges"
                 max_pixels_no_decimate = int(input_params.get("max_pixels_no_decimate", 256_000_000))
                 max_cells_d8 = int(input_params.get("max_cells_d8", 16_000_000))
                 dem_result = run_dem_flow_pipeline(
@@ -191,7 +191,7 @@ class HydroSHEDSPipeline:
 
     @staticmethod
     def _build_leaflet_report(title: str, fc: Mapping[str, object], metadata: Mapping[str, object]) -> str:
-        # 使用纯模板字符串和占位符避免 Python f-string 与 HTML/JS 花括号冲突
+        # Use pure template strings with placeholders to avoid Python f-string conflicts with HTML/JS braces
         name = metadata.get('name') or '—'
         code = metadata.get('basin_code') or '—'
         area = metadata.get('area_km2') or '—'
@@ -199,43 +199,43 @@ class HydroSHEDSPipeline:
         fc_json = json.dumps(fc)
         html = """
 <!DOCTYPE html>
-<html lang=\"zh\">
+<html lang=\"en\">
 <head>
   <meta charset=\"utf-8\" />
-  <title>HydroSHEDS 管线报告 - __TITLE__</title>
+  <title>HydroSHEDS Pipeline Report - __TITLE__</title>
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
   <link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.css\" />
   <style> html, body, #map {{ height: 85%; margin: 0; }} body {{ font-family: Arial, sans-serif; }} .card {{ padding: 12px; }} .coord {{ position: fixed; right: 12px; bottom: 12px; background: #fff; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }} </style>
 </head>
 <body>
   <div class=\"card\">
-    <h2>HydroSHEDS 处理报告</h2>
-    <p>名称: __NAME__ | 代码: __CODE__ | 面积(km²): __AREA__</p>
-    <p>来源: __SOURCE__</p>
-    <p id="dem-stats">DEM统计: —</p>
+    <h2>HydroSHEDS Processing Report</h2>
+    <p>Name: __NAME__ | Code: __CODE__ | Area(km²): __AREA__</p>
+    <p>Source: __SOURCE__</p>
+    <p id="dem-stats">DEM Statistics: —</p>
     <div class="toggle-group">
-      <label><input type="checkbox" id="toggle-dem" checked> 显示DEM栅格</label>
-      <label><input type="checkbox" id="toggle-fdir" checked> 显示流向栅格</label>
-      <label><input type="checkbox" id="toggle-facc-raster" checked> 显示累积栅格</label>
-      <label><input type="checkbox" id="toggle-acc"> 显示累积点</label>
-      <label><input type="checkbox" id="toggle-streams" checked> 显示水系矢量</label>
-      <label><input type="checkbox" id="toggle-wbd" checked> 显示子流域(WBD)</label>
-      <label><input type="checkbox" id="toggle-zones-raster"> 显示参数分区栅格</label>
-      <label><input type="checkbox" id="toggle-zones"> 显示参数分区矢量</label>
+      <label><input type="checkbox" id="toggle-dem" checked> Show DEM Raster</label>
+      <label><input type="checkbox" id="toggle-fdir" checked> Show Flow Direction</label>
+      <label><input type="checkbox" id="toggle-facc-raster" checked> Show Accumulation Raster</label>
+      <label><input type="checkbox" id="toggle-acc"> Show Accumulation Points</label>
+      <label><input type="checkbox" id="toggle-streams" checked> Show Stream Network</label>
+      <label><input type="checkbox" id="toggle-wbd" checked> Show Subbasins (WBD)</label>
+      <label><input type="checkbox" id="toggle-zones-raster"> Show Parameter Zones Raster</label>
+      <label><input type="checkbox" id="toggle-zones"> Show Parameter Zones Vector</label>
     </div>
-    <p style="margin-top:8px;color:#555;">图例：河网(蓝线)；高累积点(紫点)；参数分区(灰/绿/橙网格)</p>
+    <p style="margin-top:8px;color:#555;">Legend: Streams (blue lines); High accumulation points (purple dots); Parameter zones (gray/green/orange grid)</p>
   </div>
   <div id=\"map\"></div>
-  <div class=\"coord\" id=\"coord\">经纬度: —</div>
+  <div class=\"coord\" id=\"coord\">Coordinates: —</div>
   <script src=\"https://unpkg.com/leaflet@1.9.4/dist/leaflet.js\"></script>
-  <!-- GeoTIFF 渲染依赖 -->
+  <!-- GeoTIFF rendering dependencies -->
   <script src=\"https://cdn.jsdelivr.net/npm/geotiff@2.1.3/dist/geotiff.min.js\"></script>
   <script src=\"https://cdn.jsdelivr.net/npm/georaster@1.7.1/dist/georaster.min.js\"></script>
   <script src=\"https://cdn.jsdelivr.net/npm/georaster-layer-for-leaflet@1.7.0/dist/georaster-layer-for-leaflet.min.js\"></script>
   <script>
     const map = L.map('map');
     const osm = L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{ maxZoom: 19 }}).addTo(map);
-    // 图层面板与叠放顺序
+    // Layer pane and stacking order
     map.createPane('zones'); map.getPane('zones').style.zIndex = 400;
     map.createPane('acc');   map.getPane('acc').style.zIndex = 600;
     map.createPane('streams'); map.getPane('streams').style.zIndex = 650;
@@ -243,9 +243,9 @@ class HydroSHEDSPipeline:
     const layer = L.geoJSON(fc, {{ style: {{ color: '#d62728', weight: 2, fillOpacity: 0.35 }} }}).addTo(map);
     try {{ map.fitBounds(layer.getBounds().pad(0.2)); }} catch(e) {{ map.setView([0,0], 2); }}
     L.control.scale().addTo(map);
-    map.on('mousemove', (e) => {{ const s = `经度: ${{e.latlng.lng.toFixed(5)}} | 纬度: ${{e.latlng.lat.toFixed(5)}}`; document.getElementById('coord').textContent = s; }});
+    map.on('mousemove', (e) => {{ const s = `Longitude: ${{e.latlng.lng.toFixed(5)}} | Latitude: ${{e.latlng.lat.toFixed(5)}}`; document.getElementById('coord').textContent = s; }});
 
-    // -------- 栅格图层加载助手 --------
+    // -------- Raster layer loading helper --------
     async function addGeoTiff(url, options) {{
       const resp = await fetch(url);
       const arrayBuffer = await resp.arrayBuffer();
@@ -259,25 +259,25 @@ class HydroSHEDSPipeline:
       return layer;
     }}
 
-    // 加载 DEM 派生图层（相对 report.html 所在目录）
+    // Load DEM-derived layers (relative to report.html directory)
     fetch('dem/flow_accumulation.geojson').then(r => r.json()).then(acc => {{
       const accLayer = L.geoJSON(acc, {{ pane: 'acc', pointToLayer: (f, latlng) => L.circleMarker(latlng, {{ radius: 3, color: '#9467bd' }}),
-                                          onEachFeature: (f,l) => l.bindPopup('累积: ' + (f.properties?.acc ?? f.properties?.accumulation ?? 'N/A')) }});
+                                          onEachFeature: (f,l) => l.bindPopup('Accumulation: ' + (f.properties?.acc ?? f.properties?.accumulation ?? 'N/A')) }});
       document.getElementById('toggle-acc').onchange = (ev) => {{ if (ev.target.checked) accLayer.addTo(map); else map.removeLayer(accLayer); }};
     }}).catch(() => {{}});
 
-    // DEM统计信息（来自 process_log.json）
+    // DEM statistics (from process_log.json)
     fetch('process_log.json').then(r => r.json()).then(log => {{
       const steps = (log && log.steps) ? log.steps : [];
       let stats = null;
       for (const s of steps) {{ if (s.dem_flow && s.dem_flow.stats) {{ stats = s.dem_flow.stats; break; }} }}
       if (stats) {{
-        document.getElementById('dem-stats').textContent = `DEM统计: 高程[min/max]=${{stats.dem_min}}/${{stats.dem_max}} | 累积最大=${{stats.acc_max}} | 累积点数=${{stats.points_exported}}`;
+        document.getElementById('dem-stats').textContent = `DEM Statistics: Elevation[min/max]=${{stats.dem_min}}/${{stats.dem_max}} | Max Accumulation=${{stats.acc_max}} | Points Exported=${{stats.points_exported}}`;
       }}
     }}).catch(() => {{}});
     fetch('dem/stream_network.geojson').then(r => r.json()).then(streams => {{
-      const streamsLayer = L.geoJSON(streams, {{ pane: 'streams', style: {{ color: '#0050b5', weight: 3 }}, onEachFeature: (f,l) => l.bindPopup(`河网线 | 阈值: ${{f.properties?.threshold ?? 'N/A'}} | 点数: ${{f.properties?.length_vertices ?? 'N/A'}}`) }});
-      // 默认显示水系矢量；通过复选框控制
+      const streamsLayer = L.geoJSON(streams, {{ pane: 'streams', style: {{ color: '#0050b5', weight: 3 }}, onEachFeature: (f,l) => l.bindPopup(`Stream | Threshold: ${{f.properties?.threshold ?? 'N/A'}} | Vertices: ${{f.properties?.length_vertices ?? 'N/A'}}`) }});
+      // Show stream vector by default; controlled by checkbox
       streamsLayer.addTo(map);
       const $streams = document.getElementById('toggle-streams');
       $streams.onchange = (ev) => {{ if (ev.target.checked) streamsLayer.addTo(map); else map.removeLayer(streamsLayer); }};
@@ -295,11 +295,11 @@ class HydroSHEDSPipeline:
       document.getElementById('toggle-zones').onchange = (ev) => {{ if (ev.target.checked) zonesLayer.addTo(map); else map.removeLayer(zonesLayer); }};
     }}).catch(() => {{}});
 
-    // --- WBD 子流域（候选 HUC12） ---
+    // --- WBD Subbasins (Candidate HUC12) ---
     fetch('wbd_candidates.geojson').then(r => r.json()).then(wbd => {{
       let data = wbd;
       if (!data || !Array.isArray(data.features) || data.features.length === 0) {{
-        // 候选为空时，用已选 case_basin 作为回退，避免“看不到”的情况
+        // When candidates are empty, fallback to selected case_basin to avoid "invisible" issue
         return fetch('case_basin.geojson').then(rr => rr.json()).then(basin => {{ return basin; }});
       }}
       return data;
@@ -310,7 +310,7 @@ class HydroSHEDSPipeline:
       $wbd.onchange = (ev) => {{ if (ev.target.checked) wbdLayer.addTo(map); else map.removeLayer(wbdLayer); }};
     }}).catch(() => {{}});
 
-    // --- 栅格：DEM、流向、累积、参数分区 ---
+    // --- Rasters: DEM, Flow Direction, Accumulation, Parameter Zones ---
     (async () => {{
       try {{
         const demLayer = await addGeoTiff('dem/dem_cropped.tif', {{ opacity: 0.6, pixelValuesToColor: (vals) => {{
@@ -325,7 +325,7 @@ class HydroSHEDSPipeline:
         const $fd  = document.getElementById('toggle-fdir');
         const $faR = document.getElementById('toggle-facc-raster');
         const $zonesR = document.getElementById('toggle-zones-raster');
-        // 默认显示这些栅格图层，提升“能看到”的体验
+        // Show these raster layers by default to improve visibility experience
         if ($dem.checked) demLayer.addTo(map);
         if ($fd.checked)  fdLayer.addTo(map);
         if ($faR.checked) faLayer.addTo(map);
@@ -334,7 +334,7 @@ class HydroSHEDSPipeline:
         $fd.onchange  = (ev) => {{ if (ev.target.checked) fdLayer.addTo(map); else map.removeLayer(fdLayer); }};
         $faR.onchange = (ev) => {{ if (ev.target.checked) faLayer.addTo(map); else map.removeLayer(faLayer); }};
         $zonesR.onchange = (ev) => {{ if (ev.target.checked) zonesRasterLayer.addTo(map); else map.removeLayer(zonesRasterLayer); }};
-      }} catch (e) {{ console.warn('GeoTIFF 图层加载失败:', e); }}
+      }} catch (e) {{ console.warn('GeoTIFF layer loading failed:', e); }}
     })();
   </script>
 </body>
@@ -348,7 +348,7 @@ class HydroSHEDSPipeline:
             .replace("__AREA__", str(area))
             .replace("__SOURCE__", str(source))
             .replace("__FC_JSON__", fc_json)
-            # 统一将模板遗留的双花括号转换为单花括号，避免浏览器语法错误
+            # Convert template double braces to single braces to avoid browser syntax errors
             .replace("{{", "{")
             .replace("}}", "}")
         )
