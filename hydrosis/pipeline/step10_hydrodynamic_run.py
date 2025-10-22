@@ -293,13 +293,14 @@ def run_step10_hydrodynamic_run(config_path: Path | str) -> Dict[str, Path]:
     report_path = build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 10 – Hydrodynamic Scenario Run")
     builder.add_paragraph(
-        "执行水动力情景模拟，对比基线与情景流量差异，并输出峰值偏差统计与对比图件。"
+        "Execute hydrodynamic scenario simulations, comparing baseline and scenario discharge differences, "
+        "and outputting peak deviation statistics and comparison visualizations."
     )
-    builder.add_heading("峰值偏差概览", level=2)
+    builder.add_heading("Peak Deviation Overview", level=2)
     diff_preview = difference_df.sort_values("peak_absolute_difference_m3s", ascending=False).head(10)
     builder.add_table(
         TableData(
-            headers=["情景", "子流域", "峰值偏差 (m³/s)"],
+            headers=["Scenario", "Subbasin", "Peak Deviation (m³/s)"],
             rows=[
                 [
                     row["scenario_id"],
@@ -310,7 +311,7 @@ def run_step10_hydrodynamic_run(config_path: Path | str) -> Dict[str, Path]:
             ],
         )
     )
-    builder.add_paragraph(f"情景模拟完成时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Scenario simulation completion time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     project_cfg = context.config.setdefault("project", {})
@@ -373,11 +374,12 @@ def run_final_pipeline_report(config_path: Path | str) -> Dict[str, Path]:
     final_report_path = context.reports_directory / "final_pipeline_report.md"
     builder = MarkdownReportBuilder("Upper Truckee Ten-Step Pipeline Summary")
     builder.add_paragraph(
-        "本报告整合十步流水线各阶段的 Markdown 内容，便于审查整体输入、输出与关键指标。"
+        "This report integrates Markdown content from all ten pipeline stages, "
+        "facilitating review of overall inputs, outputs, and key metrics."
     )
-    builder.add_heading("目录", level=2)
+    builder.add_heading("Table of Contents", level=2)
     builder.extend(summary_lines)
-    builder.add_paragraph(f"汇总生成时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Summary generation time: {timestamp.isoformat()}")
 
     for title, lines in sections:
         builder.add_heading(title, level=2)

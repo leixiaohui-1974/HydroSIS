@@ -422,7 +422,7 @@ def run_step09_hydrologic_run(config_path: Path | str) -> Dict[str, Path]:
             main_ax.set_ylabel("Runoff (m³/s)")
             main_ax.set_ylim(0.0, local_discharge_ylim)
             main_ax.grid(True, linestyle="--", alpha=0.3)
-            main_ax.set_title(f"{zone} 分区降雨-径流", fontproperties="SimHei")
+            main_ax.set_title(f"{zone} Zone Rainfall-Runoff")
 
             rain_ax = main_ax.twinx()
             bars = rain_ax.bar(
@@ -450,7 +450,7 @@ def run_step09_hydrologic_run(config_path: Path | str) -> Dict[str, Path]:
             agg_ax.set_ylim(0.0, aggregated_discharge_ylim)
             agg_ax.set_ylabel("Aggregated Runoff (m³/s)")
             agg_ax.grid(True, linestyle="--", alpha=0.3)
-            agg_ax.set_title(f"{zone} 汇流范围降雨/径流", fontproperties="SimHei")
+            agg_ax.set_title(f"{zone} Catchment Rainfall/Runoff")
 
             agg_rain_ax = agg_ax.twinx()
             agg_bars = agg_rain_ax.bar(
@@ -511,17 +511,18 @@ def run_step09_hydrologic_run(config_path: Path | str) -> Dict[str, Path]:
     report_path = build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 09 – Hydrologic Baseline Run")
     builder.add_paragraph(
-        "使用最新的面雨量序列驱动基线水文模型，输出流量时序及关键图件，为情景对比提供参考。"
+        "Drive baseline hydrologic model using latest areal precipitation sequence, outputting discharge "
+        "time series and key visualizations to provide reference for scenario comparison."
     )
-    builder.add_heading("汇总指标", level=2)
+    builder.add_heading("Summary Metrics", level=2)
     peak_info = aggregated_df.max().sort_values(ascending=False).head(5)
     builder.add_table(
         TableData(
-            headers=["子流域", "峰值流量 (m³/s)"],
+            headers=["Subbasin", "Peak Discharge (m³/s)"],
             rows=[[idx, f"{value:.2f}"] for idx, value in peak_info.items()],
         )
     )
-    builder.add_paragraph(f"模型执行时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Model execution time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     project_cfg = context.config.setdefault("project", {})
@@ -1251,3 +1252,5 @@ def _run_cross_section_solver_branch(
 
 
 def run_step10_hydrodynamic_run(config_path: Path | str) -> Dict[str, Path]:
+    """Placeholder - implemented in step10_hydrodynamic_run.py module."""
+    raise NotImplementedError("See step10_hydrodynamic_run.py")

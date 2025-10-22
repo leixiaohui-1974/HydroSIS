@@ -242,20 +242,21 @@ def run_step05_rain_gauge_layout(config_path: Path | str) -> Dict[str, Path]:
     report_path = build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 05 – Rain Gauge Layout")
     builder.add_paragraph(
-        "根据基准降雨序列与子流域形状生成雨量站布局，并输出站点覆盖半径统计与示意图。"
+        "Generate rain gauge layout based on reference precipitation sequence and subbasin geometry, "
+        "outputting station coverage radius statistics and visualization."
     )
-    builder.add_heading("配置参数", level=2)
+    builder.add_heading("Configuration Parameters", level=2)
     builder.add_list(
         [
-            f"站点数：{station_count}",
-            f"随机种子：{seed}",
-            f"空间异质性：{heterogeneity:.2f}",
-            f"突发事件范围：{min_burst_events}–{max_burst_events}",
+            f"Station count: {station_count}",
+            f"Random seed: {seed}",
+            f"Spatial heterogeneity: {heterogeneity:.2f}",
+            f"Burst event range: {min_burst_events}–{max_burst_events}",
         ]
     )
-    builder.add_heading("覆盖统计", level=2)
+    builder.add_heading("Coverage Statistics", level=2)
     summary_table = TableData(
-        headers=["站点", "覆盖面积 (km²)", "等效半径 (m)"],
+        headers=["Station", "Coverage Area (km²)", "Effective Radius (m)"],
         rows=[
             [
                 row["station_id"],
@@ -266,7 +267,7 @@ def run_step05_rain_gauge_layout(config_path: Path | str) -> Dict[str, Path]:
         ],
     )
     builder.add_table(summary_table)
-    builder.add_paragraph(f"布局完成时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Layout completion time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     gauge_cfg["layout_geojson"] = context.to_relative(locations_geojson)
@@ -289,3 +290,5 @@ def run_step05_rain_gauge_layout(config_path: Path | str) -> Dict[str, Path]:
 
 
 def run_step06_rain_sequence(config_path: Path | str) -> Dict[str, Path]:
+    """Placeholder - implemented in step06_rain_sequence.py module."""
+    raise NotImplementedError("See step06_rain_sequence.py")

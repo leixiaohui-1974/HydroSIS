@@ -284,20 +284,21 @@ def run_step06_rain_sequence(config_path: Path | str) -> Dict[str, Path]:
     report_path = build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 06 – Rain Sequence Generation")
     builder.add_paragraph(
-        "根据雨量站布设结果生成时序降雨数据，输出站点及汇总强度序列，并生成热力图、动画和暴雨过程线。"
+        "Generate time-series rainfall data based on gauge layout results, outputting station and "
+        "aggregated intensity sequences, along with heatmaps, animations, and storm hyetographs."
     )
-    builder.add_heading("关键信息", level=2)
+    builder.add_heading("Key Information", level=2)
     builder.add_list(
         [
-            f"时间步长：{time_step_hours:.2f} 小时",
-            f"平均总雨量：{aggregated_total_depth:.2f} mm",
-            f"峰值强度：{aggregated_peak:.2f} mm/hr",
+            f"Time step: {time_step_hours:.2f} hours",
+            f"Average total rainfall: {aggregated_total_depth:.2f} mm",
+            f"Peak intensity: {aggregated_peak:.2f} mm/hr",
         ]
     )
-    builder.add_heading("代表站点统计", level=2)
+    builder.add_heading("Representative Station Statistics", level=2)
     builder.add_table(
         TableData(
-            headers=["站点", "总雨量 (mm)", "峰值强度 (mm/hr)"],
+            headers=["Station", "Total Rainfall (mm)", "Peak Intensity (mm/hr)"],
             rows=[
                 [
                     row["series_id"],
@@ -308,7 +309,7 @@ def run_step06_rain_sequence(config_path: Path | str) -> Dict[str, Path]:
             ],
         )
     )
-    builder.add_paragraph(f"序列生成时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Sequence generation time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     rainfall_cfg["station_series_path"] = context.to_relative(station_forcing_path)
@@ -335,3 +336,5 @@ def run_step06_rain_sequence(config_path: Path | str) -> Dict[str, Path]:
 
 
 def run_step07_thiessen_weights(config_path: Path | str) -> Dict[str, Path]:
+    """Placeholder - implemented in step07_thiessen_weights.py module."""
+    raise NotImplementedError("See step07_thiessen_weights.py")
