@@ -1,0 +1,981 @@
+project:
+  results_root: ../results/upper_truckee_project
+  channel_profile:
+    zones:
+    - P1
+    - P3
+    - P4
+    cross_section_spacing_m: 500.0
+    cross_section_half_width_m: 150.0
+    cross_section_samples: 41
+    band_width: 40.0
+    target_spacing: 150.0
+    monotonic_tolerance: 0.05
+    min_variation: 0.1
+  rain_gauge:
+    station_count: 10
+    heterogeneity: 0.4
+    min_burst_events: 1
+    max_burst_events: 3
+    seed: 42
+    layout_geojson: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/05_rain_gauge_layout/rain_gauge_locations.geojson
+    layout_csv: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/05_rain_gauge_layout/rain_gauge_layout.csv
+    thiessen_geojson: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/05_rain_gauge_layout/rain_gauge_thiessen_polygons.geojson
+  pour_points:
+    source_geojson: ../results/upper_truckee_project/02_pour_points/pour_points.geojson
+  rainfall:
+    base_series_path: storm_forcing_scaled.csv
+    base_column: "\u964D\u96E8\u5F3A\u5EA6_\u6BEB\u7C73\u6BCF\u5C0F\u65F6"
+    station_series_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/06_rain_sequence/rain_gauge_forcing.csv
+    storm_forcing_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/06_rain_sequence/storm_forcing.csv
+    summary_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/06_rain_sequence/forcing_summary.csv
+    weights_json: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/07_thiessen_weights/rain_gauge_weights.json
+    thiessen_polygons: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/07_thiessen_weights/rain_gauge_thiessen_polygons.geojson
+    areal_precip_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/08_areal_precipitation/parameter_subbasin_areal_precipitation.csv
+    timeseries_plot: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/06_rain_sequence/rainfall_timeseries.png
+    timeseries_animation: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/06_rain_sequence/rainfall_animation.gif
+  last_step01_run: '2025-10-12T23:17:45.327357+00:00'
+  last_step02_run: '2025-10-12T23:17:57.963535+00:00'
+  last_step03_run: '2025-10-12T23:18:06.383556+00:00'
+  last_step04_run: '2025-10-13T10:34:28.055689+00:00'
+  last_step05_run: '2025-10-12T23:18:27.261030+00:00'
+  last_step06_run: '2025-10-12T23:18:45.518731+00:00'
+  last_step07_run: '2025-10-12T23:20:07.570147+00:00'
+  last_step08_run: '2025-10-12T23:20:17.686418+00:00'
+  last_step09_run: '2025-10-13T01:47:57.508098+00:00'
+  last_step10_run: '2025-10-13T15:33:32.880733+00:00'
+  final_report_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/reports/final_pipeline_report.md
+  last_final_report: '2025-10-12T09:25:29.156237+00:00'
+channel_dynamics:
+  enable_cross_section_solver: true
+  flow_source: subbasin
+  flow_scenario: hydraulic_p3p4
+  zones:
+  - P1
+  report_segments:
+    P1:
+    - P1_sub1
+  cross_sections_path: ../results/upper_truckee_project/04_channel_profile/channel_cross_sections_corrected.csv
+  centerline_path: ../results/upper_truckee_project/04_channel_profile/channel_centerlines.csv
+  flow_timeseries_path: ../results/upper_truckee_project/09_hydrologic_run/channel_flow_timeseries.csv
+  time_column: Timestamp
+  mannings_n: 0.04
+  slope_cap_m_per_m: 0.01
+  slope_floor_m_per_m: 1.0e-05
+  depth_step_m: 0.25
+  active_half_width_m: 75.0
+delineation:
+  dem_path: ../data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif
+  pour_points_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/02_pour_points/pour_points.geojson
+  accumulation_threshold: 250.0
+  channel_threshold: 250.0
+  flow_direction_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/01_dem_processing/flow_direction.tif
+  flow_accumulation_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/01_dem_processing/flow_accumulation.tif
+  intermediate_directory: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/03_partitioning/intermediate
+  parameter_directory: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/03_partitioning
+  precomputed_subbasins:
+  - id: P3_sub15
+    area_km2: 12.685303
+    downstream: P3_sub6
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub5
+    area_km2: 12.685303
+    downstream: P3_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub6
+    area_km2: 12.685303
+    downstream: P3_sub3
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub7
+    area_km2: 12.685303
+    downstream: P3_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub8
+    area_km2: 12.685303
+    downstream: P3_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub9
+    area_km2: 12.685303
+    downstream: P3_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub10
+    area_km2: 12.685303
+    downstream: P3_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub12
+    area_km2: 12.685303
+    downstream: P3_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub13
+    area_km2: 6.786637
+    downstream: P3_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub14
+    area_km2: 12.685303
+    downstream: P3_sub11
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub2
+    area_km2: 12.685303
+    downstream: P3_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub3
+    area_km2: 12.685303
+    downstream: P3_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub4
+    area_km2: 12.685303
+    downstream: P3_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub11
+    area_km2: 12.685303
+    downstream: P3_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P3_sub1
+    area_km2: 12.685303
+    downstream: P6_sub6
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub20
+    area_km2: 12.685303
+    downstream: P6_sub10
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub26
+    area_km2: 12.685303
+    downstream: P6_sub10
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub6
+    area_km2: 12.685303
+    downstream: P6_sub5
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub10
+    area_km2: 12.685303
+    downstream: P6_sub7
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub16
+    area_km2: 12.685303
+    downstream: P6_sub14
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub27
+    area_km2: 12.685303
+    downstream: P6_sub7
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub5
+    area_km2: 12.685303
+    downstream: P6_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub7
+    area_km2: 12.685303
+    downstream: P6_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub14
+    area_km2: 12.685303
+    downstream: P6_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub17
+    area_km2: 12.685303
+    downstream: P6_sub12
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub21
+    area_km2: 12.685303
+    downstream: P6_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub25
+    area_km2: 12.685303
+    downstream: P6_sub12
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub20
+    area_km2: 12.685303
+    downstream: P2_sub14
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub4
+    area_km2: 12.685303
+    downstream: P6_sub3
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub12
+    area_km2: 12.685303
+    downstream: P6_sub9
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub24
+    area_km2: 12.685303
+    downstream: P6_sub13
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub28
+    area_km2: 6.723211
+    downstream: P6_sub23
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub14
+    area_km2: 12.685303
+    downstream: P2_sub11
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub16
+    area_km2: 12.685303
+    downstream: P2_sub15
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub26
+    area_km2: 12.685303
+    downstream: P2_sub25
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub3
+    area_km2: 12.685303
+    downstream: P6_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub9
+    area_km2: 12.685303
+    downstream: P6_sub8
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub13
+    area_km2: 12.685303
+    downstream: P6_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub18
+    area_km2: 12.685303
+    downstream: P6_sub15
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub22
+    area_km2: 12.685303
+    downstream: P6_sub11
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub23
+    area_km2: 12.685303
+    downstream: P6_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub11
+    area_km2: 12.685303
+    downstream: P2_sub10
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub15
+    area_km2: 12.685303
+    downstream: P2_sub10
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub18
+    area_km2: 12.685303
+    downstream: P2_sub13
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub23
+    area_km2: 12.685303
+    downstream: P2_sub10
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub25
+    area_km2: 12.685303
+    downstream: P2_sub12
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub10
+    area_km2: 12.685303
+    downstream: P4_sub9
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub2
+    area_km2: 12.685303
+    downstream: P6_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub8
+    area_km2: 12.685303
+    downstream: P6_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub11
+    area_km2: 12.685303
+    downstream: P6_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub15
+    area_km2: 12.685303
+    downstream: P6_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub19
+    area_km2: 12.685303
+    downstream: P6_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub10
+    area_km2: 12.685303
+    downstream: P2_sub9
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub12
+    area_km2: 12.685303
+    downstream: P2_sub7
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub13
+    area_km2: 12.685303
+    downstream: P2_sub9
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub21
+    area_km2: 12.685303
+    downstream: P2_sub9
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub9
+    area_km2: 12.685303
+    downstream: P4_sub8
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub16
+    area_km2: 12.685303
+    downstream: P4_sub8
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P6_sub1
+    area_km2: 12.685303
+    downstream: P2_sub7
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub7
+    area_km2: 12.685303
+    downstream: P2_sub6
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub9
+    area_km2: 12.685303
+    downstream: P2_sub8
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub24
+    area_km2: 12.685303
+    downstream: P2_sub8
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub8
+    area_km2: 12.685303
+    downstream: P4_sub7
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub13
+    area_km2: 12.685303
+    downstream: P4_sub7
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub6
+    area_km2: 12.685303
+    downstream: P2_sub5
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub8
+    area_km2: 12.685303
+    downstream: P2_sub5
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub7
+    area_km2: 12.685303
+    downstream: P4_sub6
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub5
+    area_km2: 12.685303
+    downstream: P2_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub17
+    area_km2: 12.685303
+    downstream: P2_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub19
+    area_km2: 12.685303
+    downstream: P2_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub22
+    area_km2: 12.685303
+    downstream: P2_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub28
+    area_km2: 14.144113
+    downstream: P2_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub6
+    area_km2: 12.685303
+    downstream: P4_sub5
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub4
+    area_km2: 12.685303
+    downstream: P2_sub3
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub27
+    area_km2: 12.685303
+    downstream: P2_sub3
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub5
+    area_km2: 12.685303
+    downstream: P4_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub12
+    area_km2: 12.685303
+    downstream: P4_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub10
+    area_km2: 12.685303
+    downstream: P5_sub6
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub12
+    area_km2: 16.224503
+    downstream: P5_sub5
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub12
+    area_km2: 12.685303
+    downstream: P1_sub10
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub3
+    area_km2: 12.685303
+    downstream: P2_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub4
+    area_km2: 12.685303
+    downstream: P4_sub3
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub15
+    area_km2: 7.205252
+    downstream: P4_sub3
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub5
+    area_km2: 12.685303
+    downstream: P5_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub6
+    area_km2: 12.685303
+    downstream: P5_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub11
+    area_km2: 12.685303
+    downstream: P5_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub10
+    area_km2: 12.685303
+    downstream: P1_sub9
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub2
+    area_km2: 12.685303
+    downstream: P2_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub3
+    area_km2: 12.685303
+    downstream: P4_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub4
+    area_km2: 12.685303
+    downstream: P5_sub3
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub9
+    area_km2: 12.685303
+    downstream: P1_sub8
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P2_sub1
+    area_km2: 12.685303
+    downstream: P4_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub2
+    area_km2: 12.685303
+    downstream: P4_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub11
+    area_km2: 12.685303
+    downstream: P4_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub14
+    area_km2: 12.685303
+    downstream: P4_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub3
+    area_km2: 12.685303
+    downstream: P5_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub7
+    area_km2: 12.685303
+    downstream: P5_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub9
+    area_km2: 12.685303
+    downstream: P5_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub8
+    area_km2: 12.685303
+    downstream: P1_sub5
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P4_sub1
+    area_km2: 12.685303
+    downstream: P1_sub5
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub2
+    area_km2: 12.685303
+    downstream: P5_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub8
+    area_km2: 12.685303
+    downstream: P5_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub5
+    area_km2: 12.685303
+    downstream: P1_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub14
+    area_km2: 16.478209
+    downstream: P1_sub4
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P5_sub1
+    area_km2: 12.685303
+    downstream: P1_sub7
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub4
+    area_km2: 12.685303
+    downstream: P1_sub3
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub7
+    area_km2: 12.685303
+    downstream: P1_sub6
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub13
+    area_km2: 12.685303
+    downstream: P1_sub11
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub3
+    area_km2: 12.685303
+    downstream: P1_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub6
+    area_km2: 12.685303
+    downstream: P1_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub11
+    area_km2: 12.685303
+    downstream: P1_sub2
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub2
+    area_km2: 12.685303
+    downstream: P1_sub1
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+  - id: P1_sub1
+    area_km2: 12.685303
+    downstream: null
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+partition:
+  pour_points_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/02_pour_points/pour_points.geojson
+  target_subzone_area_km2: 12.0
+  min_subzone_area_km2: 6.0
+  max_subzones_per_zone: 12
+  area_balance_tolerance: 0.25
+  reuse_channel_network: true
+  subzone_accumulation_threshold: 250.0
+  source_directory: ../config/results/upper_truckee_project/03_partitioning
+model:
+  default_runoff_model: HBV
+  default_routing_model: Muskingum
+  runoff_models:
+  - id: HBV
+    model_type: hbv
+    parameters:
+      degree_day_factor: 3.0
+      snow_threshold: 0.0
+      field_capacity: 80.0
+      beta: 1.0
+      k0: 0.12
+      k1: 0.08
+      k2: 0.012
+      percolation: 1.0
+      initial_snow: 0.0
+      initial_soil: 0.0
+      initial_upper: 0.0
+      initial_lower: 0.0
+  routing_models:
+  - id: Muskingum
+    model_type: muskingum
+    parameters:
+      travel_time: 10.0
+      weighting_factor: 0.1
+      time_step: 1.0
+  - id: DynamicWave
+    model_type: dynamic_wave
+    parameters:
+      reach_length: 15.0
+      wave_celerity: 2.2
+      diffusivity: 0.1
+      segments: 8
+      auto_substeps: true
+      max_substeps: 16
+  subbasin_assignments:
+  - targets:
+    - P3_*
+    - P4_*
+    routing_model: DynamicWave
+  parameter_zones:
+  - id: P3
+    description: Parameter zone P3
+    control_points: []
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+    explicit_subbasins:
+    - P3_sub15
+    - P3_sub5
+    - P3_sub6
+    - P3_sub7
+    - P3_sub8
+    - P3_sub9
+    - P3_sub10
+    - P3_sub12
+    - P3_sub13
+    - P3_sub14
+    - P3_sub2
+    - P3_sub3
+    - P3_sub4
+    - P3_sub11
+    - P3_sub1
+  - id: P6
+    description: Parameter zone P6
+    control_points: []
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+    explicit_subbasins:
+    - P6_sub20
+    - P6_sub26
+    - P6_sub6
+    - P6_sub10
+    - P6_sub16
+    - P6_sub27
+    - P6_sub5
+    - P6_sub7
+    - P6_sub14
+    - P6_sub17
+    - P6_sub21
+    - P6_sub25
+    - P6_sub4
+    - P6_sub12
+    - P6_sub24
+    - P6_sub28
+    - P6_sub3
+    - P6_sub9
+    - P6_sub13
+    - P6_sub18
+    - P6_sub22
+    - P6_sub23
+    - P6_sub2
+    - P6_sub8
+    - P6_sub11
+    - P6_sub15
+    - P6_sub19
+    - P6_sub1
+  - id: P2
+    description: Parameter zone P2
+    control_points: []
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+    explicit_subbasins:
+    - P2_sub20
+    - P2_sub14
+    - P2_sub16
+    - P2_sub26
+    - P2_sub11
+    - P2_sub15
+    - P2_sub18
+    - P2_sub23
+    - P2_sub25
+    - P2_sub10
+    - P2_sub12
+    - P2_sub13
+    - P2_sub21
+    - P2_sub7
+    - P2_sub9
+    - P2_sub24
+    - P2_sub6
+    - P2_sub8
+    - P2_sub5
+    - P2_sub17
+    - P2_sub19
+    - P2_sub22
+    - P2_sub28
+    - P2_sub4
+    - P2_sub27
+    - P2_sub3
+    - P2_sub2
+    - P2_sub1
+  - id: P4
+    description: Parameter zone P4
+    control_points: []
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+    explicit_subbasins:
+    - P4_sub10
+    - P4_sub9
+    - P4_sub16
+    - P4_sub8
+    - P4_sub13
+    - P4_sub7
+    - P4_sub6
+    - P4_sub5
+    - P4_sub12
+    - P4_sub4
+    - P4_sub15
+    - P4_sub3
+    - P4_sub2
+    - P4_sub11
+    - P4_sub14
+    - P4_sub1
+  - id: P5
+    description: Parameter zone P5
+    control_points: []
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+    explicit_subbasins:
+    - P5_sub10
+    - P5_sub12
+    - P5_sub5
+    - P5_sub6
+    - P5_sub11
+    - P5_sub4
+    - P5_sub3
+    - P5_sub7
+    - P5_sub9
+    - P5_sub2
+    - P5_sub8
+    - P5_sub1
+  - id: P1
+    description: Parameter zone P1
+    control_points: []
+    parameters:
+      runoff_model: HBV
+      routing_model: Muskingum
+    explicit_subbasins:
+    - P1_sub12
+    - P1_sub10
+    - P1_sub9
+    - P1_sub8
+    - P1_sub5
+    - P1_sub14
+    - P1_sub4
+    - P1_sub7
+    - P1_sub13
+    - P1_sub3
+    - P1_sub6
+    - P1_sub11
+    - P1_sub2
+    - P1_sub1
+outputs:
+  enable_figures: true
+  enable_tables: true
+  enable_reports: true
+io:
+  precipitation: ../results/upper_truckee_project/08_areal_precipitation/parameter_subbasin_areal_precipitation.csv
+  discharge_observations: null
+  results_directory: ../results/upper_truckee_project/09_hydrologic_run/hydro
+  figures_directory: ../results/upper_truckee_project/09_hydrologic_run/figures
+  reports_directory: ../results/upper_truckee_project/09_hydrologic_run/reports
+scenarios:
+- id: hydraulic_p3p4
+  description: Switch main stem parameter subzones to dynamic wave routing
+  modifications:
+    P3_sub1:
+      routing_model: DynamicWave
+    P3_sub2:
+      routing_model: DynamicWave
+    P4_sub1:
+      routing_model: DynamicWave
+    P4_sub2:
+      routing_model: DynamicWave

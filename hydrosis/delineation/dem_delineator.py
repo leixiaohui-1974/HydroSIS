@@ -10,7 +10,7 @@ offline.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import csv
 import json
 from pathlib import Path
@@ -48,11 +48,17 @@ class DelineationConfig:
     dem_path: Path
     pour_points_path: Path
     accumulation_threshold: float = 1000.0
+    channel_threshold: Optional[float] = None
     burn_streams_path: Optional[Path] = None
     precomputed_subbasins: Optional[List[Mapping[str, object]]] = None
     # Optional external subbasin boundary layer (GeoJSON). When provided,
     # report helpers can prefer this geometry over derived outlines.
     boundaries_path: Optional[Path] = None
+    flow_direction_path: Optional[Path] = None
+    flow_accumulation_path: Optional[Path] = None
+    intermediate_directory: Optional[Path] = None
+    parameter_directory: Optional[Path] = None
+    _channel_network: Optional[object] = field(default=None, init=False, repr=False)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, object]) -> "DelineationConfig":
@@ -60,9 +66,14 @@ class DelineationConfig:
             dem_path=Path(data["dem_path"]),
             pour_points_path=Path(data["pour_points_path"]),
             accumulation_threshold=float(data.get("accumulation_threshold", 1000.0)),
+            channel_threshold=float(data["channel_threshold"]) if data.get("channel_threshold") is not None else None,
             burn_streams_path=Path(data["burn_streams_path"]) if data.get("burn_streams_path") else None,
             precomputed_subbasins=list(data.get("precomputed_subbasins", [])) or None,
             boundaries_path=Path(data["boundaries_path"]) if data.get("boundaries_path") else None,
+            flow_direction_path=Path(data["flow_direction_path"]) if data.get("flow_direction_path") else None,
+            flow_accumulation_path=Path(data["flow_accumulation_path"]) if data.get("flow_accumulation_path") else None,
+            intermediate_directory=Path(data["intermediate_directory"]) if data.get("intermediate_directory") else None,
+            parameter_directory=Path(data["parameter_directory"]) if data.get("parameter_directory") else None,
         )
 
     def to_dict(self) -> Dict[str, object]:
@@ -70,9 +81,14 @@ class DelineationConfig:
             "dem_path": str(self.dem_path),
             "pour_points_path": str(self.pour_points_path),
             "accumulation_threshold": self.accumulation_threshold,
+            "channel_threshold": self.channel_threshold,
             "burn_streams_path": str(self.burn_streams_path) if self.burn_streams_path else None,
             "precomputed_subbasins": list(self.precomputed_subbasins) if self.precomputed_subbasins else None,
             "boundaries_path": str(self.boundaries_path) if self.boundaries_path else None,
+            "flow_direction_path": str(self.flow_direction_path) if self.flow_direction_path else None,
+            "flow_accumulation_path": str(self.flow_accumulation_path) if self.flow_accumulation_path else None,
+            "intermediate_directory": str(self.intermediate_directory) if self.intermediate_directory else None,
+            "parameter_directory": str(self.parameter_directory) if self.parameter_directory else None,
         }
 
     def to_subbasins(self) -> List[Subbasin]:
@@ -81,10 +97,7 @@ class DelineationConfig:
         if self.precomputed_subbasins is not None:
             return self._from_precomputed(self.precomputed_subbasins)
 
-        if (
-            (rasterio is None or rd is None or np is None)
-            and self.dem_path.suffix.lower() == ".json"
-        ):
+        if self.dem_path.suffix.lower() == ".json":
             return self._delineate_from_json()
 
         if rasterio is None or rd is None or np is None:
@@ -190,17 +203,63 @@ class DelineationConfig:
 
         # richdem processing chain
         filled = rd.FillDepressions(dem_array, in_place=False)
-        flowdir = rd.FlowDirD8(filled)
-        accumulation = rd.FlowAccumulation(flowdir, method="D8")
-        accumulation_array = np.array(accumulation, dtype=float)
+        use_numpy_flow = False
+        flowdir_rd = None
+        flowdir_array: Optional[np.ndarray] = None
+        try:
+            proportions = rd.FlowProportions(filled, method="D8")
+        except AttributeError:
+            proportions = None
+
+        if proportions is not None:
+            accumulation = rd.FlowAccumulation(filled, method="D8")
+            accumulation_array = np.array(accumulation, dtype=float)
+            flowdir_array = self._flowdir_from_proportions(proportions)
+            use_numpy_flow = True
+        else:
+            try:
+                flowdir_rd = rd.FlowDirD8(filled)
+            except AttributeError:
+                flowdir_rd = None
+                use_numpy_flow = True
+
+            if flowdir_rd is not None:
+                accumulation = rd.FlowAccumulation(flowdir_rd, method="D8")
+                flowdir_array = np.array(flowdir_rd, dtype=int)
+                accumulation_array = np.array(accumulation, dtype=float)
+                use_numpy_flow = False
+            else:
+                if self.flow_direction_path is None or self.flow_accumulation_path is None:
+                    raise RuntimeError(
+                        "The installed richdem build lacks FlowDirD8/FlowProportions. Provide 'flow_direction_path' "
+                        "and 'flow_accumulation_path' in DelineationConfig to use pre-computed grids."
+                    )
+                with rasterio.open(self.flow_direction_path) as dir_ds:
+                    flowdir_array = dir_ds.read(1).astype(int)
+                    direction_transform = dir_ds.transform
+                with rasterio.open(self.flow_accumulation_path) as acc_ds:
+                    accumulation_array = acc_ds.read(1).astype(float)
+                    accumulation_transform = acc_ds.transform
+                if direction_transform != accumulation_transform:
+                    raise ValueError("Flow direction and accumulation rasters must share the same transform.")
+                if direction_transform != transform:
+                    pass
+                accumulation_array = np.where(np.isfinite(accumulation_array), accumulation_array, 0.0)
+                use_numpy_flow = True
 
         pour_points = list(self._load_pour_points(self.pour_points_path))
         if not pour_points:
             raise RuntimeError("No pour points found for automatic delineation")
 
+        flowdir_array = np.where(np.isfinite(flowdir_array), flowdir_array, 0).astype(int)
+        upstream_index = self._build_upstream_index(flowdir_array)
+
         id_to_mask: Dict[str, np.ndarray] = {}
         for point_id, location in pour_points:
-            mask = self._watershed_mask(flowdir, location)
+            if use_numpy_flow:
+                mask = self._watershed_mask_numpy(upstream_index, location, flowdir_array.shape)
+            else:
+                mask = self._watershed_mask(flowdir_rd, location)
             if self.accumulation_threshold > 0:
                 mask = np.logical_and(
                     mask,
@@ -209,7 +268,10 @@ class DelineationConfig:
             id_to_mask[point_id] = mask
 
         subbasins: List[Subbasin] = []
-        downstream_map = self._infer_downstream_relationships(pour_points, flowdir)
+        if use_numpy_flow:
+            downstream_map = self._infer_downstream_relationships_numpy(pour_points, flowdir_array)
+        else:
+            downstream_map = self._infer_downstream_relationships(pour_points, flowdir_rd)
         for basin_id, mask in id_to_mask.items():
             area_cells = int(mask.sum())
             subbasins.append(
@@ -433,6 +495,76 @@ class DelineationConfig:
             64: (1, 0),  # South
             128: (1, 1),  # South-East
         }
+
+    @staticmethod
+    def _flowdir_from_proportions(proportions: "rd.rdarray") -> np.ndarray:
+        assert np is not None
+        array = np.array(proportions, dtype=float)
+        if array.ndim != 3 or array.shape[2] not in (8, 9):
+            raise RuntimeError("Unexpected FlowProportions output shape.")
+        if array.shape[2] == 9:
+            array = array[..., :8]
+        direction_codes = np.array([1, 2, 4, 8, 16, 32, 64, 128], dtype=int)
+        max_idx = np.argmax(array, axis=2)
+        max_vals = np.take_along_axis(array, max_idx[..., None], axis=2)[..., 0]
+        flowdir = direction_codes[max_idx]
+        flowdir[max_vals <= 0.0] = 0
+        return flowdir.astype(int)
+
+    @staticmethod
+    def _build_upstream_index(flowdir_array: np.ndarray) -> List[List[GridLocation]]:
+        rows, cols = flowdir_array.shape
+        upstream: List[List[GridLocation]] = [[] for _ in range(rows * cols)]
+        direction_map = DelineationConfig._direction_mapping()
+        for r in range(rows):
+            for c in range(cols):
+                direction = int(flowdir_array[r, c])
+                delta = direction_map.get(direction)
+                if delta is None:
+                    continue
+                nr, nc = r + delta[0], c + delta[1]
+                if 0 <= nr < rows and 0 <= nc < cols:
+                    upstream[nr * cols + nc].append((r, c))
+        return upstream
+
+    @staticmethod
+    def _watershed_mask_numpy(
+        upstream_index: Sequence[List[GridLocation]],
+        location: GridLocation,
+        shape: Tuple[int, int],
+    ) -> np.ndarray:
+        rows, cols = shape
+        mask = np.zeros(shape, dtype=bool)
+        stack = [location]
+        while stack:
+            r, c = stack.pop()
+            if mask[r, c]:
+                continue
+            mask[r, c] = True
+            idx = r * cols + c
+            for upstream_cell in upstream_index[idx]:
+                if not mask[upstream_cell[0], upstream_cell[1]]:
+                    stack.append(upstream_cell)
+        return mask
+
+    @staticmethod
+    def _infer_downstream_relationships_numpy(
+        pour_points: Sequence[Tuple[str, GridLocation]],
+        flowdir_array: np.ndarray,
+    ) -> Dict[str, Optional[str]]:
+        direction_map = DelineationConfig._direction_mapping()
+        rows, cols = flowdir_array.shape
+        downstream: Dict[str, Optional[str]] = {pid: None for pid, _ in pour_points}
+        lookup = {loc: pid for pid, loc in pour_points}
+        for pid, (row_idx, col_idx) in pour_points:
+            direction = int(flowdir_array[row_idx, col_idx])
+            delta = direction_map.get(direction)
+            if delta is None:
+                continue
+            nrow, ncol = row_idx + delta[0], col_idx + delta[1]
+            if 0 <= nrow < rows and 0 <= ncol < cols:
+                downstream[pid] = lookup.get((nrow, ncol))
+        return downstream
 
 
 __all__ = ["DelineationConfig"]

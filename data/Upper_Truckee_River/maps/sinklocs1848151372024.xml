@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rasterDisplayProperties schemaVersion="0.0" type="Classify" colorRamp="Default Sink Locations Ramp" method="Default Sink Locations Scale" min="0.0" max="INF" transparency="0.0" isHillShaded="false" isInverted="false">
+    <displayRangeList color="-525313" min="-INF" max="0.0" label="&lt;=0.0"/>
+    <displayRangeList color="-16239503" min="0.0" max="5.0" label="&lt;=5.0"/>
+    <displayRangeList color="-16240533" min="5.0" max="INF" label="&lt;=Infinity"/>
+</rasterDisplayProperties>

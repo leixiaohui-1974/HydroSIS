@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          501500.0,
+          3498500.0
+        ]
+      },
+      "properties": {
+        "id": "S1",
+        "name": "Headwater gauge"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          503500.0,
+          3496500.0
+        ]
+      },
+      "properties": {
+        "id": "S2",
+        "name": "Mid catchment reservoir"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          503500.0,
+          3494500.0
+        ]
+      },
+      "properties": {
+        "id": "S3",
+        "name": "Outlet station"
+      }
+    }
+  ]
+}

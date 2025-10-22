@@ -1,0 +1,29 @@
+#!/bin/bash
+rm -f xx*
+cd src/
+make
+cd ..
+src/priority_flood.exe test_dems/multi_flat.dem > /z/z
+cd /z
+csplit -q z '/----------------------------/' {*}
+for f in xx*
+do
+  sketch $f > sk$f.tex 2>/dev/null
+done
+
+echo "\documentclass{article}" > pic.tex
+echo "\usepackage{fullpage}" >> pic.tex
+echo "\usepackage{tikz}" >> pic.tex
+echo "\tikzset{" >> pic.tex
+echo "  prism/.style = {draw=black, fill=black!30, opacity=1}," >> pic.tex
+echo "  water/.style = {draw=black, fill=blue, opacity=0.60}," >> pic.tex
+echo "}" >> pic.tex
+echo "\begin{document}" >> pic.tex
+
+for f in sk*.tex
+do
+  echo "\include{$f}" >> pic.tex
+  echo "\newpage" >> pic.tex
+done
+
+echo "\end{document}" >> pic.tex

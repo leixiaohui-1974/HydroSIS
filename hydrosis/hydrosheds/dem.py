@@ -45,23 +45,34 @@ def crop_dem_to_bbox(dem_path: Path, bbox: Sequence[float], out_path: Path) -> P
     return out_path
 
 
-def compute_d8_flow_direction(dem: np.ndarray) -> np.ndarray:
+def compute_d8_flow_direction(dem: np.ndarray, *, transform: Optional["Affine"] = None) -> np.ndarray:
     """Compute D8 flow direction (ESRI style) codes.
     Codes: 1(E), 2(SE), 4(S), 8(SW), 16(W), 32(NW), 64(N), 128(NE)
     """
     h, w = dem.shape
     directions = np.zeros_like(dem, dtype=np.uint8)
 
+    dx = 1.0
+    dy = 1.0
+    if transform is not None:
+        try:
+            dx = abs(float(transform.a))
+            dy = abs(float(transform.e))
+        except Exception:
+            pass
+
+    diag = math.hypot(dx, dy)
+
     # neighbor offsets and corresponding codes
     neighbors = [
-        (0, 1, 1),   # E
-        (1, 1, 2),   # SE
-        (1, 0, 4),   # S
-        (1, -1, 8),  # SW
-        (0, -1, 16), # W
-        (-1, -1, 32),# NW
-        (-1, 0, 64), # N
-        (-1, 1, 128) # NE
+        (0, 1, 1, dx),    # E
+        (1, 1, 2, diag),  # SE
+        (1, 0, 4, dy),    # S
+        (1, -1, 8, diag), # SW
+        (0, -1, 16, dx),  # W
+        (-1, -1, 32, diag), # NW
+        (-1, 0, 64, dy),  # N
+        (-1, 1, 128, diag) # NE
     ]
 
     # pad with nan around to avoid bounds checks
@@ -71,15 +82,20 @@ def compute_d8_flow_direction(dem: np.ndarray) -> np.ndarray:
         for j in range(w):
             ci, cj = i + 1, j + 1
             z = pad[ci, cj]
-            max_drop = -np.inf
+            if not np.isfinite(z):
+                continue
+            max_slope = -np.inf
             code = 0
-            for di, dj, c in neighbors:
+            for di, dj, c, distance in neighbors:
                 nz = pad[ci + di, cj + dj]
+                if not np.isfinite(nz):
+                    continue
                 drop = z - nz
-                if drop > max_drop:
-                    max_drop = drop
+                slope = drop / distance if distance > 0 else drop
+                if slope > max_slope and drop > 0:
+                    max_slope = slope
                     code = c
-            directions[i, j] = code if max_drop > 0 else 0
+            directions[i, j] = code if max_slope > 0 else 0
     return directions
 
 
@@ -308,7 +324,7 @@ def run_dem_flow_pipeline(
         dem = dem[::decimate, ::decimate]
         transform = transform * Affine.scale(decimate, decimate)
 
-    directions = compute_d8_flow_direction(dem)
+    directions = compute_d8_flow_direction(dem, transform=transform)
     accumulation = compute_flow_accumulation(directions)
 
     fd_tif = out_dir / "flow_direction.tif"

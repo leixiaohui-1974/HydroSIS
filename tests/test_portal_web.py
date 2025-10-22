@@ -25,7 +25,7 @@ def test_portal_api_with_sqlalchemy_backend(tmp_path) -> None:
     results_dir = tmp_path / "results"
     results_dir.mkdir()
 
-    app = create_app(database_url=db_url)
+    app = create_app(database_url=db_url, synchronous_executor=True)
     client = TestClient(app)
 
     config = build_demo_model_config(results_dir)
@@ -39,7 +39,7 @@ def test_portal_api_with_sqlalchemy_backend(tmp_path) -> None:
 
     forcing = build_demo_forcing()
     model = HydroSISModel.from_config(config)
-    baseline_local = model.run(forcing)
+    baseline_local, _ = model.run(forcing)
     observations = {
         basin: list(values)
         for basin, values in model.accumulate_discharge(baseline_local).items()

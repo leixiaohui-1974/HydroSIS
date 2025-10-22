@@ -1,0 +1,12 @@
+Terrain Data Manager: Upper_Truckee_River
+     Version: 4.13
+     Filepath Separator: \
+End:
+
+Terrain Data: UpTruckeeRv_S10_NED_30m
+     Description: 
+     Terrain Directory: terrain\UpTruckeeRv_S10_NED_30m
+     Vertical Units: Feet
+     Last Modified Date: 14 September 2020
+     Last Modified Time: 16:07:19
+End:

@@ -1,7 +1,8 @@
 """Configuration objects and helpers for HydroSIS."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import fnmatch
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence
 
@@ -193,3 +194,264 @@ class ModelConfig:
         for sub in subbasins:
             if sub.id in scenario.modifications:
                 sub.update_parameters(scenario.modifications[sub.id])
+
+
+@dataclass
+class OutputArtifactsConfig:
+    """Control which artefacts are generated during partitioning and reporting."""
+
+    enable_figures: bool = True
+    enable_tables: bool = True
+    enable_reports: bool = True
+
+    @classmethod
+    def from_dict(cls, data: Optional[Mapping[str, object]]) -> "OutputArtifactsConfig":
+        if not data:
+            return cls()
+        return cls(
+            enable_figures=bool(data.get("enable_figures", True)),
+            enable_tables=bool(data.get("enable_tables", True)),
+            enable_reports=bool(data.get("enable_reports", True)),
+        )
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "enable_figures": self.enable_figures,
+            "enable_tables": self.enable_tables,
+            "enable_reports": self.enable_reports,
+        }
+
+
+@dataclass
+class SubbasinMethodAssignment:
+    """Pattern-based override for runoff and routing methods."""
+
+    targets: Sequence[str]
+    runoff_model: Optional[str] = None
+    routing_model: Optional[str] = None
+    description: str = ""
+    parameters: Dict[str, object] = field(default_factory=dict)
+
+    def matches(self, subbasin_id: str) -> bool:
+        return any(fnmatch.fnmatch(subbasin_id, pattern) for pattern in self.targets)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> "SubbasinMethodAssignment":
+        targets = list(data.get("targets", ["*"])) or ["*"]
+        return cls(
+            targets=targets,
+            runoff_model=data.get("runoff_model"),
+            routing_model=data.get("routing_model"),
+            description=data.get("description", ""),
+            parameters=dict(data.get("parameters", {})),
+        )
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "targets": list(self.targets),
+            "runoff_model": self.runoff_model,
+            "routing_model": self.routing_model,
+            "description": self.description,
+            "parameters": dict(self.parameters),
+        }
+
+
+@dataclass
+class ModelStructureConfig:
+    """Library of runoff/routing models and assignment rules."""
+
+    runoff_models: List[RunoffModelConfig] = field(default_factory=list)
+    routing_models: List[RoutingModelConfig] = field(default_factory=list)
+    default_runoff_model: Optional[str] = None
+    default_routing_model: Optional[str] = None
+    subbasin_assignments: List[SubbasinMethodAssignment] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> "ModelStructureConfig":
+        return cls(
+            runoff_models=[
+                RunoffModelConfig.from_dict(item)
+                for item in data.get("runoff_models", [])
+            ],
+            routing_models=[
+                RoutingModelConfig.from_dict(item)
+                for item in data.get("routing_models", [])
+            ],
+            default_runoff_model=data.get("default_runoff_model"),
+            default_routing_model=data.get("default_routing_model"),
+            subbasin_assignments=[
+                SubbasinMethodAssignment.from_dict(item)
+                for item in data.get("subbasin_assignments", [])
+            ],
+        )
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "runoff_models": [cfg.to_dict() for cfg in self.runoff_models],
+            "routing_models": [cfg.to_dict() for cfg in self.routing_models],
+            "default_runoff_model": self.default_runoff_model,
+            "default_routing_model": self.default_routing_model,
+            "subbasin_assignments": [
+                assignment.to_dict() for assignment in self.subbasin_assignments
+            ],
+        }
+
+
+@dataclass
+class ParameterPartitionConfig:
+    """Controls how parameter zones and subzones are derived."""
+
+    pour_points_path: Path
+    target_subzone_area_km2: Optional[float] = None
+    min_subzone_area_km2: Optional[float] = None
+    max_subzones_per_zone: Optional[int] = None
+    area_balance_tolerance: float = 0.25
+    reuse_channel_network: bool = True
+    subzone_accumulation_threshold: Optional[float] = None
+    subzone_accumulation_thresholds: Dict[str, float] = field(default_factory=dict)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> "ParameterPartitionConfig":
+        threshold_value: Optional[float] = None
+        threshold_map: Dict[str, float] = {}
+        accum_value = data.get("subzone_accumulation_threshold")
+        if isinstance(accum_value, Mapping):
+            threshold_map.update(
+                {
+                    str(key): float(value)
+                    for key, value in accum_value.items()
+                    if value is not None
+                }
+            )
+        elif accum_value is not None:
+            threshold_value = float(accum_value)
+        extra_map = data.get("subzone_accumulation_thresholds")
+        if isinstance(extra_map, Mapping):
+            threshold_map.update(
+                {
+                    str(key): float(value)
+                    for key, value in extra_map.items()
+                    if value is not None
+                }
+            )
+        return cls(
+            pour_points_path=Path(data["pour_points_path"]),
+            target_subzone_area_km2=float(data["target_subzone_area_km2"])
+            if data.get("target_subzone_area_km2") is not None
+            else None,
+            min_subzone_area_km2=float(data["min_subzone_area_km2"])
+            if data.get("min_subzone_area_km2") is not None
+            else None,
+            max_subzones_per_zone=int(data["max_subzones_per_zone"])
+            if data.get("max_subzones_per_zone") is not None
+            else None,
+            area_balance_tolerance=float(data.get("area_balance_tolerance", 0.25)),
+            reuse_channel_network=bool(data.get("reuse_channel_network", True)),
+            subzone_accumulation_threshold=threshold_value,
+            subzone_accumulation_thresholds=threshold_map,
+        )
+
+    def to_dict(self) -> Dict[str, object]:
+        payload: Dict[str, object] = {
+            "pour_points_path": str(self.pour_points_path),
+            "target_subzone_area_km2": self.target_subzone_area_km2,
+            "min_subzone_area_km2": self.min_subzone_area_km2,
+            "max_subzones_per_zone": self.max_subzones_per_zone,
+            "area_balance_tolerance": self.area_balance_tolerance,
+            "reuse_channel_network": self.reuse_channel_network,
+            "subzone_accumulation_threshold": self.subzone_accumulation_threshold,
+        }
+        if self.subzone_accumulation_thresholds:
+            payload["subzone_accumulation_thresholds"] = dict(
+                self.subzone_accumulation_thresholds
+            )
+        return payload
+
+
+@dataclass
+class HydroProjectConfig:
+    """Top-level configuration combining delineation, partition, and model inputs."""
+
+    delineation: DelineationConfig
+    partition: ParameterPartitionConfig
+    model: ModelStructureConfig
+    io: IOConfig
+    outputs: OutputArtifactsConfig = field(default_factory=OutputArtifactsConfig)
+    scenarios: List[ScenarioConfig] = field(default_factory=list)
+    evaluation: Optional[EvaluationConfig] = None
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> "HydroProjectConfig":
+        delineation = DelineationConfig.from_dict(data["delineation"])
+        partition = ParameterPartitionConfig.from_dict(data["partition"])
+        model = ModelStructureConfig.from_dict(data.get("model", {}))
+        io_cfg = IOConfig.from_dict(data["io"])
+        outputs_cfg = OutputArtifactsConfig.from_dict(data.get("outputs"))
+        scenarios = [ScenarioConfig(**item) for item in data.get("scenarios", [])]
+        evaluation = (
+            EvaluationConfig.from_dict(data["evaluation"])
+            if data.get("evaluation")
+            else None
+        )
+        return cls(
+            delineation=delineation,
+            partition=partition,
+            model=model,
+            io=io_cfg,
+            outputs=outputs_cfg,
+            scenarios=scenarios,
+            evaluation=evaluation,
+        )
+
+    @classmethod
+    def from_yaml(cls, path: Path) -> "HydroProjectConfig":
+        if yaml is None:
+            raise ImportError("PyYAML is required to load project configuration files.")
+        data = yaml.safe_load(Path(path).read_text())
+        return cls.from_dict(data)
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "delineation": self.delineation.to_dict(),
+            "partition": self.partition.to_dict(),
+            "model": self.model.to_dict(),
+            "io": {
+                "precipitation": str(self.io.precipitation),
+                "evaporation": str(self.io.evaporation) if self.io.evaporation else None,
+                "discharge_observations": str(self.io.discharge_observations)
+                if self.io.discharge_observations
+                else None,
+                "results_directory": str(self.io.results_directory),
+                "figures_directory": str(self.io.figures_directory)
+                if self.io.figures_directory
+                else None,
+                "reports_directory": str(self.io.reports_directory)
+                if self.io.reports_directory
+                else None,
+            },
+            "outputs": self.outputs.to_dict(),
+            "scenarios": [
+                {
+                    "id": scenario.id,
+                    "description": scenario.description,
+                    "modifications": {k: dict(v) for k, v in scenario.modifications.items()},
+                }
+                for scenario in self.scenarios
+            ],
+            "evaluation": self.evaluation.to_dict() if self.evaluation else None,
+        }
+
+    def build_model_config(
+        self,
+        parameter_zones: Optional[Sequence[ParameterZoneConfig]] = None,
+    ) -> ModelConfig:
+        zones = list(parameter_zones) if parameter_zones is not None else []
+        return ModelConfig(
+            delineation=self.delineation,
+            runoff_models=list(self.model.runoff_models),
+            routing_models=list(self.model.routing_models),
+            parameter_zones=zones,
+            io=self.io,
+            scenarios=list(self.scenarios),
+            evaluation=self.evaluation,
+        )

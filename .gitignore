@@ -1,5 +1,18 @@
 __pycache__/
 *.pyc
+
+# virtual environments
+.venv/
+venv/
+
+# top-level run artefacts
 results/*
 !results/example_run/
 !results/example_run/**
+
+# generated reports/assets under config/
+config/results/
+config/results/**
+
+# derived GIS exports (keep base DEM inputs)
+data/**/derived/**

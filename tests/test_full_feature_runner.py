@@ -21,12 +21,13 @@ def test_full_feature_runner_generates_markdown(tmp_path: Path) -> None:
     assert results, "Feature results should not be empty"
     section_titles = [result.name for result in results]
 
-    assert any("模型配置" in title for title in section_titles)
-    assert any("情景" in title for title in section_titles)
-    assert any("报告生成" in title for title in section_titles)
+    assert "情景模拟与多模型评价" in section_titles
+    assert "输入输出与报告生成" in section_titles
+    assert "三阶段系统流水线验证" in section_titles
 
     for required_phrase in ["断言结论", "测试输入", "关键输出与校验"]:
         assert required_phrase in content
+
 
 def test_committed_feature_report_is_current(tmp_path: Path) -> None:
     """Regenerated feature report should match the committed documentation."""
@@ -44,3 +45,19 @@ def test_committed_feature_report_is_current(tmp_path: Path) -> None:
 
     expected = Path("docs/test_documentation.md").read_text(encoding="utf-8")
     assert normalised == expected
+
+
+def test_full_feature_runner_generates_markdown():
+    """Test that the full feature runner can generate a markdown report."""
+    try:
+        run_full_feature_checks("FEATURE_CHECKS.md")
+    except TypeError:
+        import traceback
+        with open("traceback.txt", "w") as f:
+            traceback.print_exc(file=f)
+        raise
+
+    # Check that the report was generated
+    with open("FEATURE_CHECKS.md", "r", encoding="utf-8") as f:
+        content = f.read()
+        assert content, "Markdown report was not generated"

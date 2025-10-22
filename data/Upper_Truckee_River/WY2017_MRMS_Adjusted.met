@@ -1,0 +1,35 @@
+Meteorology: WY2017_MRMS_Adjusted
+     Last Modified Date: 17 May 2024
+     Last Modified Time: 22:05:53
+     Version: 4.13
+     Unit System: English
+     Set Missing Data to Default: Yes
+     Precipitation Method: Gridded Precipitation
+     Air Temperature Method: Grid
+     Atmospheric Pressure Method: None
+     Dew Point Method: None
+     Wind Speed Method: None
+     Shortwave Radiation Method: None
+     Longwave Radiation Method: None
+     Snowmelt Method: None
+     Evapotranspiration Method: Gridded Hamon
+End:
+
+Precip Method Parameters: Gridded Precipitation
+     Last Modified Date: 17 May 2024
+     Last Modified Time: 22:06:00
+     Time Shift Method: NONE
+End:
+
+Air Temperature Method Parameters: Grid
+     Last Modified Date: 16 May 2024
+     Last Modified Time: 22:52:52
+     Temperature Grid Name: RTMA
+     Time Shift Method: NONE
+End:
+
+Evapotranspiration Method Parameters: Gridded Hamon
+     Last Modified Date: 16 May 2024
+     Last Modified Time: 22:52:52
+Hamon Coefficient: 0.0065
+End:

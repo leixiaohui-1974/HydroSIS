@@ -1,7 +1,7 @@
 """Simplified Muskingum routing implementation."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Dict, List
 
 from .base import RoutingModel, RoutingModelConfig
 
@@ -30,6 +30,13 @@ class MuskingumRouting(RoutingModel):
             prev_in = current_in
             prev_out = current_out
         return outflow
+
+    def resolved_parameters(self, subbasin: "Subbasin") -> Dict[str, float]:
+        return {
+            "travel_time": self.k,
+            "weighting_factor": self.x,
+            "time_step": self.dt,
+        }
 
 
 RoutingModelConfig.register("muskingum", MuskingumRouting)

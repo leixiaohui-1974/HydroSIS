@@ -1,0 +1,32 @@
+Run: WY2017_MRMS
+     Default Description: Yes
+     Log File: WY2017_MRMS.log
+     DSS File: WY2017_MRMS.dss
+     Is Save Spatial Results: No
+     Last Modified Date: 17 May 2024
+     Last Modified Time: 22:06:13
+     Basin: WY2017_TI
+     Precip: WY2017_MRMS
+     Control: WY2017
+     Save State Type: None
+     Time-Series Output: Save All
+     Time Series Results Manager Start:
+     Time Series Results Manager End:
+End:
+
+Run: WY2017_MRMS_Adjusted
+     Default Description: Yes
+     Log File: WY2017_MRMS_Adjusted.log
+     DSS File: WY2017_MRMS_Adjusted.dss
+     Is Save Spatial Results: No
+     Last Modified Date: 17 May 2024
+     Last Modified Time: 22:06:30
+     Basin: WY2017_TI
+     Precip: WY2017_MRMS_Adjusted
+     Control: WY2017
+     Save State Type: None
+     Time-Series Output: Save All
+     Time Series Results Manager Start:
+     Time Series Results Manager End:
+End:
+

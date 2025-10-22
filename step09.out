@@ -1,0 +1,10 @@
+2025-10-12 16:52:39 - INFO - Step 09 – Hydrologic baseline run started.
+2025-10-12 16:52:47 - INFO - Step 09 – Hydrologic baseline run completed successfully.
+aggregated_timeseries: /mnt/e/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/09_hydrologic_run/channel_flow_timeseries.csv
+comparison_plot: /mnt/e/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/09_hydrologic_run/channel_flow_comparison.png
+hydrograph: /mnt/e/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/09_hydrologic_run/hydrograph_baseline.png
+log: /mnt/e/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/logs/step09_hydrologic_run.log
+report: /mnt/e/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/reports/step09_hydrologic_run.md
+results_directory: /mnt/e/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/09_hydrologic_run/hydro
+zone_plot: /mnt/e/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/09_hydrologic_run/zone_discharge_maps.png
+zone_timeseries: /mnt/e/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/09_hydrologic_run/zone_discharge_timeseries.csv

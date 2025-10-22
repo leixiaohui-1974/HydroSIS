@@ -26,17 +26,34 @@ from .adaptive_timestep import (
     VariableTimeStepSimulator
 )
 
-from .gpu_solver import (
-    GPUSaintVenantSolver,
-    BatchSimulator,
-    DeviceManager,
-    GPU_AVAILABLE
-)
+try:  # pragma: no cover - optional GPU support
+    from .gpu_solver import (
+        GPUSaintVenantSolver,
+        BatchSimulator,
+        DeviceManager,
+        GPU_AVAILABLE,
+    )
+except Exception:  # pragma: no cover - fallback when cupy unavailable
+    GPUSaintVenantSolver = None  # type: ignore[assignment]
+    BatchSimulator = None  # type: ignore[assignment]
+    DeviceManager = None  # type: ignore[assignment]
+    GPU_AVAILABLE = False
 
 from .steady_state import (
     SteadyStateCalculator,
     compute_normal_depth as compute_normal_depth_standalone,
     compute_critical_depth as compute_critical_depth_standalone
+)
+
+from .zone_geometry import (
+    ZoneGeometry,
+    build_zone_geometry,
+    load_zone_centerline,
+)
+
+from .cross_section_solver import (
+    CrossSectionSolver,
+    RatingCurve,
 )
 
 # 保持向后兼容
@@ -79,7 +96,23 @@ __all__ = [
     'SaintVenantSolver',
     'RiverReach',
     'BoundaryCondition',
-    'HydraulicState'
+    'HydraulicState',
+
+    # 区域几何
+    'ZoneGeometry',
+    'build_zone_geometry',
+    'load_zone_centerline',
+
+    # 简化断面求解
+    'CrossSectionSolver',
+    'RatingCurve',
 ]
+
+if GPUSaintVenantSolver is None:  # pragma: no cover
+    for name in ['GPUSaintVenantSolver', 'BatchSimulator', 'DeviceManager', 'GPU_AVAILABLE']:
+        try:
+            __all__.remove(name)
+        except ValueError:
+            pass
 
 __version__ = '1.2.0'

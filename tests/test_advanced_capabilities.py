@@ -36,8 +36,8 @@ class AdvancedCapabilityTests(unittest.TestCase):
         })
 
         precipitation = [10.0, 0.0, 25.0, 5.0, 0.0]
-        vic_flow = vic.simulate(subbasin, precipitation)
-        hbv_flow = hbv.simulate(subbasin, precipitation)
+        vic_flow, _ = vic.simulate(subbasin, precipitation)
+        hbv_flow, _ = hbv.simulate(subbasin, precipitation)
 
         self.assertEqual(len(vic_flow), len(precipitation))
         self.assertEqual(len(hbv_flow), len(precipitation))

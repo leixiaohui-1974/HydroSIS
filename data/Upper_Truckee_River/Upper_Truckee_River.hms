@@ -1,0 +1,34 @@
+Project: Upper_Truckee_River
+     Description: 
+     Version: 4.13
+     Filepath Separator: \
+     DSS File Name: Upper_Truckee_River.dss
+     Time Zone ID: America/Los_Angeles
+End:
+
+Precipitation: WY2017_MRMS
+     Filename: WY2017_MRMS.met
+     Description: 
+     Last Modified Date: 17 May 2024
+     Last Modified Time: 15:57
+End:
+
+Precipitation: WY2017_MRMS_Adjusted
+     Filename: WY2017_MRMS_Adjusted.met
+     Description: 
+     Last Modified Date: 17 May 2024
+     Last Modified Time: 22:06
+End:
+
+Basin: WY2017_TI
+     Filename: WY2017_TI.basin
+     Description: 
+     Last Modified Date: 17 May 2024
+     Last Modified Time: 15:56
+End:
+
+Control: WY2017
+     FileName: WY2017.control
+     Description: 
+End:
+

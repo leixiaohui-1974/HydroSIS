@@ -1,0 +1,33 @@
+Gage Manager: Upper_Truckee_River
+     Gage Manager: Upper_Truckee_River
+     Version: 4.13
+     Filepath Separator: \
+End: 
+
+Gage: UpTruckeeRv_S10_SNODAS
+     Gage: UpTruckeeRv_S10_SNODAS
+     Gage Type: Snow Water Equivalent
+     Reference Height Units: Feet
+     Reference Height: 32.808
+     Data Source Type: External DSS
+     Filename: data\Obs_Data.dss
+     Pathname: //UPTRUCKEERV_S10/SWE/01JAN2016 - 01JAN2017/1DAY/SNODAS/
+     Variant: Variant-1
+       Start Time: 1 October 2016, 00:00
+       End Time: 15 August 2017, 00:00
+     End Variant: Variant-1
+End: 
+
+Gage: SouthLakeTahoe
+     Gage: SouthLakeTahoe
+     Gage Type: Flow
+     Reference Height Units: Feet
+     Reference Height: 32.808
+     Data Source Type: External DSS
+     Filename: data\Obs_Data.dss
+     Pathname: //SOUTHLAKETAHOE/FLOW/01Oct2016 - 30Sep2017/15MIN/USGS/
+     Variant: Variant-1
+       Start Time: 1 January 2000, 00:00
+       End Time: 2 January 2000, 00:00
+     End Variant: Variant-1
+End: 

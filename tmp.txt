@@ -1,0 +1,200 @@
+# -*- coding: utf-8 -*-
+"""Multi-model storm comparison showcasing extended rainfall response and channel-aware routing."""
+import argparse
+import os
+import warnings
+from pathlib import Path
+import math
+import copy
+from typing import Dict, Iterable, List, Literal, Tuple, Callable
+import matplotlib.pyplot as plt
+from matplotlib import font_manager
+import numpy as np
+import pandas as pd
+
+from hydrosis.config import (
+    DelineationConfig,
+    IOConfig,
+    ModelConfig,
+    ParameterZoneConfig,
+    RoutingModelConfig,
+    RunoffModelConfig,
+)
+from hydrosis.model import Subbasin
+import hydrosis.runoff.distributed_green_ampt  # noqa: F401
+from hydrosis.reporting.markdown import MarkdownReportBuilder, TableData
+from hydrosis.routing.dynamic_wave import DynamicWaveRouting
+from hydrosis.routing.muskingum import MuskingumRouting
+from hydrosis.workflow import run_workflow
+from hydrosis.testing.synthetic_datasets import write_synthetic_delineation_inputs
+
+BASIN_AREA_KM2 = 50.0
+MM_TO_M3_PER_KM2 = 1_000.0  # 1毫米覆盖1平方公里等于1,000立方�?
+PRECIP_COLUMN = "降雨强度_毫米每小�?
+FONT_CANDIDATES = ["Microsoft YaHei", "SimHei", "Source Han Sans SC", "WenQuanYi Micro Hei", "Arial Unicode MS"]
+
+
+def configure_plot_fonts() -> None:
+    """配置中文字体，避免图中汉字出现乱码�?""
+    available_fonts = {f.name for f in font_manager.fontManager.ttflist}
+    chosen = None
+    for candidate in FONT_CANDIDATES:
+        if candidate in available_fonts:
+            chosen = candidate
+            break
+    if chosen is None:
+        chosen = "sans-serif"
+        warnings.warn(
+            "未在系统中找到常用中文字体，图形可能出现汉字缺失。可安装思源黑体或微软雅黑改善显示�?,
+            UserWarning,
+            stacklevel=2,
+        )
+    plt.rcParams["font.family"] = chosen
+    plt.rcParams["font.sans-serif"] = FONT_CANDIDATES + ["sans-serif"]
+    plt.rcParams["axes.unicode_minus"] = False
+
+
+configure_plot_fonts()
+
+warnings.filterwarnings("ignore", message="Glyph .* missing")
+
+RunoffUnit = Literal["depth", "areal_depth", "discharge"]
+
+UNIT_DEPTH: RunoffUnit = "depth"
+UNIT_AREAL_DEPTH: RunoffUnit = "areal_depth"
+UNIT_DISCHARGE: RunoffUnit = "discharge"
+
+RUNOFF_LIBRARY: Dict[str, Dict[str, object]] = {
+    "distributed_green_ampt": {
+        "label": "DistributedGreenAmpt",
+        "label_cn": "分布式Green-Ampt",
+        "parameters": {
+            "saturated_conductivity": 12.0,
+            "wetting_front_suction": 110.0,
+            "initial_moisture": 0.22,
+            "saturated_moisture": 0.4,
+            "porosity": 0.45,
+            "zones": 4,
+            "zone_distribution": "clustered",
+        },
+        "unit": UNIT_DISCHARGE,
+    },
+    "hbv": {
+        "label": "HBV",
+        "label_cn": "HBV",
+        "parameters": {
+            "field_capacity": 140.0,
+            "k0": 0.18,
+            "k1": 0.06,
+            "k2": 0.012,
+            "percolation": 2.5,
+        },
+        "unit": UNIT_AREAL_DEPTH,
+    },
+    "hymod": {
+        "label": "HYMOD",
+        "label_cn": "HYMOD",
+        "parameters": {
+            "max_storage": 85.0,
+            "beta": 1.2,
+            "quickflow_ratio": 0.55,
+            "quick_k": 0.45,
+            "slow_k": 0.05,
+        },
+        "unit": UNIT_AREAL_DEPTH,
+    },
+    "linear_reservoir": {
+        "label": "LinearReservoir",
+        "label_cn": "线性水�?,
+        "parameters": {
+            "recession": 0.94,
+            "conversion": 0.7,
+        },
+        "unit": UNIT_AREAL_DEPTH,
+    },
+    "scs_curve_number": {
+        "label": "SCS",
+        "label_cn": "SCS曲线�?,
+        "parameters": {
+            "curve_number": 78.0,
+            "initial_abstraction_ratio": 0.08,
+        },
+        "unit": UNIT_AREAL_DEPTH,
+    },
+    "simple": {
+        "label": "Simple",
+        "label_cn": "简单直�?,
+        "parameters": {},
+        "unit": UNIT_DEPTH,
+    },
+    "vic": {
+        "label": "VIC",
+        "label_cn": "VIC",
+        "parameters": {
+            "infiltration_shape": 1.0,
+            "max_soil_moisture": 135.0,
+            "baseflow_coefficient": 0.012,
+            "recession": 0.92,
+        },
+        "unit": UNIT_AREAL_DEPTH,
+    },
+    "wetspa": {
+        "label": "WETSPA",
+        "label_cn": "WETSPA",
+        "parameters": {
+            "soil_storage_max": 210.0,
+            "infiltration_coefficient": 0.62,
+            "surface_runoff_coefficient": 0.32,
+            "percolation_coefficient": 0.06,
+            "baseflow_constant": 0.045,
+        },
+        "unit": UNIT_DEPTH,
+    },
+    "xin_an_jiang": {
+        "label": "XinAnJiang",
+        "label_cn": "新安�?,
+        "parameters": {
+            "wm": 700.0,
+            "b": 0.85,
+            "imp": 0.0,
+            "recession": 0.999,
+            "initial_tension_water": 15.0,
+            "initial_groundwater": 0.05,
+        },
+        "unit": UNIT_DEPTH,
+    },
+}
+
+
+def _terminal_subbasin_id(subbasins: Iterable["Subbasin"]) -> str:
+    for sub in subbasins:
+        if getattr(sub, "downstream", None) is None:
+            return sub.id
+    raise ValueError("No terminal subbasin found in the delineation result.")
+
+
+def _build_parameter_zones(
+    subbasins: Iterable["Subbasin"],
+    runoff_model_id: str,
+    routing_selector: Callable[["Subbasin"], str],
+) -> Tuple[List[ParameterZoneConfig], Dict[str, str]]:
+    zones: List[ParameterZoneConfig] = []
+    assignment: Dict[str, str] = {}
+    for index, sub in enumerate(subbasins, start=1):
+        routing_id = routing_selector(sub)
+        assignment[sub.id] = routing_id
+        zones.append(
+            ParameterZoneConfig(
+                id=f"zone_{index}",
+                description=f"Parameters for {sub.id}",
+                control_points=[sub.id],
+                parameters={
+                    "runoff_model": runoff_model_id,
+                    "routing_model": routing_id,
+                },
+                explicit_subbasins=[sub.id],
+            )
+        )
+    return zones, assignment
+
+

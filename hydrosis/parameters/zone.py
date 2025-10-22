@@ -95,5 +95,15 @@ class ParameterZoneBuilder:
                 stack.append(upstream)
         return visited
 
+    @staticmethod
+    def _get_upstream_catchment(start_node: str, subbasins: Mapping[str, "Subbasin"]) -> Set[str]:
+        """Backward-compatible alias for legacy implementations."""
+
+        upstream_index: Dict[str, List[str]] = {}
+        for sub in subbasins.values():
+            if sub.downstream:
+                upstream_index.setdefault(sub.downstream, []).append(sub.id)
+        return ParameterZoneBuilder._collect_upstream(start_node, upstream_index)
+
 
 __all__ = ["ParameterZone", "ParameterZoneBuilder", "ParameterZoneConfig"]

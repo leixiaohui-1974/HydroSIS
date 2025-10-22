@@ -1,0 +1,29 @@
+Paired Data Manager: Upper_Truckee_River
+     Version: 4.13
+     Filepath Separator: \
+End:
+
+Table: ATI-Coldrate
+     Table Type: ATI-Cold Rate
+     Last Modified Date: 14 February 2023
+     Last Modified Time: 21:30:21
+     X-Units: DEGF-D
+     Y-Units: IN/DEG-D
+     Use External DSS File: NO
+     DSS File: Upper_Truckee_River.dss
+     Pathname: //ATI-Coldrate/ATI-COLDRATE///TABLE/
+     Interpolation: Linear Interpolation
+End:
+
+Table: ATI-Meltrate
+     Table Type: ATI-Melt Rate
+     Last Modified Date: 14 February 2023
+     Last Modified Time: 21:25:35
+     X-Units: DEGF-D
+     Y-Units: IN/DEG-D
+     Use External DSS File: NO
+     DSS File: Upper_Truckee_River.dss
+     Pathname: //ATI-Meltrate/ATI-MELTRATE///TABLE/
+     Interpolation: Linear Interpolation
+End:
+

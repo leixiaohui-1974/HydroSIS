@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "E:\OneDrive\Documents\GitHub\HydroSIS\tests\test_full_feature_runner.py", line 52, in test_full_feature_runner_generates_markdown
+    run_full_feature_checks("FEATURE_CHECKS.md")
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "E:\OneDrive\Documents\GitHub\HydroSIS\hydrosis\testing\full_feature_runner.py", line 283, in run_full_feature_checks
+    workflow_result = run_workflow(
+        config,
+    ...<4 lines>...
+        generate_report=True,
+    )
+  File "E:\OneDrive\Documents\GitHub\HydroSIS\hydrosis\workflow\orchestration.py", line 58, in run_workflow
+    baseline_run = ScenarioRun(
+        scenario_id="baseline",
+    ...<2 lines>...
+        zone_discharge={},
+    )
+TypeError: ScenarioRun.__init__() got an unexpected keyword argument 'zone_discharge'

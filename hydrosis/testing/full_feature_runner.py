@@ -394,9 +394,9 @@ def run_full_feature_checks(
             )
         )
 
-        local_flows = model.run(loaded_forcing)
-        aggregated_flows = model.accumulate_discharge(local_flows)
-        zone_discharge = model.parameter_zone_discharge(local_flows)
+        routed_flows, _local_runoff = model.run(loaded_forcing)
+        aggregated_flows = model.accumulate_discharge(routed_flows)
+        zone_discharge = model.parameter_zone_discharge(routed_flows)
 
         results.append(
             FeatureTestResult(
@@ -404,7 +404,7 @@ def run_full_feature_checks(
                 description="运行基准配置，验证产流、汇流与分区汇总结果的维度与合理性。",
                 inputs={"forcing_samples": synthetic_forcing},
                 outputs={
-                    "local_flow_keys": sorted(local_flows),
+                    "local_flow_keys": sorted(routed_flows),
                     "aggregated_series_lengths": dict(
                         sorted((sid, len(series)) for sid, series in aggregated_flows.items())
                     ),

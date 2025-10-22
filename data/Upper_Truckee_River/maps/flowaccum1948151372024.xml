@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<rasterDisplayProperties schemaVersion="0.0" type="Classify" colorRamp="Default Flow Accumulation Ramp" method="Default Flow Accumulation Scale" min="0.0" max="INF" transparency="0.0" isHillShaded="false" isInverted="false">
+    <displayRangeList color="-39" min="-INF" max="0.0" label="&lt;=0.0"/>
+    <displayRangeList color="-1575247" min="0.0" max="10.0" label="&lt;=10.0"/>
+    <displayRangeList color="-7613766" min="10.0" max="30.0" label="&lt;=30.0"/>
+    <displayRangeList color="-13654846" min="30.0" max="100.0" label="&lt;=100.0"/>
+    <displayRangeList color="-14401895" min="100.0" max="400.0" label="&lt;=400.0"/>
+    <displayRangeList color="-16245416" min="400.0" max="INF" label="&lt;=Infinity"/>
+</rasterDisplayProperties>

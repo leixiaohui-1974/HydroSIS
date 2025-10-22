@@ -2,7 +2,7 @@
 
 本报告由自动化测试程序生成，覆盖模型配置、产流汇流、情景评估、输入输出与报告生成等核心功能。每个章节列出了用于校验的输入、关键输出以及断言结果，便于快速了解产品能力的完整性。
 
-报告生成时间：2024-01-01 00:00 UTC
+报告生成时间：2025-10-12 04:30 UTC
 
 ## 模型配置解析与流域划分验证
 
@@ -53,7 +53,6 @@
   "S2": "S3",
   "S3": null
 }
-
 - **roundtrip_consistency**：True
 
 ### 断言结论
@@ -203,9 +202,9 @@
     "nse": 1.0
   },
   "alternate_routing": {
-    "rmse": 6.292304,
-    "mae": 5.40225,
-    "nse": 0.794539
+    "rmse": 0.0,
+    "mae": 0.0,
+    "nse": 1.0
   }
 }
 - **comparison_rankings**：{
@@ -238,8 +237,8 @@
 ### 关键输出与校验
 
 - **results_files**：{
-  "baseline": true,
-  "alternate_routing": true
+  "baseline": false,
+  "alternate_routing": false
 }
 - **report_path**：evaluation.md
 

@@ -1,0 +1,7 @@
+[console_scripts]
+rd_breach_depressions = richdem.cli:BreachDepressions
+rd_compare = richdem.cli:RdCompare
+rd_depression_filling = richdem.cli:DepressionFilling
+rd_flow_accumulation = richdem.cli:FlowAccumulation
+rd_info = richdem.cli:RdInfo
+rd_terrain_attribute = richdem.cli:TerrainAttribute

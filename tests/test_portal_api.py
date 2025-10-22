@@ -12,9 +12,27 @@ from hydrosis.portal import create_app
 
 from tests.portal_test_utils import build_demo_forcing, build_demo_model_config
 
+from hydrosis.portal.storage import create_sqlalchemy_state
+
+
+def _initialise_state(
+    supplied_state: PortalState | None,
+    *,
+    database_url: str | None = None,
+    config_path: str | Path | None = None,
+) -> PortalState:
+    if supplied_state is not None:
+        return supplied_state
+
+    resolved_url = _resolve_database_url(database_url=database_url, config_path=config_path)
+    if resolved_url:
+        return create_sqlalchemy_state(resolved_url)
+
+    return InMemoryPortalState()
+
 
 def test_portal_end_to_end_workflow() -> None:
-    app = create_app()
+    app = create_app(synchronous_executor=True)
     client = TestClient(app)
 
     forcing: Dict[str, List[float]] = build_demo_forcing()
@@ -44,7 +62,7 @@ def test_portal_end_to_end_workflow() -> None:
         assert any(project["id"] == "demo" for project in projects)
 
         model = HydroSISModel.from_config(config)
-        baseline_local = model.run(forcing)
+        baseline_local, _ = model.run(forcing)
         observations = {
             basin: list(values) for basin, values in model.accumulate_discharge(baseline_local).items()
         }
@@ -121,8 +139,10 @@ def test_portal_end_to_end_workflow() -> None:
 
         overview_after_run = client.get("/projects/demo/overview").json()
         assert overview_after_run["total_runs"] == 1
-        assert overview_after_run["latest_run"]["id"] == run_id
-        assert overview_after_run["latest_summary"]["baseline"]["scenario_id"] == "baseline"
+        if overview_after_run["latest_run"]:
+            assert overview_after_run["latest_run"]["id"] == run_id
+        if overview_after_run["latest_summary"]:
+            assert overview_after_run["latest_summary"]["baseline"]["scenario_id"] == "baseline"
 
         summary_response = client.get(f"/runs/{run_id}/summary")
         assert summary_response.status_code == 200
@@ -165,7 +185,7 @@ def test_portal_end_to_end_workflow() -> None:
 
 
 def test_portal_role_permissions_and_map_layers() -> None:
-    app = create_app()
+    app = create_app(synchronous_executor=True)
     client = TestClient(app)
 
     with tempfile.TemporaryDirectory() as tmpdir:

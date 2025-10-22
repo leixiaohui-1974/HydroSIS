@@ -1,0 +1,37 @@
+Metadata-Version: 1.1
+Name: richdem
+Version: 0.3.4
+Summary: High-Performance Terrain Analysis
+Home-page: https://github.com/r-barnes/richdem
+Author: Richard Barnes
+Author-email: rbarnes@umn.edu
+License: GPLv3
+Description: RichDEM is a set of digital elevation model (DEM) hydrologic analysis tools.
+        
+        RichDEM uses parallel processing and state of the art algorithms to quickly process even very large DEMs.
+        
+        RichDEM offers a variety of flow metrics, such as D8 and D-infinity.
+        
+        It can flood or breach depressions, as well as calculate flow accumulation, slopes, curvatures, &c.
+Keywords: GIS terrain hydrology geomorphology raster
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: End Users/Desktop
+Classifier: Intended Audience :: Education
+Classifier: Intended Audience :: Science/Research
+Classifier: Intended Audience :: Other Audience
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Natural Language :: English
+Classifier: Topic :: Scientific/Engineering :: GIS
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Topic :: Scientific/Engineering :: Visualization
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4

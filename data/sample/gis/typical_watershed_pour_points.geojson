@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [500500.0, 3499500.0]},
+      "properties": {"id": "UP1", "name": "上游控制点1"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [501000.0, 3499500.0]},
+      "properties": {"id": "UP2", "name": "上游控制点2"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [501500.0, 3499000.0]},
+      "properties": {"id": "MID1", "name": "中游控制点1"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [501800.0, 3498000.0]},
+      "properties": {"id": "MID2", "name": "中游控制点2"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [501900.0, 3497000.0]},
+      "properties": {"id": "DOWN1", "name": "下游控制点1"}
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [501950.0, 3496000.0]},
+      "properties": {"id": "OUTLET", "name": "流域出口"}
+    }
+  ]
+}

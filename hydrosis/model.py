@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Mapping, Optional
+from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
 from .parameters.zone import ParameterZone, ParameterZoneBuilder
 from .runoff.base import RunoffModel
@@ -19,11 +19,56 @@ class Subbasin:
     area_km2: float
     downstream: Optional[str]
     parameters: Dict[str, float] = field(default_factory=dict)
+    channel_id: Optional[str] = None
+    channel_length_m: Optional[float] = None
+    channel_slope: Optional[float] = None
+    channel_drop_m: Optional[float] = None
+    channel_segment: Optional["ChannelSegment"] = field(default=None, repr=False)
 
     def update_parameters(self, updates: Mapping[str, float]) -> None:
         """Apply parameter updates to the subbasin."""
 
         self.parameters.update(updates)
+
+
+@dataclass
+class ChannelSegment:
+    """Representation of a river reach derived from the delineation stage."""
+
+    id: str
+    downstream: Optional[str] = None
+    cells: List[Tuple[int, int]] = field(default_factory=list)
+    upstream_ids: List[str] = field(default_factory=list)
+    length_m: float = 0.0
+    slope: Optional[float] = None
+    drop_m: Optional[float] = None
+    start_elevation: Optional[float] = None
+    end_elevation: Optional[float] = None
+    attributes: Dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class ChannelNetwork:
+    """Collection of channel segments with helper summary methods."""
+
+    segments: Dict[str, ChannelSegment] = field(default_factory=dict)
+
+    def add_segment(self, segment: ChannelSegment) -> None:
+        self.segments[segment.id] = segment
+
+    def summary(self) -> Dict[str, float]:
+        """Return aggregate statistics about the network."""
+
+        if not self.segments:
+            return {"segment_count": 0, "total_length_m": 0.0, "mean_slope": None}
+        total_length = sum(seg.length_m for seg in self.segments.values())
+        slopes = [seg.slope for seg in self.segments.values() if seg.slope is not None]
+        mean_slope = sum(slopes) / len(slopes) if slopes else None
+        return {
+            "segment_count": len(self.segments),
+            "total_length_m": float(total_length),
+            "mean_slope": float(mean_slope) if mean_slope is not None else None,
+        }
 
 
 class HydroSISModel:
@@ -67,7 +112,7 @@ class HydroSISModel:
 
         return cls(delineated, zones, runoff_models, routing_models)
 
-    def run(self, forcing: Mapping[str, List[float]]) -> Dict[str, List[float]]:
+    def run(self, forcing: Mapping[str, List[float]]) -> Tuple[Dict[str, List[float]], Dict[str, List[float]]]:
         """Run the distributed hydrological simulation and return local flows."""
 
         runoff_results: Dict[str, List[float]] = {}
@@ -78,7 +123,12 @@ class HydroSISModel:
 
             runoff_model = copy.deepcopy(self.runoff_models[model_key])
             forcings = forcing.get(sub_id, [])
-            runoff_results[sub_id] = runoff_model.simulate(subbasin, forcings)
+            runoff_output = runoff_model.simulate(subbasin, forcings)
+            if isinstance(runoff_output, tuple):
+                runoff_series = runoff_output[0]
+            else:
+                runoff_series = runoff_output
+            runoff_results[sub_id] = list(runoff_series)
 
         routed: Dict[str, List[float]] = {}
         for sub_id, flows in runoff_results.items():
@@ -87,9 +137,14 @@ class HydroSISModel:
             if model_key is None:
                 raise ValueError(f"Subbasin {sub_id} missing routing_model parameter")
             routing_model = copy.deepcopy(self.routing_models[model_key])
-            routed[sub_id] = routing_model.route(subbasin, flows)
+            routing_output = routing_model.route(subbasin, flows)
+            if isinstance(routing_output, tuple):
+                routing_series = routing_output[0]
+            else:
+                routing_series = routing_output
+            routed[sub_id] = list(routing_series)
 
-        return routed
+        return routed, runoff_results
 
     def accumulate_discharge(self, routed: Mapping[str, List[float]]) -> Dict[str, List[float]]:
         """Aggregate routed flows downstream to include upstream contributions."""
@@ -115,4 +170,4 @@ class HydroSISModel:
         return zone_flows
 
 
-__all__ = ["HydroSISModel", "Subbasin"]
+__all__ = ["HydroSISModel", "Subbasin", "ChannelSegment", "ChannelNetwork"]

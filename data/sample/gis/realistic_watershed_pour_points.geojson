@@ -1,0 +1,89 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          501500.0,
+          3498500.0
+        ]
+      },
+      "properties": {
+        "id": "UP1",
+        "name": "\u4e0a\u6e38\u63a7\u5236\u70b91"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          502500.0,
+          3497500.0
+        ]
+      },
+      "properties": {
+        "id": "UP2",
+        "name": "\u4e0a\u6e38\u63a7\u5236\u70b92"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          505000.0,
+          3495000.0
+        ]
+      },
+      "properties": {
+        "id": "MID1",
+        "name": "\u4e2d\u6e38\u63a7\u5236\u70b91"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          504000.0,
+          3494000.0
+        ]
+      },
+      "properties": {
+        "id": "MID2",
+        "name": "\u4e2d\u6e38\u63a7\u5236\u70b92"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          507000.0,
+          3493000.0
+        ]
+      },
+      "properties": {
+        "id": "DOWN1",
+        "name": "\u4e0b\u6e38\u63a7\u5236\u70b91"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          508500.0,
+          3491500.0
+        ]
+      },
+      "properties": {
+        "id": "OUTLET",
+        "name": "\u6d41\u57df\u51fa\u53e3"
+      }
+    }
+  ]
+}

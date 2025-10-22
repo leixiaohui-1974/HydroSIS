@@ -1,0 +1,5 @@
+zone_id,downstream_id,area_cells,area_km2,runoff_model,routing_model,subzone_count,requested_accum_threshold,effective_accum_threshold,threshold_relaxed
+P2,P3,62874,797.575765,HBV,Muskingum,63,1000.000,1000.000,False
+P3,P4,50618,642.104686,HBV,Muskingum,51,1000.000,1000.000,False
+P1,,9863,125.115147,HBV,Muskingum,10,1000.000,1000.000,False
+P4,,9454,119.926858,HBV,Muskingum,10,1000.000,1000.000,False

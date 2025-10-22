@@ -1,0 +1,25 @@
+Grid Manager: Upper_Truckee_River
+     Grid Manager: Upper_Truckee_River
+     Version: 4.13
+     Filepath Separator: \
+End: 
+
+Grid: MRMS
+     Grid: MRMS
+     Grid Type: Precipitation
+     Storm Center X: 0.0
+     Storm Center Y: 0.0
+     Data Source Type: External DSS
+     Filename: data\MRMS.dss
+     Pathname: ///PRECIPITATION/01OCT2016:0000/01OCT2016:0100//
+End: 
+
+Grid: RTMA
+     Grid: RTMA
+     Grid Type: Temperature
+     Storm Center X: 0.0
+     Storm Center Y: 0.0
+     Data Source Type: External DSS
+     Filename: data\RTMA_Temperature.dss
+     Pathname: /SHG/UPTRUCKEERV_S10/TEMPERATURE/30SEP2016:2400//RTMA/
+End: 

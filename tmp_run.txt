@@ -1,0 +1,120 @@
+"""Run the Upper Truckee demo using HydroProjectConfig and create diagnostics."""
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Dict, Iterable, List, Mapping, Sequence, Set, Tuple
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import rasterio
+
+from hydrosis.config import HydroProjectConfig
+from hydrosis.model import Subbasin
+from hydrosis.workflow.project import build_project_model, run_project
+
+
+def _load_forcing(
+    project: HydroProjectConfig, subbasins: Sequence[Subbasin]
+) -> Tuple[pd.DatetimeIndex, Dict[str, np.ndarray]]:
+    """Load precipitation time-series and broadcast it to every subbasin."""
+
+    forcing_path = project.io.precipitation
+    df = pd.read_csv(forcing_path)
+    if df.empty:
+        raise ValueError(f"Forcing file {forcing_path} is empty.")
+
+    time_column = df.columns[0]
+    timestamps = pd.to_datetime(df[time_column])
+    numeric_columns = [
+        col for col in df.columns[1:] if pd.api.types.is_numeric_dtype(df[col])
+    ]
+    if not numeric_columns:
+        raise ValueError(
+            f"Unable to locate numeric precipitation column in {forcing_path}."
+        )
+
+    series_cache = {col: df[col].astype(float).to_numpy() for col in numeric_columns}
+    forcing: Dict[str, np.ndarray] = {}
+    missing: list[str] = []
+    for sub in subbasins:
+        sid = sub.id
+        if sid in series_cache:
+            forcing[sid] = series_cache[sid].copy()
+        else:
+            parent_id = sid.split("_")[0] if "_" in sid else None
+            if parent_id and parent_id in series_cache:
+                forcing[sid] = series_cache[parent_id].copy()
+            else:
+                missing.append(sid)
+
+    if missing:
+        if len(numeric_columns) == 1:
+            base_series = series_cache[numeric_columns[0]]
+            for sid in missing:
+                forcing[sid] = base_series.copy()
+        else:
+            raise KeyError(
+                f"Precipitation file {forcing_path} missing columns for subbasins: {missing}"
+            )
+    return timestamps, forcing
+
+
+def _build_upstream_index(subbasins: Sequence[Subbasin]) -> Dict[str, List[str]]:
+    upstream_map: Dict[str, List[str]] = {}
+    for sub in subbasins:
+        if sub.downstream:
+            upstream_map.setdefault(sub.downstream, []).append(sub.id)
+    return upstream_map
+
+
+def _collect_upstream(control: str, upstream_map: Mapping[str, Sequence[str]]) -> Set[str]:
+    stack = [control]
+    visited: Set[str] = set()
+    while stack:
+        node = stack.pop()
+        if node in visited:
+            continue
+        visited.add(node)
+        for upstream in upstream_map.get(node, []):
+            if upstream not in visited:
+                stack.append(upstream)
+    return visited
+
+
+def _area_weighted_average(
+    sub_ids: Iterable[str],
+    series_map: Mapping[str, np.ndarray],
+    area_map: Mapping[str, float],
+) -> np.ndarray:
+    accum: np.ndarray | None = None
+    total = 0.0
+    for sub_id in sub_ids:
+        if sub_id not in series_map:
+            continue
+        weight = area_map.get(sub_id, 0.0)
+        if weight <= 0:
+            continue
+        total += weight
+        if accum is None:
+            accum = series_map[sub_id] * weight
+        else:
+            accum = accum + series_map[sub_id] * weight
+    if accum is None:
+        return np.zeros_like(next(iter(series_map.values())))
+    if total <= 0.0:
+        return accum
+    return accum / total
+
+
+def _sum_series(sub_ids: Iterable[str], series_map: Mapping[str, Sequence[float]]) -> np.ndarray:
+    accum: np.ndarray | None = None
+    for sub_id in sub_ids:
+        if sub_id not in series_map:
+            continue
+        data = np.asarray(series_map[sub_id], dtype=float)
+        if accum is None:
+            accum = data.copy()
+        else:
+            accum = accum + data
+    if accum is None:
