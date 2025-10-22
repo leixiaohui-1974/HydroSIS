@@ -631,7 +631,7 @@ def create_app(
                     status=run.status,
                     timestamp=datetime.now(timezone.utc).isoformat(),
                     percent=0,
-                    message="已连接到运行进度流",
+                    message="Connected to run progress stream",
                 ).to_dict()
             )
 
@@ -829,15 +829,15 @@ def _render_assistant_reply(intent: Dict[str, object], conversation_id: str) -> 
     action = intent.get("action", "general_chat")
     if action == "run_scenarios":
         scenarios = intent.get("parameters", {}).get("scenario_ids") or ["all configured scenarios"]
-        return f"Conversation {conversation_id}: 已识别到运行情景请求，目标情景：{', '.join(scenarios)}。"
+        return f"Conversation {conversation_id}: Recognized run scenario request, target scenarios: {', '.join(scenarios)}."
     if action == "create_scenario":
-        name = intent.get("parameters", {}).get("name", "新情景")
-        return f"Conversation {conversation_id}: 可以为你创建情景 {name}，请补充参数调整信息。"
+        name = intent.get("parameters", {}).get("name", "new scenario")
+        return f"Conversation {conversation_id}: Can create scenario {name} for you, please provide parameter adjustment details."
     if action == "list_scenarios":
-        return "我可以列出当前项目中的情景，请调用场景列表接口。"
+        return "I can list scenarios in the current project, please call the scenario list endpoint."
     if action == "summarise_results":
-        return "可根据最新运行结果生成报告摘要。"
-    return "已收到你的请求，如需运行模型请说明需要的情景或分析目标。"
+        return "Can generate report summary based on latest run results."
+    return "Request received. If you need to run the model, please specify the required scenarios or analysis objectives."
 
 
 def _execute_workflow(

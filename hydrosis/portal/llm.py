@@ -45,7 +45,7 @@ class IntentParser:
     # Rule-based parsing fallback
     def _rule_based_parse(self, message: str) -> Dict[str, object]:
         lowered = message.lower()
-        if any(keyword in lowered for keyword in ["run", "simulate", "execute", "运行", "模拟"]):
+        if any(keyword in lowered for keyword in ["run", "simulate", "execute"]):
             scenario_ids = self._extract_scenarios(message)
             return {
                 "action": "run_scenarios",
