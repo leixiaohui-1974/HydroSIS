@@ -1,12 +1,18 @@
 """Pour point data structures and I/O operations."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
+import math
 from pathlib import Path
-from typing import List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
+
+import numpy as np
+import rasterio
+import rasterio.transform
 
 
+@dataclass
 class PourPoint:
     """Discrete outlet used to delineate upstream contributing areas."""
 

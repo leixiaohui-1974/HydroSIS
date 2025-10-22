@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 
 from .base import RunoffModel, RunoffModelConfig
+from ..validation import validate_positive, validate_probability
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from ..model import Subbasin
@@ -31,6 +32,50 @@ class HBVRunoff(RunoffModel):
         self.soil = float(self.parameters.get("initial_soil", 40.0))
         self.upper = float(self.parameters.get("initial_upper", 5.0))
         self.lower = float(self.parameters.get("initial_lower", 20.0))
+
+    def validate_parameters(self) -> None:
+        """Validate HBV model parameters.
+
+        Validates:
+            - degree_day_factor: Must be >= 0
+            - field_capacity: Must be > 0
+            - beta: Must be > 0
+            - k0, k1, k2: Recession coefficients, must be in [0, 1]
+            - percolation: Must be >= 0
+            - initial_snow, initial_soil, initial_upper, initial_lower: Must be >= 0
+        """
+        degree_day = float(self.parameters.get("degree_day_factor", 3.0))
+        validate_positive("degree_day_factor", degree_day, strict=False)
+
+        fc = float(self.parameters.get("field_capacity", 100.0))
+        validate_positive("field_capacity", fc, strict=True)
+
+        beta = float(self.parameters.get("beta", 1.0))
+        validate_positive("beta", beta, strict=True)
+
+        k0 = float(self.parameters.get("k0", 0.15))
+        validate_probability("k0", k0)
+
+        k1 = float(self.parameters.get("k1", 0.05))
+        validate_probability("k1", k1)
+
+        k2 = float(self.parameters.get("k2", 0.01))
+        validate_probability("k2", k2)
+
+        perc = float(self.parameters.get("percolation", 2.0))
+        validate_positive("percolation", perc, strict=False)
+
+        init_snow = float(self.parameters.get("initial_snow", 0.0))
+        validate_positive("initial_snow", init_snow, strict=False)
+
+        init_soil = float(self.parameters.get("initial_soil", 40.0))
+        validate_positive("initial_soil", init_soil, strict=False)
+
+        init_upper = float(self.parameters.get("initial_upper", 5.0))
+        validate_positive("initial_upper", init_upper, strict=False)
+
+        init_lower = float(self.parameters.get("initial_lower", 20.0))
+        validate_positive("initial_lower", init_lower, strict=False)
 
     def simulate(self, subbasin: "Subbasin", precipitation: List[float]) -> List[float]:
         flows: List[float] = []

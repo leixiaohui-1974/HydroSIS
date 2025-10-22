@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 
 from .base import RunoffModel, RunoffModelConfig
+from ..validation import validate_positive, validate_probability, validate_range
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from ..model import Subbasin
@@ -30,6 +31,35 @@ class XinAnJiangRunoff(RunoffModel):
         )
         self.tension_water = min(self.wm, max(0.0, initial_storage))
         self.groundwater = float(self.parameters.get("initial_groundwater", 0.0))
+
+    def validate_parameters(self) -> None:
+        """Validate XinAnJiang model parameters.
+
+        Validates:
+            - wm: Tension water capacity, must be > 0
+            - b: Storage distribution curve exponent, must be >= 0
+            - imp: Impervious area fraction, must be in [0, 1]
+            - recession: Groundwater recession coefficient, must be in [0, 1]
+            - initial_tension_water: Must be >= 0
+            - initial_groundwater: Must be >= 0
+        """
+        wm = float(self.parameters.get("wm", 150.0))
+        validate_positive("wm", wm, strict=True)
+
+        b = float(self.parameters.get("b", 0.3))
+        validate_positive("b", b, strict=False)  # Can be 0
+
+        imp = float(self.parameters.get("imp", 0.05))
+        validate_probability("imp", imp)
+
+        k = float(self.parameters.get("recession", 0.6))
+        validate_probability("recession", k)
+
+        initial_tw = float(self.parameters.get("initial_tension_water", 0.5 * wm))
+        validate_positive("initial_tension_water", initial_tw, strict=False)
+
+        initial_gw = float(self.parameters.get("initial_groundwater", 0.0))
+        validate_positive("initial_groundwater", initial_gw, strict=False)
 
     def _infiltration_capacity(self) -> float:
         storage_ratio = min(1.0, max(0.0, self.tension_water / self.wm))

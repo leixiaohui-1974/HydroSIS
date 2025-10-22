@@ -32,6 +32,7 @@ import math
 from typing import TYPE_CHECKING, List, Mapping, Dict
 
 from .base import RunoffModel, RunoffModelConfig
+from ..validation import validate_positive, validate_probability, validate_integer, ParameterValidationError
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from ..model import Subbasin
@@ -103,6 +104,51 @@ class DistributedGreenAmpt(RunoffModel):
         
         # Initialize zones
         self.zones = self._initialize_zones()
+
+    def validate_parameters(self) -> None:
+        """Validate Distributed Green-Ampt model parameters.
+
+        Validates:
+            - saturated_conductivity: Must be > 0
+            - wetting_front_suction: Must be > 0
+            - initial_moisture: Must be in [0, 1]
+            - saturated_moisture: Must be in [0, 1]
+            - porosity: Must be in [0, 1]
+            - zones: Must be >= 1
+            - Cross-parameter check: initial_moisture < saturated_moisture <= porosity
+        """
+        k_sat = float(self.parameters.get("saturated_conductivity", 10.0))
+        validate_positive("saturated_conductivity", k_sat, strict=True)
+
+        psi_f = float(self.parameters.get("wetting_front_suction", 100.0))
+        validate_positive("wetting_front_suction", psi_f, strict=True)
+
+        theta_i = float(self.parameters.get("initial_moisture", 0.2))
+        validate_probability("initial_moisture", theta_i)
+
+        theta_s = float(self.parameters.get("saturated_moisture", 0.4))
+        validate_probability("saturated_moisture", theta_s)
+
+        porosity = float(self.parameters.get("porosity", 0.45))
+        validate_probability("porosity", porosity)
+
+        zones = int(self.parameters.get("zones", 5))
+        validate_integer("zones", zones, min_value=1)
+
+        # Cross-parameter validation
+        if theta_i >= theta_s:
+            raise ParameterValidationError(
+                "initial_moisture",
+                theta_i,
+                f"must be less than saturated_moisture ({theta_s})"
+            )
+
+        if theta_s > porosity:
+            raise ParameterValidationError(
+                "saturated_moisture",
+                theta_s,
+                f"must be less than or equal to porosity ({porosity})"
+            )
 
     def get_initial_storage(self) -> List[float]:
         """Get initial cumulative infiltration for each zone from parameters.

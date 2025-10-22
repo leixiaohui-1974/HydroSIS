@@ -13,6 +13,18 @@ class RoutingModel:
 
     def __init__(self, parameters: Mapping[str, float]):
         self.parameters = dict(parameters)
+        self.validate_parameters()
+
+    def validate_parameters(self) -> None:
+        """Validate model parameters against physical constraints.
+
+        Subclasses should override this method to implement specific
+        validation rules for their parameters.
+
+        Raises:
+            ParameterValidationError: If any parameter is invalid
+        """
+        pass  # Default: no validation (for backward compatibility)
 
     def route(self, subbasin: "Subbasin", inflow: List[float]) -> List[float]:
         raise NotImplementedError

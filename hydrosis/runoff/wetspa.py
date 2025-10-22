@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 
 from .base import RunoffModel, RunoffModelConfig
+from ..validation import validate_positive, validate_probability, validate_range
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from ..model import Subbasin
@@ -38,6 +39,40 @@ class WETSPARunoff(RunoffModel):
             max(0.0, float(self.parameters.get("initial_soil_moisture", 0.5 * self.capacity))),
         )
         self.groundwater = max(0.0, float(self.parameters.get("initial_groundwater", 0.0)))
+
+    def validate_parameters(self) -> None:
+        """Validate WETSPA model parameters.
+
+        Validates:
+            - soil_storage_max: Must be > 0
+            - infiltration_coefficient: Must be in [0, 1]
+            - surface_runoff_coefficient: Must be in [0, 1]
+            - percolation_coefficient: Must be in [0, 1]
+            - baseflow_constant: Must be in [0, 1]
+            - initial_soil_moisture: Must be >= 0 and <= soil_storage_max
+            - initial_groundwater: Must be >= 0
+        """
+        capacity = float(self.parameters.get("soil_storage_max", 200.0))
+        validate_positive("soil_storage_max", capacity, strict=True)
+
+        inf_coeff = float(self.parameters.get("infiltration_coefficient", 0.6))
+        validate_probability("infiltration_coefficient", inf_coeff)
+
+        surf_coeff = float(self.parameters.get("surface_runoff_coefficient", 0.4))
+        validate_probability("surface_runoff_coefficient", surf_coeff)
+
+        perc_coeff = float(self.parameters.get("percolation_coefficient", 0.05))
+        validate_probability("percolation_coefficient", perc_coeff)
+
+        bf_const = float(self.parameters.get("baseflow_constant", 0.04))
+        validate_probability("baseflow_constant", bf_const)
+
+        init_soil = float(self.parameters.get("initial_soil_moisture", 0.5 * capacity))
+        validate_range("initial_soil_moisture", init_soil, 0.0, capacity,
+                      min_inclusive=True, max_inclusive=True)
+
+        init_gw = float(self.parameters.get("initial_groundwater", 0.0))
+        validate_positive("initial_groundwater", init_gw, strict=False)
 
     def simulate(self, subbasin: "Subbasin", precipitation: List[float]) -> List[float]:
         flows: List[float] = []
