@@ -2,14 +2,21 @@ from __future__ import annotations
 
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Mapping, Set, Tuple
+from typing import Dict, List, Mapping, Sequence, Set, Tuple
 
 import numpy as np
 import pandas as pd
 
 
 def _read_time_series(path: Path) -> Tuple[np.ndarray, np.ndarray]:
-    """读取 `write_time_series` 格式的两列 CSV。"""
+    """Read two-column CSV file in `write_time_series` format.
+
+    Args:
+        path: Path to the CSV file
+
+    Returns:
+        Tuple of (timestamps, values) arrays
+    """
     data = np.loadtxt(path, delimiter=",", dtype=float)
     if data.ndim == 1:
         return np.array([data[0]], dtype=float), np.array([data[1]], dtype=float)
@@ -17,15 +24,32 @@ def _read_time_series(path: Path) -> Tuple[np.ndarray, np.ndarray]:
 
 
 def _detect_precip_column(df: pd.DataFrame) -> str:
-    """返回降雨强度所在的第一个数值列。"""
+    """Detect the first numeric column containing precipitation data.
+
+    Args:
+        df: DataFrame to search
+
+    Returns:
+        Name of the precipitation column
+
+    Raises:
+        ValueError: If no numeric precipitation column is found
+    """
     for column in df.columns[1:]:
         if pd.api.types.is_numeric_dtype(df[column]):
             return column
-    raise ValueError("无法在降雨文件中找到数值型降雨列。")
+    raise ValueError("Unable to find numeric precipitation column in rainfall file.")
 
 
 def _compute_time_step_hours(timestamps: pd.Series) -> float:
-    """估算连续时间序列的步长（单位：小时）。"""
+    """Estimate time step length in hours from timestamp series.
+
+    Args:
+        timestamps: Series of datetime timestamps
+
+    Returns:
+        Time step in hours (defaults to 1.0 if cannot be determined)
+    """
     deltas = timestamps.diff().dropna()
     if deltas.empty:
         return 1.0
@@ -37,7 +61,15 @@ def _compute_time_step_hours(timestamps: pd.Series) -> float:
 
 
 def _collect_upstream(zone_id: str, upstream_map: Mapping[str, Sequence[str]]) -> Set[str]:
-    """回溯 zone 的所有上游 zone（含自身）。"""
+    """Collect all upstream zones for a given zone (including itself).
+
+    Args:
+        zone_id: The zone to trace upstream from
+        upstream_map: Mapping from zone to its upstream zones
+
+    Returns:
+        Set of all upstream zone IDs (including the zone itself)
+    """
     stack: List[str] = [zone_id]
     visited: Set[str] = set()
     while stack:
@@ -52,7 +84,15 @@ def _collect_upstream(zone_id: str, upstream_map: Mapping[str, Sequence[str]]) -
 
 
 def _align_series(series: np.ndarray, length: int) -> np.ndarray:
-    """调整时序长度（超长截断，缺失补零）。"""
+    """Align time series to specified length (truncate if too long, pad with zeros if too short).
+
+    Args:
+        series: Input time series array
+        length: Target length
+
+    Returns:
+        Aligned array of specified length
+    """
     if len(series) == length:
         return series
     aligned = np.zeros(length, dtype=float)
@@ -68,7 +108,23 @@ def compute_zone_runoff_coefficients(
     precipitation_path: Path,
     output_path: Path,
 ) -> Path:
-    """根据参数区拓扑、局地径流与降雨，计算每个参数区的径流系数。"""
+    """Compute runoff coefficients for each parameter zone based on topology, local runoff, and precipitation.
+
+    Args:
+        parameter_dir: Directory containing parameter zone definitions (parameter_zones.csv, parameter_subbasins.csv)
+        aggregated_dir: Directory containing aggregated runoff time series (*.csv)
+        local_dir: Directory containing local runoff time series (*.csv)
+        precipitation_path: Path to precipitation time series file
+        output_path: Path where output CSV will be written
+
+    Returns:
+        Path to the output file containing runoff coefficients
+
+    Raises:
+        FileNotFoundError: If required input files or directories are missing
+        ValueError: If time series lengths are inconsistent or data is invalid
+        RuntimeError: If no usable CSV time series found in aggregated directory
+    """
 
     parameter_dir = Path(parameter_dir)
     aggregated_dir = Path(aggregated_dir)
@@ -80,13 +136,15 @@ def compute_zone_runoff_coefficients(
     subzone_csv = parameter_dir / "parameter_subbasins.csv"
 
     if not zone_csv.exists() or not subzone_csv.exists():
-        raise FileNotFoundError("参数目录缺少 parameter_zones.csv 或 parameter_subbasins.csv。")
+        raise FileNotFoundError(
+            f"Parameter directory missing required files: parameter_zones.csv or parameter_subbasins.csv"
+        )
     if not aggregated_dir.exists():
-        raise FileNotFoundError(f"聚合结果目录不存在: {aggregated_dir}")
+        raise FileNotFoundError(f"Aggregated results directory does not exist: {aggregated_dir}")
     if not local_dir.exists():
-        raise FileNotFoundError(f"局地径流目录不存在: {local_dir}")
+        raise FileNotFoundError(f"Local runoff directory does not exist: {local_dir}")
     if not precipitation_path.exists():
-        raise FileNotFoundError(f"降雨时序文件不存在: {precipitation_path}")
+        raise FileNotFoundError(f"Precipitation time series file does not exist: {precipitation_path}")
 
     zones_df = pd.read_csv(zone_csv)
     subzones_df = pd.read_csv(subzone_csv)
@@ -119,11 +177,13 @@ def compute_zone_runoff_coefficients(
         if time_index is None:
             time_index = steps
         elif len(time_index) != len(steps):
-            raise ValueError(f"聚合结果 {csv_path} 的时间长度与其他序列不一致。")
+            raise ValueError(
+                f"Time series length in {csv_path} is inconsistent with other series"
+            )
         aggregated_series[zone_id] = values
 
     if not aggregated_series:
-        raise RuntimeError(f"聚合目录 {aggregated_dir} 中没有可用的 CSV 时序。")
+        raise RuntimeError(f"No usable CSV time series found in aggregated directory: {aggregated_dir}")
 
     step_count = len(next(iter(aggregated_series.values())))
 
@@ -135,7 +195,7 @@ def compute_zone_runoff_coefficients(
 
     precip_df = pd.read_csv(precipitation_path)
     if precip_df.empty:
-        raise ValueError(f"降雨文件 {precipitation_path} 为空。")
+        raise ValueError(f"Precipitation file is empty: {precipitation_path}")
 
     time_col = precip_df.columns[0]
     try:
@@ -146,7 +206,7 @@ def compute_zone_runoff_coefficients(
     precip_column = _detect_precip_column(precip_df)
     precip_series = precip_df[precip_column].astype(float).to_numpy()
     if len(precip_series) != step_count:
-        raise ValueError("降雨序列长度与聚合序列长度不匹配。")
+        raise ValueError("Precipitation series length does not match aggregated series length")
 
     rainfall_depth_mm = float(precip_series.sum() * dt_hours)
     rainfall_depth_m = rainfall_depth_mm / 1000.0

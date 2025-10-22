@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 
 from .base import RunoffModel, RunoffModelConfig
+from ..validation import validate_positive, validate_probability, validate_integer, validate_range
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from ..model import Subbasin
@@ -29,6 +30,47 @@ class HYMODRunoff(RunoffModel):
         initial_quick = float(self.parameters.get("initial_quick_storage", 0.0))
         self.quick_states = [initial_quick for _ in range(self.num_quick)]
         self.slow_state = float(self.parameters.get("initial_slow_storage", 0.0))
+
+    def validate_parameters(self) -> None:
+        """Validate HYMOD model parameters.
+
+        Validates:
+            - max_storage: Must be > 0
+            - beta: Must be >= 0
+            - quickflow_ratio: Must be in [0, 1]
+            - quick_k: Must be in [0, 1]
+            - slow_k: Must be in [0, 1]
+            - num_quick_reservoirs: Must be >= 1
+            - initial_soil_storage: Must be >= 0 and <= max_storage
+            - initial_quick_storage, initial_slow_storage: Must be >= 0
+        """
+        smax = float(self.parameters.get("max_storage", 100.0))
+        validate_positive("max_storage", smax, strict=True)
+
+        beta = float(self.parameters.get("beta", 1.0))
+        validate_positive("beta", beta, strict=False)
+
+        qf_ratio = float(self.parameters.get("quickflow_ratio", 0.7))
+        validate_probability("quickflow_ratio", qf_ratio)
+
+        k_quick = float(self.parameters.get("quick_k", 0.5))
+        validate_probability("quick_k", k_quick)
+
+        k_slow = float(self.parameters.get("slow_k", 0.05))
+        validate_probability("slow_k", k_slow)
+
+        num_quick = int(self.parameters.get("num_quick_reservoirs", 3))
+        validate_integer("num_quick_reservoirs", num_quick, min_value=1)
+
+        init_soil = float(self.parameters.get("initial_soil_storage", 0.5 * smax))
+        validate_range("initial_soil_storage", init_soil, 0.0, smax,
+                      min_inclusive=True, max_inclusive=True)
+
+        init_quick = float(self.parameters.get("initial_quick_storage", 0.0))
+        validate_positive("initial_quick_storage", init_quick, strict=False)
+
+        init_slow = float(self.parameters.get("initial_slow_storage", 0.0))
+        validate_positive("initial_slow_storage", init_slow, strict=False)
 
     def _effective_rain(self, rainfall: float) -> float:
         if rainfall <= 0.0:

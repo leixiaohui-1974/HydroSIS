@@ -1,45 +1,51 @@
-# ============ HydroSIS 集成接口 ============
+# ============ HydroSIS Integration Interface ============
+
+import math
+from typing import List, Mapping
+
+from .core import SaintVenantSolver, BoundaryCondition, RiverReach
+
 
 class HydrodynamicRoutingModel:
-    """作为 HydroSIS RoutingModel 的水动力路由实现"""
-    
+    """Hydrodynamic routing implementation as HydroSIS RoutingModel"""
+
     def __init__(self, parameters: Mapping[str, float]):
         self.parameters = dict(parameters)
-        
-        # 从参数提取河道配置
+
+        # Extract channel configuration from parameters
         self.reach = RiverReach(
             id=str(parameters.get('reach_id', 'main')),
-            length=float(parameters.get('length', 10000)),  # 默认10km
+            length=float(parameters.get('length', 10000)),  # Default 10km
             bed_slope=float(parameters.get('bed_slope', 0.001)),
             manning_n=float(parameters.get('manning_n', 0.03)),
             width=float(parameters.get('width', 30)),
             num_sections=int(parameters.get('num_sections', 20))
         )
-        
-        self.dt = float(parameters.get('time_step', 300))  # 默认5分钟
+
+        self.dt = float(parameters.get('time_step', 300))  # Default 5 minutes
         self.solver = SaintVenantSolver(self.reach, dt=self.dt)
-        
+
     def route(self, subbasin, inflow: List[float]) -> List[float]:
-        """实现 HydroSIS RoutingModel 接口
-        
-        参数:
-            subbasin: 子流域对象
-            inflow: 产流时间序列 (m³/s)
-        
-        返回:
-            出口流量时间序列 (m³/s)
+        """Implement HydroSIS RoutingModel interface
+
+        Args:
+            subbasin: Subbasin object
+            inflow: Runoff time series (m³/s)
+
+        Returns:
+            Outlet discharge time series (m³/s)
         """
         num_steps = len(inflow)
-        
-        # 将产流均匀分布到河段
+
+        # Distribute runoff uniformly across reach
         lateral_per_section = [q / self.reach.num_sections for q in inflow]
-        
-        # 配置边界条件
+
+        # Configure boundary conditions
         bc = BoundaryCondition(
             upstream_type="discharge",
-            upstream_values=[0.0] * num_steps,  # 无上游来水
+            upstream_values=[0.0] * num_steps,  # No upstream inflow
             downstream_type="stage",
-            downstream_values=[2.0] * num_steps  # 下游恒定水位
+            downstream_values=[2.0] * num_steps  # Constant downstream stage
         )
         
         outflow = []
@@ -54,7 +60,7 @@ class HydrodynamicRoutingModel:
 
 
 def create_coupled_model_config():
-    """生成耦合模拟的示例配置"""
+    """Generate example configuration for coupled simulation"""
     config = {
         "routing_models": [
             {
@@ -75,21 +81,21 @@ def create_coupled_model_config():
     return config
 
 
-# 注册到 HydroSIS 框架
+# Register with HydroSIS framework
 try:
     from hydrosis.routing.base import RoutingModelConfig
     RoutingModelConfig.register("saint_venant_1d", HydrodynamicRoutingModel)
-    print("✓ 一维水动力模型已注册到 HydroSIS 路由模型库")
+    print("✓ 1D hydrodynamic model registered to HydroSIS routing model library")
 except ImportError:
-    print("⚠ 未检测到 HydroSIS 框架,模型可独立运行")
+    print("⚠ HydroSIS framework not detected, model can run independently")
 
 
 if __name__ == "__main__":
-    # 独立运行示例
+    # Standalone execution example
     print("=" * 60)
-    print("一维水动力模型独立测试")
+    print("1D Hydrodynamic Model Standalone Test")
     print("=" * 60)
-    
+
     reach = RiverReach(
         id="test_reach",
         length=5000,
@@ -98,35 +104,35 @@ if __name__ == "__main__":
         width=25,
         num_sections=15
     )
-    
+
     solver = SaintVenantSolver(reach, dt=60)
-    
-    # 设置洪水过程边界
+
+    # Set flood hydrograph boundary
     num_steps = 100
     peak_time = 30
     upstream_q = [10 + 50 * math.exp(-((t-peak_time)/10)**2) for t in range(num_steps)]
-    
+
     bc = BoundaryCondition(
         upstream_type="discharge",
         upstream_values=upstream_q,
         downstream_type="stage",
         downstream_values=[2.5] * num_steps
     )
-    
-    # 设置均匀侧向入流
+
+    # Set uniform lateral inflow
     solver.set_lateral_inflow([0.01] * reach.num_sections)
-    
-    print(f"模拟河段: {reach.length}m, {reach.num_sections}个断面")
-    print(f"上游峰值流量: {max(upstream_q):.1f} m³/s")
-    print("开始模拟...\n")
-    
+
+    print(f"Simulated reach: {reach.length}m, {reach.num_sections} cross-sections")
+    print(f"Upstream peak discharge: {max(upstream_q):.1f} m³/s")
+    print("Starting simulation...\n")
+
     results = solver.run_simulation(bc, num_steps)
-    
-    # 输出结果摘要
+
+    # Output results summary
     peak_discharge_outlet = max(d[-1] for d in results['discharge'])
     peak_depth = max(max(d) for d in results['depth'])
-    
-    print(f"✓ 模拟完成 {num_steps} 个时间步")
-    print(f"  出口峰值流量: {peak_discharge_outlet:.2f} m³/s")
-    print(f"  最大水深: {peak_depth:.2f} m")
-    print(f"  演算衰减: {(max(upstream_q) - peak_discharge_outlet)/max(upstream_q)*100:.1f}%")
+
+    print(f"✓ Simulation completed {num_steps} time steps")
+    print(f"  Outlet peak discharge: {peak_discharge_outlet:.2f} m³/s")
+    print(f"  Maximum depth: {peak_depth:.2f} m")
+    print(f"  Routing attenuation: {(max(upstream_q) - peak_discharge_outlet)/max(upstream_q)*100:.1f}%")

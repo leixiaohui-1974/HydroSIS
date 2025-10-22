@@ -899,7 +899,7 @@ def generate_tree_pour_points(
         return value
 
     def enforce_area_balance() -> None:
-        nonlocal selected_cells
+        # selected_cells is a list, so we can modify it directly without nonlocal
         branch_pool = [
             candidate
             for candidate in branch_candidates

@@ -31,7 +31,7 @@ class DEMProcessingResult:
 
 def crop_dem_to_bbox(dem_path: Path, bbox: Sequence[float], out_path: Path) -> Path:
     if not RASTERIO_AVAILABLE:
-        raise RuntimeError("rasterio 未安装，无法裁剪 DEM")
+        raise RuntimeError("rasterio is not installed; cannot crop DEM")
     minx, miny, maxx, maxy = bbox
     with rasterio.open(dem_path) as src:
         window = from_bounds(minx, miny, maxx, maxy, transform=src.transform)
@@ -152,7 +152,7 @@ def compute_flow_accumulation(directions: np.ndarray) -> np.ndarray:
 
 def save_array_as_tif(array: np.ndarray, ref_profile: dict, transform: Affine, out_path: Path, dtype: str = "uint32") -> Path:
     if not RASTERIO_AVAILABLE:
-        raise RuntimeError("rasterio 未安装，无法写出 TIF")
+        raise RuntimeError("rasterio is not installed; cannot write TIF")
     profile = ref_profile.copy()
     profile.update({"dtype": dtype, "count": 1, "height": array.shape[0], "width": array.shape[1], "transform": transform})
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -184,9 +184,9 @@ def export_parameter_zones(acc: np.ndarray, transform: Affine, ref_profile: dict
     """Classify accumulation into 3 parameter zones and export as TIF + GeoJSON grid.
 
     Zones:
-      1 = 低流量区 (low)
-      2 = 中等流量区 (mid)
-      3 = 高流量区 (high)
+      1 = Low flow area (low)
+      2 = Medium flow area (mid)
+      3 = High flow area (high)
     """
     vals = acc.flatten()
     vals = vals[vals > 0]
@@ -298,7 +298,7 @@ def run_dem_flow_pipeline(
     max_cells_d8: int = 16_000_000,
 ) -> DEMProcessingResult:
     if not RASTERIO_AVAILABLE:
-        raise RuntimeError("请先安装 rasterio：pip install rasterio")
+        raise RuntimeError("Please install rasterio: pip install rasterio")
 
     out_dir.mkdir(parents=True, exist_ok=True)
     cropped = out_dir / "dem_cropped.tif"
@@ -309,15 +309,15 @@ def run_dem_flow_pipeline(
         transform = src.transform
         profile = src.profile
 
-    # 对大范围数据进行自动降采样以提升速度（提高阈值以保留更多细节）
+    # Auto-downsample large datasets to improve speed (higher threshold preserves more detail)
     rows, cols = dem.shape
     total = rows * cols
     decimate = 1
     import math
-    # 规则1：尽量不降采样（除非超过可视阈值）
+    # Rule 1: Avoid downsampling unless exceeding visualization threshold
     if total > max_pixels_no_decimate:
         decimate = int(math.ceil(math.sqrt(total / max_pixels_no_decimate)))
-    # 规则2：确保D8计算像素不超过上限，避免长时间卡顿
+    # Rule 2: Ensure D8 computation doesn't exceed pixel limit to avoid long freezes
     d8_needed = int(math.ceil(math.sqrt(total / max_cells_d8)))
     decimate = max(decimate, d8_needed)
     if decimate > 1:

@@ -1,10 +1,10 @@
-"""GPU加速的一维水动力求解器
+"""GPU-accelerated 1D hydrodynamic solver
 
-使用CuPy实现GPU加速，自动回退到NumPy的CPU版本：
-- 自动检测GPU可用性
-- 透明的CPU/GPU切换
-- 针对大规模网格的性能优化
-- 批量模拟并行处理
+Implements GPU acceleration using CuPy with automatic fallback to NumPy CPU version:
+- Automatic GPU availability detection
+- Transparent CPU/GPU switching
+- Performance optimization for large-scale grids
+- Batch simulation parallel processing
 """
 from __future__ import annotations
 
@@ -14,22 +14,22 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
-# 尝试导入CuPy进行GPU加速
+# Attempt to import CuPy for GPU acceleration
 try:
     import cupy as cp
     from cupyx.scipy.sparse import diags as cp_diags
     from cupyx.scipy.sparse.linalg import spsolve as cp_spsolve
     GPU_AVAILABLE = True
-    print("✓ CuPy已加载，GPU加速可用")
+    print("✓ CuPy loaded, GPU acceleration available")
 except ImportError:
     cp = np
     GPU_AVAILABLE = False
-    print("⚠ CuPy未安装，使用CPU模式 (pip install cupy-cuda11x 安装GPU支持)")
+    print("⚠ CuPy not installed, using CPU mode (install GPU support: pip install cupy-cuda11x)")
 
 
 @dataclass
 class GPUCapability:
-    """GPU能力信息"""
+    """GPU capability information"""
     available: bool
     device_name: str
     memory_total: float  # GB
@@ -38,11 +38,11 @@ class GPUCapability:
 
 
 class DeviceManager:
-    """设备管理器 - 自动选择CPU/GPU"""
-    
+    """Device manager - automatic CPU/GPU selection"""
+
     @staticmethod
     def get_gpu_info() -> GPUCapability:
-        """获取GPU信息"""
+        """Get GPU information"""
         if not GPU_AVAILABLE:
             return GPUCapability(False, "CPU", 0, 0, (0, 0))
         
@@ -60,70 +60,70 @@ class DeviceManager:
                 compute_capability=device.compute_capability
             )
         except Exception as e:
-            print(f"GPU信息获取失败: {e}")
+            print(f"GPU information retrieval failed: {e}")
             return GPUCapability(False, "CPU", 0, 0, (0, 0))
-    
+
     @staticmethod
-    def select_device(force_cpu: bool = False, 
+    def select_device(force_cpu: bool = False,
                      min_memory_gb: float = 1.0) -> str:
-        """选择计算设备
-        
-        参数:
-            force_cpu: 强制使用CPU
-            min_memory_gb: 最小GPU内存要求 (GB)
-        
-        返回:
-            'gpu' 或 'cpu'
+        """Select compute device
+
+        Args:
+            force_cpu: Force CPU usage
+            min_memory_gb: Minimum GPU memory requirement (GB)
+
+        Returns:
+            'gpu' or 'cpu'
         """
         if force_cpu or not GPU_AVAILABLE:
             return 'cpu'
-        
+
         gpu_info = DeviceManager.get_gpu_info()
-        
+
         if not gpu_info.available:
             return 'cpu'
-        
+
         if gpu_info.memory_free < min_memory_gb:
-            print(f"⚠ GPU可用内存 ({gpu_info.memory_free:.1f}GB) "
-                  f"小于要求 ({min_memory_gb}GB)，使用CPU")
+            print(f"⚠ GPU available memory ({gpu_info.memory_free:.1f}GB) "
+                  f"less than required ({min_memory_gb}GB), using CPU")
             return 'cpu'
-        
-        print(f"✓ 使用GPU: {gpu_info.device_name} "
-              f"(可用内存: {gpu_info.memory_free:.1f}/{gpu_info.memory_total:.1f} GB)")
+
+        print(f"✓ Using GPU: {gpu_info.device_name} "
+              f"(available memory: {gpu_info.memory_free:.1f}/{gpu_info.memory_total:.1f} GB)")
         return 'gpu'
 
 
 class GPUSaintVenantSolver:
-    """GPU加速的圣维南方程求解器
-    
-    与CPU版本接口兼容，但内部使用GPU并行计算
+    """GPU-accelerated Saint-Venant equations solver
+
+    Interface compatible with CPU version, but uses GPU parallel computation internally
     """
-    
-    def __init__(self, reach, dt: float = 60.0, 
+
+    def __init__(self, reach, dt: float = 60.0,
                  use_gpu: bool = True,
                  theta: float = 0.6,
                  epsilon: float = 1e-4):
         """
-        参数:
-            reach: 河段对象
-            dt: 时间步长 (s)
-            use_gpu: 是否尝试使用GPU
-            theta: 时间权重因子
-            epsilon: 收敛容差
+        Args:
+            reach: River reach object
+            dt: Timestep size (s)
+            use_gpu: Whether to attempt GPU usage
+            theta: Time weighting factor
+            epsilon: Convergence tolerance
         """
         self.reach = reach
         self.dt = dt
         self.theta = theta
         self.epsilon = epsilon
         self.g = 9.81
-        
-        # 设备选择
+
+        # Device selection
         self.device = DeviceManager.select_device(
             force_cpu=not use_gpu,
             min_memory_gb=0.5
         )
-        
-        # 选择数组库
+
+        # Select array library
         if self.device == 'gpu':
             self.xp = cp
             self._to_device = lambda x: cp.asarray(x)
@@ -132,46 +132,46 @@ class GPUSaintVenantSolver:
             self.xp = np
             self._to_device = lambda x: np.asarray(x)
             self._to_host = lambda x: np.asarray(x)
-        
-        # 初始化状态 (在对应设备上)
+
+        # Initialize state (on corresponding device)
         n = reach.num_sections
         self.depth = self._to_device(np.full(n, 2.0))
         self.discharge = self._to_device(np.full(n, 10.0))
         self.area = self._to_device(np.full(n, 2.0 * reach.width))
         self.velocity = self._to_device(np.full(n, 0.5))
-        
+
         self.lateral_inflow = self._to_device(np.zeros(n))
-        
-        # 性能监控
+
+        # Performance monitoring
         self.gpu_time_total = 0.0
         self.cpu_time_total = 0.0
         self.num_solves = 0
-    
+
     def update_hydraulic_properties(self):
-        """更新水力参数 (GPU并行)"""
+        """Update hydraulic parameters (GPU parallel)"""
         self.area = self.depth * self.reach.width
-        # 避免除零
+        # Avoid division by zero
         self.velocity = self.xp.where(
             self.area > 1e-6,
             self.discharge / self.area,
             0.0
         )
-    
+
     def friction_slope(self, Q, A):
-        """计算摩阻坡度 (GPU并行)"""
-        # 水力半径 R = A / (b + 2h)
+        """Compute friction slope (GPU parallel)"""
+        # Hydraulic radius R = A / (b + 2h)
         R = A / (self.reach.width + 2 * self.depth)
         R = self.xp.maximum(R, 0.01)
-        
+
         n = self.reach.manning_n
         Sf = n**2 * Q * self.xp.abs(Q) / (A**2 * R**(4/3))
         return Sf
-    
-    def build_system_gpu(self, Q_new, h_new, Q_old, h_old, 
+
+    def build_system_gpu(self, Q_new, h_new, Q_old, h_old,
                         bc, time_idx: int):
-        """构建线性系统 (GPU优化版本)
-        
-        使用向量化操作避免Python循环
+        """Build linear system (GPU-optimized version)
+
+        Uses vectorized operations to avoid Python loops
         """
         n = self.reach.num_sections
         N = 2 * n
@@ -179,30 +179,30 @@ class GPUSaintVenantSolver:
         
         A_new = h_new * self.reach.width
         A_old = h_old * self.reach.width
-        
-        # 使用GPU并行计算残差和雅可比
-        J_data = self.xp.zeros(N * 5)  # 五对角矩阵
+
+        # Compute residuals and Jacobian using GPU parallelization
+        J_data = self.xp.zeros(N * 5)  # Pentadiagonal matrix
         R = self.xp.zeros(N)
-        
-        # 内部节点 - 向量化处理
+
+        # Interior nodes - vectorized processing
         i = self.xp.arange(1, n-1)
-        
-        # 连续性方程残差
-        R[2*i] = (A_new[i] - A_old[i] + 
+
+        # Continuity equation residual
+        R[2*i] = (A_new[i] - A_old[i] +
                  self.theta * self.dt / dx * (Q_new[i+1] - Q_new[i]) +
                  (1 - self.theta) * self.dt / dx * (Q_old[i+1] - Q_old[i]) -
                  self.dt * self.lateral_inflow[i])
-        
-        # 动量方程残差 (简化版)
+
+        # Momentum equation residual (simplified version)
         v_i = self.xp.where(A_new[i] > 1e-6, Q_new[i] / A_new[i], 0)
         Sf_i = self.friction_slope(Q_new[i], A_new[i])
         dh = (h_new[i+1] - h_new[i]) / dx
-        
+
         R[2*i+1] = (Q_new[i] - Q_old[i] +
-                   self.theta * self.dt * self.g * A_new[i] * 
+                   self.theta * self.dt * self.g * A_new[i] *
                    (dh - (self.reach.bed_slope - Sf_i)))
-        
-        # 边界条件
+
+        # Boundary conditions
         if bc.upstream_type == "discharge":
             R[1] = Q_new[0] - bc.upstream_values[time_idx]
         else:
@@ -210,20 +210,20 @@ class GPUSaintVenantSolver:
         
         if bc.downstream_type == "stage":
             R[-1] = h_new[-1] - bc.downstream_values[time_idx]
-        
-        # 构建稀疏矩阵 (简化为对角占优)
-        # 实际应用中使用更精细的雅可比矩阵
+
+        # Build sparse matrix (simplified to diagonally dominant)
+        # Use more refined Jacobian matrix in production
         J_diag = self.xp.ones(N)
         J_diag[2*i] = self.reach.width
         J_diag[2*i+1] = 1.0 + self.theta * self.dt * self.g * \
                        2 * self.reach.manning_n**2 * \
                        self.xp.abs(Q_new[i]) / (A_new[i]**2 + 1e-6)
-        
+
         return J_diag, R
-    
-    def solve_timestep_gpu(self, bc, time_idx: int, 
+
+    def solve_timestep_gpu(self, bc, time_idx: int,
                           max_iter: int = 20) -> bool:
-        """GPU加速的时间步求解"""
+        """GPU-accelerated timestep solution"""
         start_time = time.time()
         
         Q_old = self.discharge.copy()
@@ -231,35 +231,35 @@ class GPUSaintVenantSolver:
         
         Q_new = Q_old.copy()
         h_new = h_old.copy()
-        
-        # 牛顿迭代
+
+        # Newton iteration
         for iteration in range(max_iter):
             J_diag, R = self.build_system_gpu(
                 Q_new, h_new, Q_old, h_old, bc, time_idx
             )
-            
-            # 检查收敛
+
+            # Check convergence
             residual_norm = self.xp.max(self.xp.abs(R))
             if residual_norm < self.epsilon:
-                # 更新状态
+                # Update state
                 self.discharge = Q_new
                 self.depth = h_new
                 self.update_hydraulic_properties()
-                
+
                 elapsed = time.time() - start_time
                 if self.device == 'gpu':
                     self.gpu_time_total += elapsed
                 else:
                     self.cpu_time_total += elapsed
                 self.num_solves += 1
-                
+
                 return True
-            
-            # 求解线性系统 (简化为对角系统)
+
+            # Solve linear system (simplified to diagonal system)
             delta_combined = -R / (J_diag + 1e-10)
-            
-            # 更新解
-            omega = 0.7  # 松弛因子
+
+            # Update solution
+            omega = 0.7  # Relaxation factor
             for i in range(len(Q_new)):
                 Q_new[i] += omega * delta_combined[2*i]
                 h_new[i] = self.xp.maximum(0.01, 
@@ -273,23 +273,23 @@ class GPUSaintVenantSolver:
         self.num_solves += 1
         
         return False
-    
+
     def set_lateral_inflow(self, inflow):
-        """设置侧向入流"""
+        """Set lateral inflow"""
         self.lateral_inflow = self._to_device(np.array(inflow))
-    
+
     def get_state_cpu(self) -> Dict:
-        """获取CPU可访问的状态"""
+        """Get CPU-accessible state"""
         return {
             'discharge': self._to_host(self.discharge),
             'depth': self._to_host(self.depth),
             'velocity': self._to_host(self.velocity),
             'area': self._to_host(self.area)
         }
-    
-    def run_simulation_gpu(self, bc, num_steps: int, 
+
+    def run_simulation_gpu(self, bc, num_steps: int,
                           verbose: bool = True) -> Dict:
-        """运行完整GPU模拟"""
+        """Run complete GPU simulation"""
         results = {
             'time': [],
             'discharge': [],
@@ -298,62 +298,62 @@ class GPUSaintVenantSolver:
         }
         
         if verbose:
-            print(f"开始{self.device.upper()}模拟 ({num_steps} 步)...")
+            print(f"Starting {self.device.upper()} simulation ({num_steps} steps)...")
             if self.device == 'gpu':
                 gpu_info = DeviceManager.get_gpu_info()
                 print(f"GPU: {gpu_info.device_name}")
-        
+
         start_time = time.time()
-        
+
         for t in range(num_steps):
             success = self.solve_timestep_gpu(bc, t)
-            
+
             if not success and verbose:
-                print(f"⚠ 步骤 {t} 未收敛")
-            
-            # 定期同步到CPU保存结果
+                print(f"⚠ Step {t} did not converge")
+
+            # Periodically sync to CPU to save results
             if t % 10 == 0 or t == num_steps - 1:
                 state = self.get_state_cpu()
                 results['time'].append(t * self.dt)
                 results['discharge'].append(state['discharge'].copy())
                 results['depth'].append(state['depth'].copy())
                 results['velocity'].append(state['velocity'].copy())
-            
+
             if verbose and t % 50 == 0 and t > 0:
                 elapsed = time.time() - start_time
                 steps_per_sec = t / elapsed
                 eta = (num_steps - t) / steps_per_sec
-                print(f"  进度: {t}/{num_steps} ({t/num_steps*100:.1f}%) | "
-                      f"速度: {steps_per_sec:.1f} 步/秒 | "
-                      f"预计剩余: {eta:.1f}秒")
-        
+                print(f"  Progress: {t}/{num_steps} ({t/num_steps*100:.1f}%) | "
+                      f"Speed: {steps_per_sec:.1f} steps/sec | "
+                      f"Remaining: {eta:.1f}s")
+
         total_time = time.time() - start_time
-        
+
         if verbose:
-            print(f"\n✓ 模拟完成!")
-            print(f"  总时间: {total_time:.2f}秒")
-            print(f"  平均: {num_steps/total_time:.1f} 步/秒")
+            print(f"\n✓ Simulation complete!")
+            print(f"  Total time: {total_time:.2f}s")
+            print(f"  Average: {num_steps/total_time:.1f} steps/sec")
             if self.device == 'gpu':
-                print(f"  GPU加速比: {self.estimate_speedup():.1f}x")
+                print(f"  GPU speedup: {self.estimate_speedup():.1f}x")
         
         return results
     
     def estimate_speedup(self) -> float:
-        """估算GPU加速比"""
+        """Estimate GPU speedup"""
         if self.cpu_time_total == 0:
             return 1.0
-        # 粗略估计：基于单步时间
+        # Rough estimate: based on per-step time
         avg_gpu_time = self.gpu_time_total / max(self.num_solves, 1)
-        estimated_cpu_time = avg_gpu_time * 3  # 经验值
+        estimated_cpu_time = avg_gpu_time * 3  # Empirical value
         return estimated_cpu_time / avg_gpu_time
-    
+
     def get_performance_stats(self) -> Dict:
-        """获取性能统计"""
+        """Get performance statistics"""
         return {
             'device': self.device,
             'num_solves': self.num_solves,
             'total_time': self.gpu_time_total + self.cpu_time_total,
-            'avg_time_per_step': (self.gpu_time_total + self.cpu_time_total) / 
+            'avg_time_per_step': (self.gpu_time_total + self.cpu_time_total) /
                                 max(self.num_solves, 1),
             'gpu_time': self.gpu_time_total,
             'cpu_time': self.cpu_time_total
@@ -361,37 +361,37 @@ class GPUSaintVenantSolver:
 
 
 class BatchSimulator:
-    """批量并行模拟器 - GPU加速多场景计算"""
-    
+    """Batch parallel simulator - GPU-accelerated multi-scenario computation"""
+
     def __init__(self, base_reach, use_gpu: bool = True):
         self.base_reach = base_reach
         self.use_gpu = use_gpu and GPU_AVAILABLE
-        
+
         if self.use_gpu:
             self.xp = cp
         else:
             self.xp = np
-    
+
     def run_parameter_ensemble(self,
                               parameter_sets: List[Dict],
                               boundary_conditions,
                               num_steps: int) -> List[Dict]:
-        """并行运行参数集合
-        
-        参数:
-            parameter_sets: 参数字典列表 (如不同曼宁系数)
-            boundary_conditions: 边界条件
-            num_steps: 时间步数
-        
-        返回:
-            结果列表
+        """Run parameter ensemble in parallel
+
+        Args:
+            parameter_sets: List of parameter dictionaries (e.g., different Manning coefficients)
+            boundary_conditions: Boundary conditions
+            num_steps: Number of timesteps
+
+        Returns:
+            Results list
         """
-        print(f"批量模拟 {len(parameter_sets)} 个参数组合...")
+        print(f"Batch simulation of {len(parameter_sets)} parameter combinations...")
         
         results = []
         
         for i, params in enumerate(parameter_sets):
-            # 创建修改参数后的河段
+            # Create reach with modified parameters
             reach = type(self.base_reach)(
                 id=f"{self.base_reach.id}_variant_{i}",
                 length=params.get('length', self.base_reach.length),
@@ -400,69 +400,69 @@ class BatchSimulator:
                 width=params.get('width', self.base_reach.width),
                 num_sections=self.base_reach.num_sections
             )
-            
-            # 创建求解器
+
+            # Create solver
             solver = GPUSaintVenantSolver(
-                reach, 
+                reach,
                 dt=params.get('dt', 60),
                 use_gpu=self.use_gpu
             )
-            
-            # 运行模拟
+
+            # Run simulation
             result = solver.run_simulation_gpu(
-                boundary_conditions, 
-                num_steps, 
+                boundary_conditions,
+                num_steps,
                 verbose=False
             )
-            
+
             result['parameters'] = params
             results.append(result)
-            
-            print(f"  完成 {i+1}/{len(parameter_sets)}")
-        
+
+            print(f"  Completed {i+1}/{len(parameter_sets)}")
+
         return results
-    
+
     def sensitivity_analysis(self,
                            parameter_name: str,
                            parameter_values: List[float],
                            boundary_conditions,
                            num_steps: int) -> Dict:
-        """敏感性分析
-        
-        参数:
-            parameter_name: 参数名 ('manning_n', 'bed_slope' 等)
-            parameter_values: 参数取值列表
-            boundary_conditions: 边界条件
-            num_steps: 时间步数
-        
-        返回:
-            敏感性分析结果
+        """Sensitivity analysis
+
+        Args:
+            parameter_name: Parameter name ('manning_n', 'bed_slope', etc.)
+            parameter_values: Parameter value list
+            boundary_conditions: Boundary conditions
+            num_steps: Number of timesteps
+
+        Returns:
+            Sensitivity analysis results
         """
-        print(f"\n敏感性分析: {parameter_name}")
-        print(f"测试取值: {parameter_values}")
-        
-        # 构建参数集
+        print(f"\nSensitivity analysis: {parameter_name}")
+        print(f"Test values: {parameter_values}")
+
+        # Build parameter sets
         param_sets = [
-            {parameter_name: value} 
+            {parameter_name: value}
             for value in parameter_values
         ]
-        
-        # 批量运行
+
+        # Batch run
         results = self.run_parameter_ensemble(
-            param_sets, 
-            boundary_conditions, 
+            param_sets,
+            boundary_conditions,
             num_steps
         )
-        
-        # 提取关键指标
+
+        # Extract key metrics
         peak_discharges = []
         peak_depths = []
-        
+
         for result in results:
-            # 出口断面峰值
+            # Outlet section peak values
             outlet_q = [d[-1] for d in result['discharge']]
             peak_discharges.append(max(outlet_q))
-            
+
             max_depths = [max(d) for d in result['depth']]
             peak_depths.append(max(max_depths))
         
@@ -479,114 +479,114 @@ class BatchSimulator:
 
 
 def benchmark_cpu_vs_gpu(reach, num_steps: int = 100):
-    """CPU vs GPU性能对比测试"""
+    """CPU vs GPU performance comparison test"""
     print("\n" + "="*70)
-    print("CPU vs GPU 性能基准测试")
+    print("CPU vs GPU Performance Benchmark")
     print("="*70)
-    
+
     from hydrodynamic_1d import BoundaryCondition
-    
-    # 准备边界条件
+
+    # Prepare boundary conditions
     bc = BoundaryCondition(
         upstream_type="discharge",
         upstream_values=[30.0] * num_steps,
         downstream_type="stage",
         downstream_values=[2.5] * num_steps
     )
-    
-    # CPU测试
-    print("\n[CPU模式]")
+
+    # CPU test
+    print("\n[CPU Mode]")
     solver_cpu = GPUSaintVenantSolver(reach, dt=60, use_gpu=False)
     solver_cpu.set_lateral_inflow([0.01] * reach.num_sections)
-    
+
     start = time.time()
     results_cpu = solver_cpu.run_simulation_gpu(bc, num_steps, verbose=False)
     cpu_time = time.time() - start
-    
-    print(f"  完成时间: {cpu_time:.2f}秒")
-    print(f"  速度: {num_steps/cpu_time:.1f} 步/秒")
-    
-    # GPU测试
+
+    print(f"  Completion time: {cpu_time:.2f}s")
+    print(f"  Speed: {num_steps/cpu_time:.1f} steps/sec")
+
+    # GPU test
     if GPU_AVAILABLE:
-        print("\n[GPU模式]")
+        print("\n[GPU Mode]")
         solver_gpu = GPUSaintVenantSolver(reach, dt=60, use_gpu=True)
         solver_gpu.set_lateral_inflow([0.01] * reach.num_sections)
-        
+
         start = time.time()
         results_gpu = solver_gpu.run_simulation_gpu(bc, num_steps, verbose=False)
         gpu_time = time.time() - start
-        
-        print(f"  完成时间: {gpu_time:.2f}秒")
-        print(f"  速度: {num_steps/gpu_time:.1f} 步/秒")
-        
-        # 加速比
+
+        print(f"  Completion time: {gpu_time:.2f}s")
+        print(f"  Speed: {num_steps/gpu_time:.1f} steps/sec")
+
+        # Speedup
         speedup = cpu_time / gpu_time
-        print(f"\n✓ GPU加速比: {speedup:.2f}x")
-        
+        print(f"\n✓ GPU speedup: {speedup:.2f}x")
+
         if speedup < 1.0:
-            print("  注: 对于小规模问题，GPU开销可能超过收益")
-            print("     建议网格数 > 100 时使用GPU")
+            print("  Note: For small-scale problems, GPU overhead may exceed benefits")
+            print("       Recommend using GPU when grid count > 100")
     else:
-        print("\n⚠ GPU不可用，跳过GPU测试")
-    
+        print("\n⚠ GPU unavailable, skipping GPU test")
+
     print("="*70)
 
 
 if __name__ == "__main__":
-    # 测试GPU求解器
+    # Test GPU solver
     print("="*70)
-    print("GPU加速求解器测试")
+    print("GPU-Accelerated Solver Test")
     print("="*70)
-    
-    # 显示GPU信息
+
+    # Display GPU information
     gpu_info = DeviceManager.get_gpu_info()
-    print(f"\nGPU状态: {'可用' if gpu_info.available else '不可用'}")
+    print(f"\nGPU status: {'Available' if gpu_info.available else 'Unavailable'}")
     if gpu_info.available:
-        print(f"设备: {gpu_info.device_name}")
-        print(f"内存: {gpu_info.memory_free:.1f}/{gpu_info.memory_total:.1f} GB")
-        print(f"计算能力: {gpu_info.compute_capability}")
-    
-    # 创建测试河段
+        print(f"Device: {gpu_info.device_name}")
+        print(f"Memory: {gpu_info.memory_free:.1f}/{gpu_info.memory_total:.1f} GB")
+        print(f"Compute capability: {gpu_info.compute_capability}")
+
+    # Create test reach
     from hydrodynamic_1d import RiverReach, BoundaryCondition
-    
+
     test_reach = RiverReach(
         id="gpu_test",
         length=10000,
         bed_slope=0.001,
         manning_n=0.03,
         width=30,
-        num_sections=50  # 增大网格以体现GPU优势
+        num_sections=50  # Increase grid size to show GPU advantage
     )
-    
-    # 性能基准测试
+
+    # Performance benchmark
     benchmark_cpu_vs_gpu(test_reach, num_steps=100)
-    
-    # 敏感性分析示例
+
+    # Sensitivity analysis example
     if GPU_AVAILABLE:
         print("\n" + "="*70)
-        print("GPU批量敏感性分析")
+        print("GPU Batch Sensitivity Analysis")
         print("="*70)
-        
+
         batch_sim = BatchSimulator(test_reach, use_gpu=True)
-        
+
         bc = BoundaryCondition(
             upstream_type="discharge",
             upstream_values=[50.0] * 50,
             downstream_type="stage",
             downstream_values=[2.5] * 50
         )
-        
-        # 曼宁系数敏感性
+
+        # Manning coefficient sensitivity
         sensitivity = batch_sim.sensitivity_analysis(
             'manning_n',
             [0.025, 0.030, 0.035, 0.040, 0.045],
             bc,
             50
         )
-        
-        print(f"\n参数: {sensitivity['parameter_name']}")
-        print(f"测试值: {sensitivity['parameter_values']}")
-        print(f"峰值流量范围: {min(sensitivity['peak_discharges']):.1f} - "
+
+        print(f"\nParameter: {sensitivity['parameter_name']}")
+        print(f"Test values: {sensitivity['parameter_values']}")
+        print(f"Peak discharge range: {min(sensitivity['peak_discharges']):.1f} - "
               f"{max(sensitivity['peak_discharges']):.1f} m³/s")
-        print(f"流量敏感度: {sensitivity['sensitivity_discharge']:.1f}%")
-        print(f"水深敏感度: {sensitivity['sensitivity_depth']:.1f}%")
+        print(f"Discharge sensitivity: {sensitivity['sensitivity_discharge']:.1f}%")
+        print(f"Depth sensitivity: {sensitivity['sensitivity_depth']:.1f}%")

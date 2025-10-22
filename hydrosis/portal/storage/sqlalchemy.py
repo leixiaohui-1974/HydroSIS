@@ -31,6 +31,7 @@ from ..state import (
     serialize_workflow_result,
 )
 from hydrosis.config import ModelConfig
+from hydrosis.workflow import WorkflowResult
 
 Base = declarative_base()
 

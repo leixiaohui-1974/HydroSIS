@@ -1173,7 +1173,7 @@ def partition_parameter_zones(
                                 rep_point = geom_obj.representative_point()
                                 label_points.append((rep_point.x, rep_point.y, text_value))
                         except Exception:
-                            # 在出现拓扑错误时跳过该标注
+                            # Skip this label on topology error
                             continue
 
             if patches:

@@ -1,0 +1,30 @@
+[flake8]
+max-line-length = 100
+extend-ignore =
+    # F821: undefined name (forward references with __future__ annotations)
+    F821,
+    # E501: line too long (already set max-line-length to 100)
+    E501,
+    # W503: line break before binary operator (conflicts with PEP 8)
+    W503,
+    # E226: missing whitespace around arithmetic operator (sometimes more readable)
+    E226,
+    # E231: missing whitespace after ':' (sometimes intentional for alignment)
+    E231
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    build,
+    dist,
+    *.egg-info,
+    richdem-0.3.4,
+    pybind11_wheel,
+    .pytest_cache
+per-file-ignores =
+    # __init__.py files often have unused imports for re-export
+    __init__.py:F401,F403
+    # Test files may have unused imports
+    tests/*.py:F401

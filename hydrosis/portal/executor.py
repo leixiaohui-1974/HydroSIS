@@ -170,28 +170,28 @@ class RunExecutor:
     def _build_message(self, stage: str, payload: Mapping[str, object]) -> str:
         phase = payload.get("phase")
         if stage == "baseline":
-            return "基准情景模拟完成" if phase == "complete" else "开始基准情景模拟"
+            return "Baseline scenario simulation complete" if phase == "complete" else "Starting baseline scenario simulation"
         if stage == "scenario":
             scenario_id = payload.get("scenario_id")
             index = payload.get("index")
             total = payload.get("total")
-            label = f"情景 {scenario_id}" if scenario_id else "情景"
+            label = f"Scenario {scenario_id}" if scenario_id else "Scenario"
             if phase == "complete":
-                return f"{label} 完成 ({index}/{total})"
-            return f"开始 {label} ({index}/{total})"
+                return f"{label} complete ({index}/{total})"
+            return f"Starting {label} ({index}/{total})"
         if stage == "evaluation":
-            return "评估阶段完成" if phase == "complete" else "开始评估阶段"
+            return "Evaluation stage complete" if phase == "complete" else "Starting evaluation stage"
         if stage == "evaluation_plan":
             plan_id = payload.get("plan_id")
-            label = f"评估方案 {plan_id}" if plan_id else "评估方案"
+            label = f"Evaluation plan {plan_id}" if plan_id else "Evaluation plan"
             return f"{label} {payload.get('phase')} ({payload.get('index')}/{payload.get('total')})"
         if stage == "persistence":
-            return "输出已写入结果目录" if phase == "complete" else "正在写入输出文件"
+            return "Outputs written to results directory" if phase == "complete" else "Writing output files"
         if stage == "report":
-            return "报告生成完成" if phase == "complete" else "正在生成评估报告"
+            return "Report generation complete" if phase == "complete" else "Generating evaluation report"
         if stage == "workflow":
-            return "工作流执行完成" if phase == "complete" else "准备执行工作流"
-        return f"{stage} 阶段更新"
+            return "Workflow execution complete" if phase == "complete" else "Preparing workflow execution"
+        return f"{stage} stage update"
 
     def _emit_progress(
         self,
@@ -257,7 +257,7 @@ class RunExecutor:
             status="queued",
             timestamp=datetime.now(timezone.utc).isoformat(),
             percent=0,
-            message="运行已加入队列等待执行",
+            message="Run queued for execution",
             progress={
                 "completed": 0,
                 "total": tracker.total_segments,
@@ -283,7 +283,7 @@ class RunExecutor:
                 status="running",
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 percent=tracker.percent_complete(),
-                message="工作流执行已开始",
+                message="Workflow execution started",
                 progress={
                     "completed": tracker.completed_segments,
                     "total": tracker.total_segments,
@@ -318,7 +318,7 @@ class RunExecutor:
                     status="completed",
                     timestamp=datetime.now(timezone.utc).isoformat(),
                     percent=100,
-                    message="运行完成，结果已保存",
+                    message="Run completed, results saved",
                     progress={
                         "completed": tracker.total_segments,
                         "total": tracker.total_segments,
@@ -336,7 +336,7 @@ class RunExecutor:
                     status="failed",
                     timestamp=datetime.now(timezone.utc).isoformat(),
                     percent=tracker.percent_complete(),
-                    message="运行失败，请查看错误信息",
+                    message="Run failed, please check error details",
                     progress={
                         "completed": tracker.completed_segments,
                         "total": tracker.total_segments,

@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
 from urllib.request import urlretrieve
 
 

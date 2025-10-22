@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 
 from .base import RunoffModel, RunoffModelConfig
+from ..validation import validate_positive, validate_probability
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from ..model import Subbasin
@@ -29,6 +30,37 @@ class VICRunoff(RunoffModel):
         self.surface_storage = float(self.parameters.get("initial_surface", 5.0))
         self.root_storage = float(self.parameters.get("initial_root", 50.0))
         self.deep_storage = float(self.parameters.get("initial_deep", 20.0))
+
+    def validate_parameters(self) -> None:
+        """Validate VIC model parameters.
+
+        Validates:
+            - infiltration_shape: Must be > 0
+            - max_soil_moisture: Must be > 0
+            - baseflow_coefficient: Must be >= 0
+            - recession: Must be in [0, 1]
+            - initial_surface, initial_root, initial_deep: Must be >= 0
+        """
+        inf_shape = float(self.parameters.get("infiltration_shape", 0.3))
+        validate_positive("infiltration_shape", inf_shape, strict=True)
+
+        max_sm = float(self.parameters.get("max_soil_moisture", 150.0))
+        validate_positive("max_soil_moisture", max_sm, strict=True)
+
+        bf_coeff = float(self.parameters.get("baseflow_coefficient", 0.005))
+        validate_positive("baseflow_coefficient", bf_coeff, strict=False)
+
+        recession = float(self.parameters.get("recession", 0.95))
+        validate_probability("recession", recession)
+
+        init_surf = float(self.parameters.get("initial_surface", 5.0))
+        validate_positive("initial_surface", init_surf, strict=False)
+
+        init_root = float(self.parameters.get("initial_root", 50.0))
+        validate_positive("initial_root", init_root, strict=False)
+
+        init_deep = float(self.parameters.get("initial_deep", 20.0))
+        validate_positive("initial_deep", init_deep, strict=False)
 
     def simulate(self, subbasin: "Subbasin", precipitation: List[float]) -> List[float]:
         runoff: List[float] = []

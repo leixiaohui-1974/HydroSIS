@@ -104,15 +104,15 @@ def _build_narrative(
     deltas: Mapping[str, Mapping[str, Mapping[str, float]]],
 ) -> str:
     if not scenarios:
-        return "仅运行了基准情景，尚无情景对比可供总结。"
+        return "Only baseline scenario was run; no scenario comparison available for summary."
 
     parts = [
-        "基准情景的主要指标已记录，可对比以下情景的变化：",
+        "Baseline scenario metrics recorded; comparing changes for the following scenarios:",
     ]
     for scenario_id, summary in scenarios.items():
         delta = deltas.get(scenario_id, {})
         if not delta:
-            parts.append(f"- 情景 {scenario_id} 与基准在聚合流量上差异很小。")
+            parts.append(f"- Scenario {scenario_id} shows minimal difference from baseline in aggregated discharge.")
             continue
         highlights = []
         for subbasin, stats in delta.items():
@@ -121,18 +121,18 @@ def _build_narrative(
             descriptor = []
             if abs(volume_change) > 1e-6:
                 descriptor.append(
-                    f"总径流{'增加' if volume_change >= 0 else '减少'} {abs(volume_change):.2f}"
+                    f"Total runoff {'increased' if volume_change >= 0 else 'decreased'} {abs(volume_change):.2f}"
                 )
             if abs(peak_change) > 1e-6:
                 descriptor.append(
-                    f"峰值流量{'升高' if peak_change >= 0 else '降低'} {abs(peak_change):.2f}"
+                    f"Peak flow {'increased' if peak_change >= 0 else 'decreased'} {abs(peak_change):.2f}"
                 )
             if descriptor:
-                highlights.append(f"子流域 {subbasin}：{'，'.join(descriptor)}")
+                highlights.append(f"Subbasin {subbasin}: {', '.join(descriptor)}")
         if highlights:
-            parts.append(f"- 情景 {scenario_id} 的主要变化：" + "；".join(highlights) + "。")
+            parts.append(f"- Scenario {scenario_id} key changes: " + "; ".join(highlights) + ".")
         else:
-            parts.append(f"- 情景 {scenario_id} 的变化在统计量上不显著。")
+            parts.append(f"- Scenario {scenario_id} changes are not statistically significant.")
     return "\n".join(parts)
 
 

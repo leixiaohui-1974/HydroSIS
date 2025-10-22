@@ -1,11 +1,11 @@
-"""HydroSIS 一维水动力模块
+"""HydroSIS 1D Hydrodynamics Module
 
-提供完整的圣维南方程求解能力，支持：
-- 多种断面形式（矩形、梯形、复合、不规则）
-- 自适应时间步长控制
-- GPU加速计算
-- 稳态流计算
-- 与HydroSIS无缝集成
+Provides complete Saint-Venant equation solving capabilities, supporting:
+- Multiple cross-section types (rectangle, trapezoid, compound, irregular)
+- Adaptive time step control
+- GPU-accelerated computation
+- Steady-state flow calculation
+- Seamless integration with HydroSIS
 """
 
 from .geometry import (
@@ -56,7 +56,7 @@ from .cross_section_solver import (
     RatingCurve,
 )
 
-# 保持向后兼容
+# Maintain backward compatibility
 from .core import (
     SaintVenantSolver,
     RiverReach,
@@ -65,7 +65,7 @@ from .core import (
 )
 
 __all__ = [
-    # 断面几何
+    # Cross-section geometry
     'CrossSection',
     'RectangleSection',
     'TrapezoidSection',
@@ -74,36 +74,36 @@ __all__ = [
     'create_cross_section',
     'compute_normal_depth',
     'compute_critical_depth',
-    
-    # 自适应控制
+
+    # Adaptive control
     'AdaptiveTimeStepController',
     'AdaptiveStrategy',
     'TimeStepMetrics',
     'VariableTimeStepSimulator',
-    
-    # GPU加速
+
+    # GPU acceleration
     'GPUSaintVenantSolver',
     'BatchSimulator',
     'DeviceManager',
     'GPU_AVAILABLE',
-    
-    # 稳态计算
+
+    # Steady-state computation
     'SteadyStateCalculator',
     'compute_normal_depth_standalone',
     'compute_critical_depth_standalone',
-    
-    # 核心求解器
+
+    # Core solver
     'SaintVenantSolver',
     'RiverReach',
     'BoundaryCondition',
     'HydraulicState',
 
-    # 区域几何
+    # Zone geometry
     'ZoneGeometry',
     'build_zone_geometry',
     'load_zone_centerline',
 
-    # 简化断面求解
+    # Simplified cross-section solver
     'CrossSectionSolver',
     'RatingCurve',
 ]

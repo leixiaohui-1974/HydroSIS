@@ -5,6 +5,7 @@ import math
 from typing import TYPE_CHECKING, Dict, List
 
 from .base import RoutingModel, RoutingModelConfig
+from ..validation import validate_positive, validate_integer
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from ..model import Subbasin
@@ -25,6 +26,39 @@ class DynamicWaveRouting(RoutingModel):
         self.auto_substeps = bool(self.parameters.get("auto_substeps", False))
         self.max_substeps = max(self._base_substeps, int(self.parameters.get("max_substeps", 1)))
         self.substeps = self._determine_substeps()
+
+    def validate_parameters(self) -> None:
+        """Validate Dynamic Wave routing parameters.
+
+        Validates:
+            - time_step: Must be > 0
+            - reach_length: Must be > 0
+            - segments: Must be >= 1
+            - wave_celerity: Must be > 0
+            - diffusivity: Must be > 0
+            - substeps: Must be >= 1
+            - max_substeps: Must be >= substeps
+        """
+        dt = float(self.parameters.get("time_step", 1.0))
+        validate_positive("time_step", dt, strict=True)
+
+        reach_len = float(self.parameters.get("reach_length", 5.0))
+        validate_positive("reach_length", reach_len, strict=True)
+
+        segments = int(self.parameters.get("segments", 5))
+        validate_integer("segments", segments, min_value=1)
+
+        wave_cel = float(self.parameters.get("wave_celerity", 1.5))
+        validate_positive("wave_celerity", wave_cel, strict=True)
+
+        diffusivity = float(self.parameters.get("diffusivity", 0.05))
+        validate_positive("diffusivity", diffusivity, strict=True)
+
+        substeps = int(self.parameters.get("substeps", 1))
+        validate_integer("substeps", substeps, min_value=1)
+
+        max_substeps = int(self.parameters.get("max_substeps", 1))
+        validate_integer("max_substeps", max_substeps, min_value=substeps)
 
     def _stability_terms(self, step_dt: float | None = None) -> Dict[str, float]:
         dt = float(step_dt or self.dt)

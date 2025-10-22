@@ -1,10 +1,10 @@
-"""河道断面几何计算模块
+"""Channel cross-section geometry computation module
 
-支持多种断面形式的水力计算：
-- 矩形断面 (Rectangle)
-- 梯形断面 (Trapezoid)
-- 复合断面 (Compound) - 滩地+主槽
-- 自定义断面 (Irregular) - 基于测点插值
+Supports hydraulic calculations for multiple cross-section types:
+- Rectangle cross-section
+- Trapezoid cross-section
+- Compound cross-section - floodplain + main channel
+- Irregular cross-section - based on surveyed point interpolation
 """
 from __future__ import annotations
 
@@ -17,54 +17,54 @@ import numpy as np
 
 @dataclass
 class HydraulicProperties:
-    """水力几何参数集合"""
-    
-    area: float          # 过水面积 (m²)
-    wetted_perimeter: float  # 湿周 (m)
-    hydraulic_radius: float  # 水力半径 R=A/P (m)
-    top_width: float     # 水面宽度 (m)
-    hydraulic_depth: float   # 水力水深 D=A/T (m)
-    conveyance: float    # 流量模数 K=A*R^(2/3) (m^(8/3))
+    """Hydraulic geometry parameter collection"""
+
+    area: float          # Flow area (m²)
+    wetted_perimeter: float  # Wetted perimeter (m)
+    hydraulic_radius: float  # Hydraulic radius R=A/P (m)
+    top_width: float     # Water surface width (m)
+    hydraulic_depth: float   # Hydraulic depth D=A/T (m)
+    conveyance: float    # Conveyance K=A*R^(2/3) (m^(8/3))
 
 
 class CrossSection(ABC):
-    """断面基类 - 定义统一接口"""
-    
+    """Cross-section base class - defines uniform interface"""
+
     @abstractmethod
     def compute_properties(self, depth: float) -> HydraulicProperties:
-        """根据水深计算水力参数"""
+        """Calculate hydraulic parameters from depth"""
         pass
-    
+
     @abstractmethod
-    def compute_depth_from_area(self, area: float, 
+    def compute_depth_from_area(self, area: float,
                                 tolerance: float = 1e-4) -> float:
-        """根据过水面积反算水深 (用于隐式求解)"""
+        """Calculate depth from flow area (for implicit solution)"""
         pass
-    
+
     @abstractmethod
     def get_max_depth(self) -> float:
-        """返回断面最大允许水深"""
+        """Return maximum allowable depth of cross-section"""
         pass
 
 
 class RectangleSection(CrossSection):
-    """矩形断面
-    
-    ┌────────────┐  ← 顶部宽度 b
+    """Rectangle cross-section
+
+    ┌────────────┐  ← Top width b
     │            │
-    │            │  h (水深)
+    │            │  h (depth)
     │            │
     └────────────┘
     """
-    
+
     def __init__(self, width: float, max_depth: float = 10.0):
         """
-        参数:
-            width: 河宽 (m)
-            max_depth: 最大水深限制 (m)
+        Parameters:
+            width: Channel width (m)
+            max_depth: Maximum depth limit (m)
         """
         if width <= 0:
-            raise ValueError("河宽必须为正数")
+            raise ValueError("Channel width must be positive")
         self.width = width
         self._max_depth = max_depth
     
@@ -84,55 +84,55 @@ class RectangleSection(CrossSection):
             conveyance=area * hydraulic_radius**(2/3) if hydraulic_radius > 0 else 0
         )
     
-    def compute_depth_from_area(self, area: float, 
+    def compute_depth_from_area(self, area: float,
                                 tolerance: float = 1e-4) -> float:
-        # 矩形断面: h = A / b (解析解)
+        # Rectangle cross-section: h = A / b (analytical solution)
         return min(area / self.width, self._max_depth)
-    
+
     def get_max_depth(self) -> float:
         return self._max_depth
 
 
 class TrapezoidSection(CrossSection):
-    """梯形断面
-    
-          T (顶宽)
+    """Trapezoid cross-section
+
+          T (top width)
     ╱‾‾‾‾‾‾‾‾‾‾‾╲
     ╱            ╲
-   ╱   主槽宽b    ╲  h (水深)
+   ╱ main channel╲  h (depth)
   ╱   m:1  |  m:1 ╲
  ╱_________________╲
         b
-    
-    其中 m 为边坡系数 (水平:垂直)
+
+    where m is side slope coefficient (horizontal:vertical)
     """
-    
-    def __init__(self, bottom_width: float, side_slope: float, 
+
+    def __init__(self, bottom_width: float, side_slope: float,
                  max_depth: float = 10.0):
         """
-        参数:
-            bottom_width: 底宽 b (m)
-            side_slope: 边坡系数 m (水平/垂直比)
-                       例: m=2 表示2:1边坡 (2米水平对应1米垂直)
-            max_depth: 最大水深限制 (m)
+        Parameters:
+            bottom_width: Bottom width b (m)
+            side_slope: Side slope coefficient m (horizontal/vertical ratio)
+                       e.g., m=2 means 2:1 slope (2m horizontal per 1m vertical)
+            max_depth: Maximum depth limit (m)
         """
         if bottom_width <= 0 or side_slope < 0:
-            raise ValueError("底宽必须为正，边坡系数非负")
-        
+            raise ValueError("Bottom width must be positive, side slope must be non-negative")
+
         self.bottom_width = bottom_width
         self.side_slope = side_slope
         self._max_depth = max_depth
-    
+
     def compute_properties(self, depth: float) -> HydraulicProperties:
         depth = max(0.0, min(depth, self._max_depth))
-        
-        # 梯形面积: A = (b + m*h) * h
+
+        # Trapezoid area: A = (b + m*h) * h
         area = (self.bottom_width + self.side_slope * depth) * depth
-        
-        # 顶宽: T = b + 2*m*h
+
+        # Top width: T = b + 2*m*h
         top_width = self.bottom_width + 2 * self.side_slope * depth
-        
-        # 湿周: P = b + 2*h*sqrt(1 + m²)
+
+        # Wetted perimeter: P = b + 2*h*sqrt(1 + m²)
         side_length = depth * np.sqrt(1 + self.side_slope**2)
         wetted_perimeter = self.bottom_width + 2 * side_length
         
@@ -148,40 +148,40 @@ class TrapezoidSection(CrossSection):
             conveyance=area * hydraulic_radius**(2/3) if hydraulic_radius > 0 else 0
         )
     
-    def compute_depth_from_area(self, area: float, 
+    def compute_depth_from_area(self, area: float,
                                 tolerance: float = 1e-4) -> float:
-        # 梯形断面: A = (b + m*h) * h
-        # 整理为: m*h² + b*h - A = 0
-        # 求解二次方程: h = (-b + sqrt(b² + 4*m*A)) / (2*m)
-        
-        if self.side_slope < 1e-6:  # 退化为矩形
+        # Trapezoid cross-section: A = (b + m*h) * h
+        # Rearrange to: m*h² + b*h - A = 0
+        # Solve quadratic equation: h = (-b + sqrt(b² + 4*m*A)) / (2*m)
+
+        if self.side_slope < 1e-6:  # Degenerates to rectangle
             return area / self.bottom_width
-        
+
         b = self.bottom_width
         m = self.side_slope
-        
+
         discriminant = b**2 + 4 * m * area
         if discriminant < 0:
             return 0.0
-        
+
         depth = (-b + np.sqrt(discriminant)) / (2 * m)
         return min(depth, self._max_depth)
-    
+
     def get_max_depth(self) -> float:
         return self._max_depth
 
 
 class CompoundSection(CrossSection):
-    """复合断面 - 主槽+左右滩地
-    
-    左滩地  |   主槽    |  右滩地
+    """Compound cross-section - main channel + left/right floodplains
+
+    Left FP  |  Main Ch  | Right FP
     ────┐   ┌────────┐   ┌────
         │   │        │   │
-        │   │        │   │  主槽水深 h
-        └───┘        └───┘  滩地高度 h_fp
+        │   │        │   │  Main channel depth h
+        └───┘        └───┘  Floodplain height h_fp
     """
-    
-    def __init__(self, 
+
+    def __init__(self,
                  main_bottom_width: float,
                  main_side_slope: float,
                  floodplain_height: float,
@@ -189,13 +189,13 @@ class CompoundSection(CrossSection):
                  right_floodplain_width: float = 0.0,
                  max_depth: float = 15.0):
         """
-        参数:
-            main_bottom_width: 主槽底宽 (m)
-            main_side_slope: 主槽边坡系数
-            floodplain_height: 滩地高度，从主槽底部算起 (m)
-            left_floodplain_width: 左滩地宽度 (m)
-            right_floodplain_width: 右滩地宽度 (m)
-            max_depth: 最大水深限制 (m)
+        Parameters:
+            main_bottom_width: Main channel bottom width (m)
+            main_side_slope: Main channel side slope coefficient
+            floodplain_height: Floodplain height from main channel bottom (m)
+            left_floodplain_width: Left floodplain width (m)
+            right_floodplain_width: Right floodplain width (m)
+            max_depth: Maximum depth limit (m)
         """
         self.main_channel = TrapezoidSection(
             main_bottom_width, 
@@ -209,37 +209,37 @@ class CompoundSection(CrossSection):
     
     def compute_properties(self, depth: float) -> HydraulicProperties:
         depth = max(0.0, min(depth, self._max_depth))
-        
+
         if depth <= self.floodplain_height:
-            # 水位未漫滩，仅主槽过流
+            # Water level below floodplain, only main channel carries flow
             return self.main_channel.compute_properties(depth)
-        
-        # 水位漫滩，分别计算主槽和滩地
+
+        # Water level inundates floodplain, calculate main channel and floodplain separately
         main_props = self.main_channel.compute_properties(self.floodplain_height)
-        
-        # 滩地水深
+
+        # Floodplain depth
         fp_depth = depth - self.floodplain_height
-        
-        # 滩地面积 (矩形)
+
+        # Floodplain area (rectangular)
         fp_area = (self.left_fp_width + self.right_fp_width) * fp_depth
-        
-        # 总面积
+
+        # Total area
         total_area = main_props.area + fp_area
-        
-        # 滩地湿周 (只计算水下部分)
+
+        # Floodplain wetted perimeter (only underwater portion)
         fp_perimeter = self.left_fp_width + self.right_fp_width
-        
-        # 总湿周
+
+        # Total wetted perimeter
         total_perimeter = main_props.wetted_perimeter + fp_perimeter
-        
-        # 顶宽
+
+        # Top width
         main_top_width = self.main_channel.bottom_width + \
                         2 * self.main_channel.side_slope * self.floodplain_height
         total_top_width = main_top_width + self.left_fp_width + self.right_fp_width
-        
+
         hydraulic_radius = total_area / total_perimeter if total_perimeter > 0 else 0
         hydraulic_depth = total_area / total_top_width if total_top_width > 0 else 0
-        
+
         return HydraulicProperties(
             area=total_area,
             wetted_perimeter=total_perimeter,
@@ -248,117 +248,117 @@ class CompoundSection(CrossSection):
             hydraulic_depth=hydraulic_depth,
             conveyance=total_area * hydraulic_radius**(2/3) if hydraulic_radius > 0 else 0
         )
-    
-    def compute_depth_from_area(self, area: float, 
+
+    def compute_depth_from_area(self, area: float,
                                 tolerance: float = 1e-4) -> float:
-        # 牛顿迭代法求解
-        depth = 1.0  # 初值
-        
+        # Newton iteration method
+        depth = 1.0  # Initial value
+
         for _ in range(20):
             props = self.compute_properties(depth)
             residual = props.area - area
-            
+
             if abs(residual) < tolerance:
                 return depth
-            
-            # 数值微分求导数 dA/dh
+
+            # Numerical differentiation for derivative dA/dh
             delta = 0.01
             props_plus = self.compute_properties(depth + delta)
             derivative = (props_plus.area - props.area) / delta
-            
+
             if abs(derivative) < 1e-10:
                 break
-            
-            # 牛顿更新
+
+            # Newton update
             depth -= residual / derivative
             depth = max(0.01, min(depth, self._max_depth))
-        
+
         return depth
-    
+
     def get_max_depth(self) -> float:
         return self._max_depth
 
 
 class IrregularSection(CrossSection):
-    """不规则断面 - 基于实测断面点
-    
-    通过一系列 (y, z) 坐标点定义，其中:
-    - y: 横向坐标 (m)
-    - z: 高程 (m，相对于基准面)
+    """Irregular cross-section - based on surveyed points
+
+    Defined by a series of (y, z) coordinate points, where:
+    - y: Transverse coordinate (m)
+    - z: Elevation (m, relative to datum)
     """
-    
+
     def __init__(self, y_coords: List[float], z_coords: List[float],
                  base_elevation: float = 0.0):
         """
-        参数:
-            y_coords: 横坐标序列，从左岸到右岸 (m)
-            z_coords: 对应的高程序列 (m)
-            base_elevation: 河底基准高程 (m)
+        Parameters:
+            y_coords: Transverse coordinate sequence, from left bank to right bank (m)
+            z_coords: Corresponding elevation sequence (m)
+            base_elevation: Channel bottom datum elevation (m)
         """
         if len(y_coords) != len(z_coords) or len(y_coords) < 3:
-            raise ValueError("断面点数量至少3个，且横纵坐标数量相等")
-        
-        # 确保从左到右排序
+            raise ValueError("At least 3 cross-section points required, and x/y coordinates must have equal length")
+
+        # Ensure sorted from left to right
         sorted_pairs = sorted(zip(y_coords, z_coords))
         self.y_coords = np.array([y for y, z in sorted_pairs])
         self.z_coords = np.array([z for y, z in sorted_pairs])
-        
+
         self.base_elevation = base_elevation
         self._max_depth = np.max(self.z_coords) - np.min(self.z_coords) + 5.0
     
     def compute_properties(self, depth: float) -> HydraulicProperties:
         depth = max(0.0, min(depth, self._max_depth))
-        
-        # 当前水位高程
+
+        # Current water surface elevation
         water_surface = self.base_elevation + depth
-        
-        # 找到水下的断面段
+
+        # Find submerged cross-section segments
         area = 0.0
         wetted_perimeter = 0.0
         submerged_y = []
-        
+
         for i in range(len(self.y_coords) - 1):
             y1, z1 = self.y_coords[i], self.z_coords[i]
             y2, z2 = self.y_coords[i + 1], self.z_coords[i + 1]
-            
-            # 判断该段是否在水下
+
+            # Check if segment is underwater
             if z1 > water_surface and z2 > water_surface:
-                continue  # 完全露出水面
-            
-            # 处理部分淹没情况
+                continue  # Completely above water surface
+
+            # Handle partial submersion
             if z1 < water_surface and z2 < water_surface:
-                # 完全淹没
+                # Completely submerged
                 segment_width = y2 - y1
                 segment_height = (water_surface - z1 + water_surface - z2) / 2
                 area += segment_width * segment_height
                 wetted_perimeter += np.sqrt((y2 - y1)**2 + (z2 - z1)**2)
                 submerged_y.extend([y1, y2])
             else:
-                # 部分淹没，需要插值找交点
+                # Partially submerged, need interpolation to find intersection
                 if z1 > water_surface:
                     z1, z2 = z2, z1
                     y1, y2 = y2, y1
-                
-                # 线性插值找水面交点
+
+                # Linear interpolation to find water surface intersection
                 t = (water_surface - z1) / (z2 - z1) if abs(z2 - z1) > 1e-10 else 0
                 y_intersect = y1 + t * (y2 - y1)
-                
+
                 segment_width = abs(y_intersect - y1)
                 segment_height = (water_surface - z1) / 2
                 area += segment_width * segment_height
-                wetted_perimeter += np.sqrt((y_intersect - y1)**2 + 
+                wetted_perimeter += np.sqrt((y_intersect - y1)**2 +
                                            (water_surface - z1)**2)
                 submerged_y.extend([y1, y_intersect])
-        
-        # 水面宽度
+
+        # Water surface width
         if len(submerged_y) >= 2:
             top_width = max(submerged_y) - min(submerged_y)
         else:
             top_width = 0.0
-        
+
         hydraulic_radius = area / wetted_perimeter if wetted_perimeter > 0 else 0
         hydraulic_depth = area / top_width if top_width > 0 else 0
-        
+
         return HydraulicProperties(
             area=area,
             wetted_perimeter=wetted_perimeter,
@@ -367,42 +367,42 @@ class IrregularSection(CrossSection):
             hydraulic_depth=hydraulic_depth,
             conveyance=area * hydraulic_radius**(2/3) if hydraulic_radius > 0 else 0
         )
-    
-    def compute_depth_from_area(self, area: float, 
+
+    def compute_depth_from_area(self, area: float,
                                 tolerance: float = 1e-4) -> float:
-        # 二分法求解
+        # Bisection method
         depth_min, depth_max = 0.0, self._max_depth
-        
+
         for _ in range(50):
             depth_mid = (depth_min + depth_max) / 2
             props = self.compute_properties(depth_mid)
-            
+
             if abs(props.area - area) < tolerance:
                 return depth_mid
-            
+
             if props.area < area:
                 depth_min = depth_mid
             else:
                 depth_max = depth_mid
-        
+
         return (depth_min + depth_max) / 2
-    
+
     def get_max_depth(self) -> float:
         return self._max_depth
 
 
-# ============ 工厂函数 ============
+# ============ Factory Functions ============
 
 def create_cross_section(section_type: str, **parameters) -> CrossSection:
-    """工厂函数：根据类型创建断面对象
-    
-    参数:
+    """Factory function: create cross-section object based on type
+
+    Parameters:
         section_type: 'rectangle', 'trapezoid', 'compound', 'irregular'
-        **parameters: 断面特定参数
-    
-    示例:
-        >>> section = create_cross_section('trapezoid', 
-        ...                                bottom_width=10, 
+        **parameters: Cross-section specific parameters
+
+    Example:
+        >>> section = create_cross_section('trapezoid',
+        ...                                bottom_width=10,
         ...                                side_slope=2.0)
     """
     section_type = section_type.lower()
@@ -438,73 +438,73 @@ def create_cross_section(section_type: str, **parameters) -> CrossSection:
         )
     
     else:
-        raise ValueError(f"不支持的断面类型: {section_type}")
+        raise ValueError(f"Unsupported cross-section type: {section_type}")
 
 
-# ============ 实用工具函数 ============
+# ============ Utility Functions ============
 
-def compute_normal_depth(section: CrossSection, discharge: float, 
+def compute_normal_depth(section: CrossSection, discharge: float,
                         bed_slope: float, manning_n: float,
                         tolerance: float = 1e-4) -> float:
-    """计算正常水深 (Manning公式)
-    
+    """Calculate normal depth (Manning formula)
+
     Q = (1/n) * A * R^(2/3) * S^(1/2)
-    
-    参数:
-        section: 断面对象
-        discharge: 流量 (m³/s)
-        bed_slope: 河床坡度
-        manning_n: 曼宁系数
-        tolerance: 收敛容差
-    
-    返回:
-        正常水深 (m)
+
+    Parameters:
+        section: Cross-section object
+        discharge: Discharge (m³/s)
+        bed_slope: Bed slope
+        manning_n: Manning coefficient
+        tolerance: Convergence tolerance
+
+    Returns:
+        Normal depth (m)
     """
-    depth = 1.0  # 初值
-    
+    depth = 1.0  # Initial value
+
     for _ in range(50):
         props = section.compute_properties(depth)
-        
-        # Manning流量计算
+
+        # Manning discharge calculation
         Q_computed = (1 / manning_n) * props.area * \
                      props.hydraulic_radius**(2/3) * np.sqrt(bed_slope)
-        
+
         residual = Q_computed - discharge
-        
+
         if abs(residual) < tolerance:
             return depth
-        
-        # 数值导数
+
+        # Numerical derivative
         delta = 0.01
         props_plus = section.compute_properties(depth + delta)
         Q_plus = (1 / manning_n) * props_plus.area * \
                  props_plus.hydraulic_radius**(2/3) * np.sqrt(bed_slope)
-        
+
         derivative = (Q_plus - Q_computed) / delta
-        
+
         if abs(derivative) < 1e-10:
             break
-        
-        # 牛顿更新
+
+        # Newton update
         depth -= residual / derivative
         depth = max(0.1, min(depth, section.get_max_depth()))
-    
+
     return depth
 
 
 def compute_critical_depth(section: CrossSection, discharge: float,
                           tolerance: float = 1e-4) -> float:
-    """计算临界水深
-    
-    Fr = 1 时的水深，即 Q²T/(gA³) = 1
-    
-    参数:
-        section: 断面对象
-        discharge: 流量 (m³/s)
-        tolerance: 收敛容差
-    
-    返回:
-        临界水深 (m)
+    """Calculate critical depth
+
+    Depth when Fr = 1, i.e., Q²T/(gA³) = 1
+
+    Parameters:
+        section: Cross-section object
+        discharge: Discharge (m³/s)
+        tolerance: Convergence tolerance
+
+    Returns:
+        Critical depth (m)
     """
     g = 9.81
     depth = 1.0
@@ -515,57 +515,57 @@ def compute_critical_depth(section: CrossSection, discharge: float,
         if props.area < 1e-6:
             depth += 0.1
             continue
-        
-        # Froude数
+
+        # Froude number
         Fr_squared = discharge**2 * props.top_width / (g * props.area**3)
         residual = Fr_squared - 1.0
-        
+
         if abs(residual) < tolerance:
             return depth
-        
-        # 数值导数
+
+        # Numerical derivative
         delta = 0.01
         props_plus = section.compute_properties(depth + delta)
         Fr_squared_plus = discharge**2 * props_plus.top_width / \
                          (g * props_plus.area**3)
         derivative = (Fr_squared_plus - Fr_squared) / delta
-        
+
         if abs(derivative) < 1e-10:
             break
-        
+
         depth -= residual / derivative
         depth = max(0.1, min(depth, section.get_max_depth()))
-    
+
     return depth
 
 
 if __name__ == "__main__":
-    # 测试不同断面类型
+    # Test different cross-section types
     print("="*60)
-    print("断面几何模块测试")
+    print("Cross-Section Geometry Module Test")
     print("="*60)
-    
+
     test_depth = 3.0
-    
-    # 测试1: 矩形断面
-    print("\n1. 矩形断面 (宽30m)")
+
+    # Test 1: Rectangle cross-section
+    print("\n1. Rectangle cross-section (width 30m)")
     rect = RectangleSection(width=30)
     props = rect.compute_properties(test_depth)
-    print(f"   水深 = {test_depth} m")
-    print(f"   面积 = {props.area:.2f} m²")
-    print(f"   水力半径 = {props.hydraulic_radius:.2f} m")
-    
-    # 测试2: 梯形断面
-    print("\n2. 梯形断面 (底宽10m, 边坡2:1)")
+    print(f"   Depth = {test_depth} m")
+    print(f"   Area = {props.area:.2f} m²")
+    print(f"   Hydraulic radius = {props.hydraulic_radius:.2f} m")
+
+    # Test 2: Trapezoid cross-section
+    print("\n2. Trapezoid cross-section (bottom width 10m, side slope 2:1)")
     trap = TrapezoidSection(bottom_width=10, side_slope=2.0)
     props = trap.compute_properties(test_depth)
-    print(f"   水深 = {test_depth} m")
-    print(f"   面积 = {props.area:.2f} m²")
-    print(f"   顶宽 = {props.top_width:.2f} m")
-    print(f"   水力半径 = {props.hydraulic_radius:.2f} m")
-    
-    # 测试3: 复合断面
-    print("\n3. 复合断面 (主槽8m+滩地各15m)")
+    print(f"   Depth = {test_depth} m")
+    print(f"   Area = {props.area:.2f} m²")
+    print(f"   Top width = {props.top_width:.2f} m")
+    print(f"   Hydraulic radius = {props.hydraulic_radius:.2f} m")
+
+    # Test 3: Compound cross-section
+    print("\n3. Compound cross-section (main channel 8m + floodplains 15m each)")
     compound = CompoundSection(
         main_bottom_width=8,
         main_side_slope=1.5,
@@ -573,27 +573,27 @@ if __name__ == "__main__":
         left_floodplain_width=15,
         right_floodplain_width=15
     )
-    
-    print("   主槽内 (h=2m):")
+
+    print("   In main channel (h=2m):")
     props = compound.compute_properties(2.0)
-    print(f"      面积 = {props.area:.2f} m²")
-    
-    print("   漫滩后 (h=4m):")
+    print(f"      Area = {props.area:.2f} m²")
+
+    print("   After overbank (h=4m):")
     props = compound.compute_properties(4.0)
-    print(f"      面积 = {props.area:.2f} m²")
-    print(f"      顶宽 = {props.top_width:.2f} m")
-    
-    # 测试4: 正常水深计算
-    print("\n4. 正常水深计算 (Q=50 m³/s, S=0.001, n=0.03)")
+    print(f"      Area = {props.area:.2f} m²")
+    print(f"      Top width = {props.top_width:.2f} m")
+
+    # Test 4: Normal depth calculation
+    print("\n4. Normal depth calculation (Q=50 m³/s, S=0.001, n=0.03)")
     normal_depth = compute_normal_depth(trap, 50, 0.001, 0.03)
-    print(f"   正常水深 = {normal_depth:.2f} m")
-    
-    # 测试5: 临界水深
-    print("\n5. 临界水深计算 (Q=50 m³/s)")
+    print(f"   Normal depth = {normal_depth:.2f} m")
+
+    # Test 5: Critical depth
+    print("\n5. Critical depth calculation (Q=50 m³/s)")
     critical_depth = compute_critical_depth(trap, 50)
-    print(f"   临界水深 = {critical_depth:.2f} m")
-    
+    print(f"   Critical depth = {critical_depth:.2f} m")
+
     if normal_depth > critical_depth:
-        print("   → 缓流状态")
+        print("   → Subcritical flow")
     else:
-        print("   → 急流状态")
+        print("   → Supercritical flow")

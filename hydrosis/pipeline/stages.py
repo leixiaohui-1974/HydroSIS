@@ -1,11 +1,12 @@
 """Generic stage orchestrator for the HydroSIS three-phase product workflow.
 
-The workflow被拆分为：
-1. Preprocessing（流域划分、雨量、断面提取等）
-2. Modeling（流域水文 / 河道水动力模拟）
-3. Postprocessing（成果汇总、可视化、报告导出）
+The workflow is divided into:
+1. Preprocessing (watershed delineation, precipitation, cross-section extraction, etc.)
+2. Modeling (watershed hydrology / channel hydrodynamics simulation)
+3. Postprocessing (results aggregation, visualization, report generation)
 
-本模块提供通用的任务管理器，便于将现有模块化函数串联执行。
+This module provides a generic task manager to facilitate the sequential execution
+of existing modular functions.
 """
 from __future__ import annotations
 

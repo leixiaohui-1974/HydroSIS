@@ -178,12 +178,12 @@ def generate_evaluation_report(
         except ValueError:
             return Path(os.path.relpath(path, report_directory))
 
-    builder = MarkdownReportBuilder(title="HydroSIS 模型评估报告")
+    builder = MarkdownReportBuilder(title="HydroSIS Model Evaluation Report")
     if description:
         builder.add_paragraph(description)
 
     table = summarise_aggregated_metrics(scores, evaluator)
-    builder.add_heading("总体评价指标", level=2)
+    builder.add_heading("Overall Evaluation Metrics", level=2)
     builder.add_table(table)
 
     comparator = ModelComparator(evaluator)
@@ -194,7 +194,7 @@ def generate_evaluation_report(
         try:
             ranking = comparator.rank(list(scores), ranking_metric)
             builder.add_heading(
-                f"基于 {ranking_metric.upper()} 的模型排序", level=2
+                f"Model Ranking Based on {ranking_metric.upper()}", level=2
             )
             builder.add_list(
                 [
@@ -205,27 +205,27 @@ def generate_evaluation_report(
             )
         except KeyError:
             builder.add_paragraph(
-                f"指标 {ranking_metric} 未在评估指标中定义，无法生成排序。"
+                f"Metric {ranking_metric} is not defined in evaluation metrics; cannot generate ranking."
             )
 
     metric_figures = _generate_metric_figures(scores, evaluator, figures_directory)
     if metric_figures:
-        builder.add_heading("指标图表", level=2)
+        builder.add_heading("Metric Charts", level=2)
         for figure in metric_figures:
             builder.add_image(_relative_figure_path(figure), alt_text=figure.stem)
     else:
-        builder.add_paragraph("未生成指标图表（可能缺少 matplotlib 依赖）。")
+        builder.add_paragraph("No metric charts generated (matplotlib dependency may be missing).")
 
     if simulations:
         hydrograph_figures = _generate_hydrograph_figures(
             simulations, observations, figures_directory
         )
         if hydrograph_figures:
-            builder.add_heading("子流域径流过程对比", level=2)
+            builder.add_heading("Subbasin Hydrograph Comparison", level=2)
             for figure in hydrograph_figures:
                 builder.add_image(_relative_figure_path(figure), alt_text=figure.stem)
         elif observations is not None:
-            builder.add_paragraph("未生成径流对比图（可能缺少 matplotlib 依赖）。")
+            builder.add_paragraph("No hydrograph comparison charts generated (matplotlib dependency may be missing).")
 
     if template is None:
         template = default_evaluation_template()

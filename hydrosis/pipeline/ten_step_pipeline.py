@@ -633,6 +633,11 @@ def run_step02_pour_points(config_path: Path | str) -> Dict[str, Path]:
     source_entry = pour_cfg.get("source_geojson")
     use_existing = False
     pour_points: List[Any]
+
+    # Load transform early in case we need it for coordinate conversion
+    with rasterio.open(flow_acc_path) as acc_ds:
+        transform = acc_ds.transform
+
     if source_entry:
         source_path = _resolve_input_path(context, str(source_entry))
         if source_path.exists():
@@ -693,9 +698,9 @@ def run_step02_pour_points(config_path: Path | str) -> Dict[str, Path]:
     if not pour_points:
         raise RuntimeError("Pour point generation produced no outputs.")
 
+    # Read accumulation data (transform was already loaded earlier)
     with rasterio.open(flow_acc_path) as acc_ds:
         accumulation = acc_ds.read(1)
-        transform = acc_ds.transform
     with rasterio.open(dem_path) as dem_ds:
         dem_array = dem_ds.read(1, masked=True).filled(np.nan)
         dem_transform = dem_ds.transform
@@ -1246,19 +1251,21 @@ def run_step03_partitioning(config_path: Path | str) -> Dict[str, Path]:
 
             report_path = _build_report_path(context, step_index, step_name)
             builder = MarkdownReportBuilder("Step 03 – Parameter Partitioning")
-            builder.add_paragraph("本步骤复用既有参数分区成果，对主要统计与文件结构进行验证。")
-            builder.add_heading("总体概览", level=2)
+            builder.add_paragraph(
+                "This step reuses existing parameter zone results and validates key statistics and file structure."
+            )
+            builder.add_heading("Overview", level=2)
             highlight_items = [
                 f"Parameter zones: {total_zones}",
                 f"Parameter subzones: {total_subzones}",
             ]
             if largest_zone is not None:
                 highlight_items.append(
-                    f"最大分区：{largest_zone['zone_id']} ({largest_zone['area_km2']:.2f} km²，{largest_zone['subzone_count']} 个子分区)"
+                    f"Largest zone: {largest_zone['zone_id']} ({largest_zone['area_km2']:.2f} km², {largest_zone['subzone_count']} subzones)"
                 )
             builder.add_list(highlight_items)
 
-            builder.add_heading("区域预览", level=2)
+            builder.add_heading("Zone Preview", level=2)
             preview = zones_df.head(min(6, len(zones_df)))
             if not preview.empty:
                 builder.add_table(
@@ -1277,7 +1284,7 @@ def run_step03_partitioning(config_path: Path | str) -> Dict[str, Path]:
                     )
                 )
 
-            builder.add_heading("成果文件", level=2)
+            builder.add_heading("Output Files", level=2)
             builder.add_list(
                 [
                     f"Parameter zones GeoJSON: `{context.to_relative(parameter_zones_geojson)}`",
@@ -1285,7 +1292,7 @@ def run_step03_partitioning(config_path: Path | str) -> Dict[str, Path]:
                     f"Parameter channels GeoJSON: `{context.to_relative(parameter_channels_geojson)}`",
                 ]
             )
-            builder.add_paragraph(f"验证时间：{timestamp.isoformat()}")
+            builder.add_paragraph(f"Validation time: {timestamp.isoformat()}")
             report_path.parent.mkdir(parents=True, exist_ok=True)
             builder.write(report_path)
 
@@ -1773,25 +1780,25 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
             return None
         fig, axes = plt.subplots(1, 2, figsize=(12, 4), constrained_layout=True)
         mesh = axes[0].pcolormesh(xs, ys, Z, shading="auto", cmap="terrain")
-        axes[0].set_title(f"{zone_id} 河槽热力图")
-        axes[0].set_xlabel("沿程 (m)")
-        axes[0].set_ylabel("距中心线 (m)")
-        fig.colorbar(mesh, ax=axes[0], label="高程 (m)")
+        axes[0].set_title(f"{zone_id} Channel Heatmap")
+        axes[0].set_xlabel("Along-channel (m)")
+        axes[0].set_ylabel("Distance from Centerline (m)")
+        fig.colorbar(mesh, ax=axes[0], label="Elevation (m)")
 
         axes[1].plot(
             centerline["global_station_m"],
             centerline["base_elevation_m"],
-            label="原始基准",
+            label="Original Baseline",
             linestyle="--",
         )
         axes[1].plot(
             centerline["global_station_m"],
             centerline["global_corrected_elevation_m"],
-            label="矫正后",
+            label="Corrected",
         )
-        axes[1].set_xlabel("沿程 (m)")
-        axes[1].set_ylabel("高程 (m)")
-        axes[1].set_title(f"{zone_id} 中心线纵剖面")
+        axes[1].set_xlabel("Along-channel (m)")
+        axes[1].set_ylabel("Elevation (m)")
+        axes[1].set_title(f"{zone_id} Centerline Longitudinal Profile")
         axes[1].legend()
 
         output_path = step_dir / f"{zone_id}_channel_static.png"
@@ -1817,9 +1824,9 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
             cl_sorted["global_corrected_elevation_m"],
             label=zone,
         )
-    plt.xlabel("沿程 (m)")
-    plt.ylabel("高程 (m)")
-    plt.title("主干河道中心线比较")
+    plt.xlabel("Along-channel (m)")
+    plt.ylabel("Elevation (m)")
+    plt.title("Main Channel Centerline Comparison")
     plt.legend()
     plt.tight_layout()
     plt.savefig(combined_plot_path, dpi=220)
@@ -1842,11 +1849,11 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
             )
             fig = go.Figure(data=[scatter])
             fig.update_layout(
-                title=f"{zone} 河槽三维点云",
+                title=f"{zone} Channel 3D Point Cloud",
                 scene=dict(
-                    xaxis_title="沿程 (m)",
-                    yaxis_title="距中心线 (m)",
-                    zaxis_title="高程 (m)",
+                    xaxis_title="Along-channel (m)",
+                    yaxis_title="Distance from Centerline (m)",
+                    zaxis_title="Elevation (m)",
                 ),
             )
             path = step_dir / f"{zone}_channel_terrain.html"
@@ -1861,11 +1868,11 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
             surface = go.Surface(x=xs, y=ys, z=Z, colorscale="Viridis")
             surf_fig = go.Figure(data=[surface])
             surf_fig.update_layout(
-                title=f"{zone} 河槽曲面",
+                title=f"{zone} Channel Surface",
                 scene=dict(
-                    xaxis_title="沿程 (m)",
-                    yaxis_title="距中心线 (m)",
-                    zaxis_title="高程 (m)",
+                    xaxis_title="Along-channel (m)",
+                    yaxis_title="Distance from Centerline (m)",
+                    zaxis_title="Elevation (m)",
                 ),
             )
             surf_path = step_dir / f"{zone}_channel_surface.html"
@@ -1888,11 +1895,11 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
                 )
             )
         combined_fig.update_layout(
-            title="主干河道三维点云对比",
+            title="Main Channel 3D Point Cloud Comparison",
             scene=dict(
-                xaxis_title="沿程 (m)",
-                yaxis_title="距中心线 (m)",
-                zaxis_title="高程 (m)",
+                xaxis_title="Along-channel (m)",
+                yaxis_title="Distance from Centerline (m)",
+                zaxis_title="Elevation (m)",
             ),
         )
         combined_html = step_dir / "combined_channel_terrain.html"
@@ -1910,11 +1917,11 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
                 go.Surface(x=xs_all, y=ys_all, z=Z_all, colorscale="Viridis")
             )
         combined_surface.update_layout(
-            title="主干河道三维曲面",
+            title="Main Channel 3D Surface",
             scene=dict(
-                xaxis_title="沿程 (m)",
-                yaxis_title="距中心线 (m)",
-                zaxis_title="高程 (m)",
+                xaxis_title="Along-channel (m)",
+                yaxis_title="Distance from Centerline (m)",
+                zaxis_title="Elevation (m)",
             ),
         )
         combined_surface_path = step_dir / "combined_channel_surface.html"
@@ -2175,20 +2182,21 @@ def run_step05_rain_gauge_layout(config_path: Path | str) -> Dict[str, Path]:
     report_path = _build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 05 – Rain Gauge Layout")
     builder.add_paragraph(
-        "根据基准降雨序列与子流域形状生成雨量站布局，并输出站点覆盖半径统计与示意图。"
+        "Generate rain gauge layout based on reference precipitation sequence and subbasin geometry, "
+        "outputting station coverage radius statistics and visualization."
     )
-    builder.add_heading("配置参数", level=2)
+    builder.add_heading("Configuration Parameters", level=2)
     builder.add_list(
         [
-            f"站点数：{station_count}",
-            f"随机种子：{seed}",
-            f"空间异质性：{heterogeneity:.2f}",
-            f"突发事件范围：{min_burst_events}–{max_burst_events}",
+            f"Station count: {station_count}",
+            f"Random seed: {seed}",
+            f"Spatial heterogeneity: {heterogeneity:.2f}",
+            f"Burst event range: {min_burst_events}–{max_burst_events}",
         ]
     )
-    builder.add_heading("覆盖统计", level=2)
+    builder.add_heading("Coverage Statistics", level=2)
     summary_table = TableData(
-        headers=["站点", "覆盖面积 (km²)", "等效半径 (m)"],
+        headers=["Station", "Coverage Area (km²)", "Equivalent Radius (m)"],
         rows=[
             [
                 row["station_id"],
@@ -2199,7 +2207,7 @@ def run_step05_rain_gauge_layout(config_path: Path | str) -> Dict[str, Path]:
         ],
     )
     builder.add_table(summary_table)
-    builder.add_paragraph(f"布局完成时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Layout completion time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     gauge_cfg["layout_geojson"] = context.to_relative(locations_geojson)
@@ -2453,20 +2461,21 @@ def run_step06_rain_sequence(config_path: Path | str) -> Dict[str, Path]:
     report_path = _build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 06 – Rain Sequence Generation")
     builder.add_paragraph(
-        "根据雨量站布设结果生成时序降雨数据，输出站点及汇总强度序列，并生成热力图、动画和暴雨过程线。"
+        "Generate time-series rainfall data based on gauge layout results, outputting station and "
+        "aggregated intensity sequences, along with heatmaps, animations, and storm hyetographs."
     )
-    builder.add_heading("关键信息", level=2)
+    builder.add_heading("Key Information", level=2)
     builder.add_list(
         [
-            f"时间步长：{time_step_hours:.2f} 小时",
-            f"平均总雨量：{aggregated_total_depth:.2f} mm",
-            f"峰值强度：{aggregated_peak:.2f} mm/hr",
+            f"Time step: {time_step_hours:.2f} hours",
+            f"Average total rainfall: {aggregated_total_depth:.2f} mm",
+            f"Peak intensity: {aggregated_peak:.2f} mm/hr",
         ]
     )
-    builder.add_heading("代表站点统计", level=2)
+    builder.add_heading("Representative Station Statistics", level=2)
     builder.add_table(
         TableData(
-            headers=["站点", "总雨量 (mm)", "峰值强度 (mm/hr)"],
+            headers=["Station", "Total Rainfall (mm)", "Peak Intensity (mm/hr)"],
             rows=[
                 [
                     row["series_id"],
@@ -2477,7 +2486,7 @@ def run_step06_rain_sequence(config_path: Path | str) -> Dict[str, Path]:
             ],
         )
     )
-    builder.add_paragraph(f"序列生成时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Sequence generation time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     rainfall_cfg["station_series_path"] = context.to_relative(station_forcing_path)
@@ -2653,20 +2662,21 @@ def run_step07_thiessen_weights(config_path: Path | str) -> Dict[str, Path]:
     report_path = _build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 07 – Thiessen Weights")
     builder.add_paragraph(
-        "根据雨量站布设与子流域形状计算泰森多边形及站点权重，为后续面雨量插值提供输入。"
+        "Compute Thiessen polygons and station weights based on gauge layout and subbasin geometry "
+        "for areal precipitation interpolation."
     )
-    builder.add_heading("统计概览", level=2)
+    builder.add_heading("Statistical Overview", level=2)
     top_rows = weights_df.sort_values("weight", ascending=False).head(10)
     builder.add_table(
         TableData(
-            headers=["子流域", "雨量站", "权重"],
+            headers=["Subbasin", "Station", "Weight"],
             rows=[
                 [row["subbasin_id"], row["station_id"], f"{row['weight']:.3f}"]
                 for _, row in top_rows.iterrows()
             ],
         )
     )
-    builder.add_paragraph(f"权重计算时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Weight computation time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     rainfall_cfg["weights_json"] = context.to_relative(weights_json_path)
@@ -2972,13 +2982,14 @@ def run_step08_areal_precipitation(config_path: Path | str) -> Dict[str, Path]:
     report_path = _build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 08 – Areal Precipitation")
     builder.add_paragraph(
-        "使用泰森权重将雨量站时序插值到参数子流域，生成面雨量表、热力图、累积过程及动画。"
+        "Interpolate gauge time series to parameter subbasins using Thiessen weights, generating "
+        "areal precipitation tables, heatmaps, cumulative plots, and animations."
     )
-    builder.add_heading("统计摘要", level=2)
+    builder.add_heading("Statistical Summary", level=2)
     summary_preview = areal_summary_df.sort_values("total_depth_mm", ascending=False).head(10)
     builder.add_table(
         TableData(
-            headers=["子流域", "总雨量 (mm)", "峰值强度 (mm/hr)"],
+            headers=["Subbasin", "Total Rainfall (mm)", "Peak Intensity (mm/hr)"],
             rows=[
                 [
                     row["subbasin_id"],
@@ -2989,7 +3000,7 @@ def run_step08_areal_precipitation(config_path: Path | str) -> Dict[str, Path]:
             ],
         )
     )
-    builder.add_paragraph(f"面雨量插值时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Areal precipitation interpolation time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     rainfall_cfg["areal_precip_path"] = context.to_relative(subbasin_csv)
@@ -3383,7 +3394,7 @@ def run_step09_hydrologic_run(config_path: Path | str) -> Dict[str, Path]:
             main_ax.set_ylabel("Runoff (m³/s)")
             main_ax.set_ylim(0.0, local_discharge_ylim)
             main_ax.grid(True, linestyle="--", alpha=0.3)
-            main_ax.set_title(f"{zone} 分区降雨-径流", fontproperties="SimHei")
+            main_ax.set_title(f"{zone} Zone Rainfall-Runoff")
 
             rain_ax = main_ax.twinx()
             bars = rain_ax.bar(
@@ -3411,7 +3422,7 @@ def run_step09_hydrologic_run(config_path: Path | str) -> Dict[str, Path]:
             agg_ax.set_ylim(0.0, aggregated_discharge_ylim)
             agg_ax.set_ylabel("Aggregated Runoff (m³/s)")
             agg_ax.grid(True, linestyle="--", alpha=0.3)
-            agg_ax.set_title(f"{zone} 汇流范围降雨/径流", fontproperties="SimHei")
+            agg_ax.set_title(f"{zone} Catchment Rainfall/Runoff")
 
             agg_rain_ax = agg_ax.twinx()
             agg_bars = agg_rain_ax.bar(
@@ -3472,17 +3483,18 @@ def run_step09_hydrologic_run(config_path: Path | str) -> Dict[str, Path]:
     report_path = _build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 09 – Hydrologic Baseline Run")
     builder.add_paragraph(
-        "使用最新的面雨量序列驱动基线水文模型，输出流量时序及关键图件，为情景对比提供参考。"
+        "Drive baseline hydrologic model using latest areal precipitation sequence, outputting discharge "
+        "time series and key visualizations to provide reference for scenario comparison."
     )
-    builder.add_heading("汇总指标", level=2)
+    builder.add_heading("Summary Metrics", level=2)
     peak_info = aggregated_df.max().sort_values(ascending=False).head(5)
     builder.add_table(
         TableData(
-            headers=["子流域", "峰值流量 (m³/s)"],
+            headers=["Subbasin", "Peak Discharge (m³/s)"],
             rows=[[idx, f"{value:.2f}"] for idx, value in peak_info.items()],
         )
     )
-    builder.add_paragraph(f"模型执行时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Model execution time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     project_cfg = context.config.setdefault("project", {})
@@ -4454,13 +4466,14 @@ def run_step10_hydrodynamic_run(config_path: Path | str) -> Dict[str, Path]:
     report_path = _build_report_path(context, step_index, step_name)
     builder = MarkdownReportBuilder("Step 10 – Hydrodynamic Scenario Run")
     builder.add_paragraph(
-        "执行水动力情景模拟，对比基线与情景流量差异，并输出峰值偏差统计与对比图件。"
+        "Execute hydrodynamic scenario simulations, comparing baseline and scenario discharge differences, "
+        "and outputting peak deviation statistics and comparison visualizations."
     )
-    builder.add_heading("峰值偏差概览", level=2)
+    builder.add_heading("Peak Deviation Overview", level=2)
     diff_preview = difference_df.sort_values("peak_absolute_difference_m3s", ascending=False).head(10)
     builder.add_table(
         TableData(
-            headers=["情景", "子流域", "峰值偏差 (m³/s)"],
+            headers=["Scenario", "Subbasin", "Peak Deviation (m³/s)"],
             rows=[
                 [
                     row["scenario_id"],
@@ -4471,7 +4484,7 @@ def run_step10_hydrodynamic_run(config_path: Path | str) -> Dict[str, Path]:
             ],
         )
     )
-    builder.add_paragraph(f"情景模拟完成时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Scenario simulation completion time: {timestamp.isoformat()}")
     builder.write(report_path)
 
     project_cfg = context.config.setdefault("project", {})
@@ -4534,11 +4547,12 @@ def run_final_pipeline_report(config_path: Path | str) -> Dict[str, Path]:
     final_report_path = context.reports_directory / "final_pipeline_report.md"
     builder = MarkdownReportBuilder("Upper Truckee Ten-Step Pipeline Summary")
     builder.add_paragraph(
-        "本报告整合十步流水线各阶段的 Markdown 内容，便于审查整体输入、输出与关键指标。"
+        "This report integrates Markdown content from all ten pipeline stages, "
+        "facilitating review of overall inputs, outputs, and key metrics."
     )
-    builder.add_heading("目录", level=2)
+    builder.add_heading("Table of Contents", level=2)
     builder.extend(summary_lines)
-    builder.add_paragraph(f"汇总生成时间：{timestamp.isoformat()}")
+    builder.add_paragraph(f"Summary generation time: {timestamp.isoformat()}")
 
     for title, lines in sections:
         builder.add_heading(title, level=2)

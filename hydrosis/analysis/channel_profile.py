@@ -74,7 +74,9 @@ def load_cross_sections(path: Path, zones: Optional[Sequence[str]] = None) -> pd
         zone_list = list(zones)
         df = df[df["zone_id"].isin(zone_list)].copy()
     if df.empty:
-        raise FileNotFoundError(f"{path} 中未找到指定分区 {zones or '全部'} 的断面数据")
+        raise FileNotFoundError(
+            f"No cross-section data found in {path} for zones {zones or 'all'}"
+        )
     return df
 
 
@@ -106,7 +108,7 @@ def attach_global_station(
     """Attach cumulative chainage (`global_station_m`) to each cross-section row."""
     segments_df = _ensure_dataframe(segments)
     if segments_df.empty:
-        raise FileNotFoundError("Segments 数据为空，无法计算 global_station_m。")
+        raise FileNotFoundError("Segments data is empty, cannot compute global_station_m")
 
     segments_df["segment_start"] = segments_df["cumulative_length_m"] - segments_df["length_m"]
 
@@ -170,7 +172,7 @@ def extract_centerline(zone_df: pd.DataFrame, band_width: float) -> pd.DataFrame
 
     subset = subset.dropna(subset=["global_station_m"])
     if subset.empty:
-        raise ValueError("缺少 global_station_m，无法提取中心线。")
+        raise ValueError("Missing global_station_m column, cannot extract centerline")
 
     center_idx = (
         subset.groupby("global_station_m")["distance_from_center_m"]
