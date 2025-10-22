@@ -1,36 +1,22 @@
-# HydroSIS 模型评估报告
+# HydroSIS Model Evaluation Report
 
-自动生成的模型精度评价报告
+Automatically generated evaluation report.
 
-## 总体评价指标
+## Overall Evaluation Metrics
 
 | Model | RMSE | MAE | PBIAS | NSE |
 | --- | --- | --- | --- | --- |
 | baseline | 66.3190 | 45.6124 | 0.2103 | 0.9903 |
-| reservoir_reoperation | 161.3882 | 125.3837 | 7.6517 | 0.8458 |
-| vic_hbv_tuning | 1587.4880 | 1559.4284 | 1141.4153 | -3384.3731 |
+| reservoir_reoperation | 66.3190 | 45.6124 | 0.2103 | 0.9903 |
+| vic_hbv_tuning | 66.3190 | 45.6124 | 0.2103 | 0.9903 |
 
-## 基于 RMSE 的模型排序
+## Model Ranking Based on RMSE
 
-1. baseline: 66.31896097718354
-2. reservoir_reoperation: 161.3881941190155
-3. vic_hbv_tuning: 1587.4879887180691
+1. baseline: 66.31896097718355
+2. reservoir_reoperation: 66.31896097718355
+3. vic_hbv_tuning: 66.31896097718355
 
-## GIS地图展示
-
-### 子流域划分图
-
-![subbasin_map](../figures/professional_subbasin_map.png)
-
-### 参数分区划分图
-
-![parameter_zone_map](../figures/professional_zone_map.png)
-
-### 综合对比仪表板
-
-![gis_dashboard](../figures/gis_comparison_dashboard.png)
-
-## 指标图表
+## Metric Charts
 
 ![metric_rmse](../figures/metric_rmse.png)
 
@@ -40,7 +26,7 @@
 
 ![metric_nse](../figures/metric_nse.png)
 
-## 子流域径流过程对比
+## Subbasin Hydrograph Comparison
 
 ![hydrograph_SB1](../figures/hydrograph_SB1.png)
 
@@ -50,14 +36,14 @@
 
 ![hydrograph_SB4](../figures/hydrograph_SB4.png)
 
-## 模型运行概述
+## Model Run Overview
 
-本次评估比较了 3 套模拟方案（baseline, reservoir_reoperation, vic_hbv_tuning），评价指标包括 RMSE, MAE, PBIAS, NSE。
+（示例 LLM 输出）Based on the overall evaluation metrics, summarize the main performance of baseline and comparison scenarios, and explain the data sources.
 
-## 关键发现
+## Key Findings
 
-在 Compare baseline and reservoir scenario at key gauges 中，排序为 baseline > reservoir_reoperation。
+Plan Compare baseline and reservoir scenario at key gauges ranks baseline > reservoir_reoperation best to worst.
 
-## 后续建议
+## Recommendations
 
-可继续针对关键指标开展参数分区校准或扩展新的情景对比。
+（示例 LLM 输出）Based on current evaluation results, propose recommendations for further calibration, data collection, or scenario analysis.
