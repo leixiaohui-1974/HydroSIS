@@ -28,24 +28,24 @@ class EvaluationReportTemplate:
 def default_evaluation_template() -> EvaluationReportTemplate:
     return EvaluationReportTemplate(
         overview=ReportSection(
-            heading="模型运行概述",
+            heading="Model Run Overview",
             prompt=(
-                "请根据模型的总体评价指标，概述基准情景与对比情景的"
-                "主要表现，并说明数据来源。"
+                "Based on the overall evaluation metrics, summarize the main performance "
+                "of baseline and comparison scenarios, and explain the data sources."
             ),
         ),
         highlights=ReportSection(
-            heading="关键发现",
+            heading="Key Findings",
             prompt=(
-                "结合各子流域的径流对比和指标排序，归纳表现最佳"
-                "与需要改进的模型，并说明可能的原因。"
+                "Combining subbasin hydrograph comparisons and metric rankings, summarize "
+                "the best-performing and areas needing improvement, and explain possible causes."
             ),
         ),
         next_steps=ReportSection(
-            heading="后续建议",
+            heading="Recommendations",
             prompt=(
-                "基于当前评估结果，提出进一步校准、资料收集或情景"
-                "分析的建议。"
+                "Based on current evaluation results, propose recommendations for further "
+                "calibration, data collection, or scenario analysis."
             ),
         ),
     )
