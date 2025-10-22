@@ -231,25 +231,25 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
             return None
         fig, axes = plt.subplots(1, 2, figsize=(12, 4), constrained_layout=True)
         mesh = axes[0].pcolormesh(xs, ys, Z, shading="auto", cmap="terrain")
-        axes[0].set_title(f"{zone_id} 河槽热力图")
-        axes[0].set_xlabel("沿程 (m)")
-        axes[0].set_ylabel("距中心线 (m)")
-        fig.colorbar(mesh, ax=axes[0], label="高程 (m)")
+        axes[0].set_title(f"{zone_id} Channel Heatmap")
+        axes[0].set_xlabel("Along-channel (m)")
+        axes[0].set_ylabel("Distance from Centerline (m)")
+        fig.colorbar(mesh, ax=axes[0], label="Elevation (m)")
 
         axes[1].plot(
             centerline["global_station_m"],
             centerline["base_elevation_m"],
-            label="原始基准",
+            label="Original Baseline",
             linestyle="--",
         )
         axes[1].plot(
             centerline["global_station_m"],
             centerline["global_corrected_elevation_m"],
-            label="矫正后",
+            label="Corrected",
         )
-        axes[1].set_xlabel("沿程 (m)")
-        axes[1].set_ylabel("高程 (m)")
-        axes[1].set_title(f"{zone_id} 中心线纵剖面")
+        axes[1].set_xlabel("Along-channel (m)")
+        axes[1].set_ylabel("Elevation (m)")
+        axes[1].set_title(f"{zone_id} Centerline Longitudinal Profile")
         axes[1].legend()
 
         output_path = step_dir / f"{zone_id}_channel_static.png"
@@ -275,9 +275,9 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
             cl_sorted["global_corrected_elevation_m"],
             label=zone,
         )
-    plt.xlabel("沿程 (m)")
-    plt.ylabel("高程 (m)")
-    plt.title("主干河道中心线比较")
+    plt.xlabel("Along-channel (m)")
+    plt.ylabel("Elevation (m)")
+    plt.title("Main Channel Centerline Comparison")
     plt.legend()
     plt.tight_layout()
     plt.savefig(combined_plot_path, dpi=220)
@@ -300,11 +300,11 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
             )
             fig = go.Figure(data=[scatter])
             fig.update_layout(
-                title=f"{zone} 河槽三维点云",
+                title=f"{zone} Channel 3D Point Cloud",
                 scene=dict(
-                    xaxis_title="沿程 (m)",
-                    yaxis_title="距中心线 (m)",
-                    zaxis_title="高程 (m)",
+                    xaxis_title="Along-channel (m)",
+                    yaxis_title="Distance from Centerline (m)",
+                    zaxis_title="Elevation (m)",
                 ),
             )
             path = step_dir / f"{zone}_channel_terrain.html"
@@ -319,11 +319,11 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
             surface = go.Surface(x=xs, y=ys, z=Z, colorscale="Viridis")
             surf_fig = go.Figure(data=[surface])
             surf_fig.update_layout(
-                title=f"{zone} 河槽曲面",
+                title=f"{zone} Channel Surface",
                 scene=dict(
-                    xaxis_title="沿程 (m)",
-                    yaxis_title="距中心线 (m)",
-                    zaxis_title="高程 (m)",
+                    xaxis_title="Along-channel (m)",
+                    yaxis_title="Distance from Centerline (m)",
+                    zaxis_title="Elevation (m)",
                 ),
             )
             surf_path = step_dir / f"{zone}_channel_surface.html"
@@ -346,11 +346,11 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
                 )
             )
         combined_fig.update_layout(
-            title="主干河道三维点云对比",
+            title="Main Channel 3D Point Cloud Comparison",
             scene=dict(
-                xaxis_title="沿程 (m)",
-                yaxis_title="距中心线 (m)",
-                zaxis_title="高程 (m)",
+                xaxis_title="Along-channel (m)",
+                yaxis_title="Distance from Centerline (m)",
+                zaxis_title="Elevation (m)",
             ),
         )
         combined_html = step_dir / "combined_channel_terrain.html"
@@ -368,11 +368,11 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
                 go.Surface(x=xs_all, y=ys_all, z=Z_all, colorscale="Viridis")
             )
         combined_surface.update_layout(
-            title="主干河道三维曲面",
+            title="Main Channel 3D Surface",
             scene=dict(
-                xaxis_title="沿程 (m)",
-                yaxis_title="距中心线 (m)",
-                zaxis_title="高程 (m)",
+                xaxis_title="Along-channel (m)",
+                yaxis_title="Distance from Centerline (m)",
+                zaxis_title="Elevation (m)",
             ),
         )
         combined_surface_path = step_dir / "combined_channel_surface.html"
@@ -444,3 +444,5 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
 
 
 def run_step05_rain_gauge_layout(config_path: Path | str) -> Dict[str, Path]:
+    """Placeholder - implemented in step05_rain_gauge_layout.py module."""
+    raise NotImplementedError("See step05_rain_gauge_layout.py")
