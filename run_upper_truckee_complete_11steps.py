@@ -423,10 +423,14 @@ def step02_pour_point_generation(
                 'pfafstetter_code': pfaf_code,
             })
 
-    print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点")
-    print(f"    - 10号点（出口）: 控制面积={total_basin_area_km2:.2f} km²")
-    for p in main_stream_points[1:]:
-        print(f"    - {p['id']}号点: 控制面积={p['controlled_area_km2']:.2f} km² ({p['controlled_area_km2']/total_basin_area_km2*100:.1f}%)")
+    # 按照accumulation从大到小排序，确保顺序是从下游到上游
+    # 这样在后续分区计算时才能正确处理
+    main_stream_points.sort(key=lambda p: p['accumulation'], reverse=True)
+
+    print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点（按流量从下游到上游排列）")
+    for p in main_stream_points:
+        pct = p['controlled_area_km2'] / total_basin_area_km2 * 100
+        print(f"    - {p['id']}号点: 累积={p['accumulation']:.0f}, 控制面积={p['controlled_area_km2']:.2f} km² ({pct:.1f}%)")
 
     # 5. 为每个干流分区找到1个最大支流汇入点
     main_stream_set = set(main_stream_cells)
@@ -456,8 +460,9 @@ def step02_pour_point_generation(
 
     tributary_points = []
 
-    # 反向处理（从上游到下游），确保支流不重叠
-    for main_idx in range(len(main_stream_points) - 1, -1, -1):
+    # 正向处理（从下游到上游），main_stream_points已按accumulation从大到小排序
+    # 每个干流点的分区 = 本点的上游 - 上游干流点的上游
+    for main_idx in range(len(main_stream_points)):
         main_point = main_stream_points[main_idx]
         main_id = main_point['id']
         main_r, main_c = main_point['row'], main_point['col']
@@ -467,11 +472,11 @@ def step02_pour_point_generation(
         # 追溯该干流点的流域范围
         watershed = delineate_watershed(main_r, main_c)
 
-        # 如果不是最下游的点，需要排除下游干流点的流域
-        if main_idx > 0:
-            downstream_point = main_stream_points[main_idx - 1]
-            downstream_watershed = delineate_watershed(downstream_point['row'], downstream_point['col'])
-            watershed = watershed - downstream_watershed
+        # 如果不是最上游的点，需要排除上游干流点的流域
+        if main_idx < len(main_stream_points) - 1:
+            upstream_point = main_stream_points[main_idx + 1]
+            upstream_watershed = delineate_watershed(upstream_point['row'], upstream_point['col'])
+            watershed = watershed - upstream_watershed
 
         print(f"    - 本分区流域范围: {len(watershed)}个格网")
 
@@ -969,7 +974,7 @@ def step03_parameter_zones_and_subbasins(
         # 如果子流域数量较多，使用渐变色而不是离散颜色
         if n_features > 20:
             cmap = cm.get_cmap('tab20', n_features)
-            show_labels = False  # 太多子流域时不显示单独的标签
+            show_labels = True  # 修改：始终显示子流域编码标注
             show_legend = False
         else:
             cmap = cm.get_cmap('tab10')
@@ -994,11 +999,13 @@ def step03_parameter_zones_and_subbasins(
                     ax.plot(x, y, linewidth=1.5, color=color, label=label)
                     ax.fill(x, y, alpha=0.3, color=color)
 
-            # 只在子流域数量较少时添加标签
+            # 添加子流域编码标签
             if show_labels:
                 centroid = geom.centroid
-                ax.text(centroid.x, centroid.y, sub_id, fontsize=9, fontweight='bold',
-                       ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
+                # 根据子流域数量调整字体大小
+                fontsize = 6 if n_features > 100 else (7 if n_features > 50 else 9)
+                ax.text(centroid.x, centroid.y, sub_id, fontsize=fontsize, fontweight='bold',
+                       ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', alpha=0.7, pad=0.2))
 
         ax.set_title(f'Upper Truckee River - Subbasin Delineation ({n_features} subbasins)',
                     fontsize=14, fontweight='bold')
