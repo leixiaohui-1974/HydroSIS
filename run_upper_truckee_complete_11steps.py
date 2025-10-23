@@ -1402,10 +1402,10 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
         "outputs": [],
     }
 
-    # 配置产流模型
+    # 配置产流模型（ID必须与parameters中的runoff_model匹配）
     runoff_models = [
         RunoffModelConfig(
-            id="HBV_mountain",
+            id="hbv",  # 与parameter_zones中的runoff_model键匹配
             model_type="hbv",
             parameters={
                 "TT": 0.0,
@@ -1424,7 +1424,7 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
             }
         ),
         RunoffModelConfig(
-            id="SCS_valley",
+            id="scs_curve_number",
             model_type="scs_curve_number",
             parameters={
                 "curve_number": 75.0,
@@ -1433,10 +1433,10 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
         ),
     ]
 
-    # 配置汇流模型
+    # 配置汇流模型（ID必须与parameters中的routing_model匹配）
     routing_models = [
         RoutingModelConfig(
-            id="Muskingum_standard",
+            id="muskingum",  # 与parameter_zones中的routing_model键匹配
             model_type="muskingum",
             parameters={
                 "K": 10.0,
@@ -1446,8 +1446,67 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
         ),
     ]
 
-    # 配置参数区（使用partition输出）
-    parameter_zones = partition_outputs.parameter_zones
+    # 构建zone到subzones的映射
+    zone_to_subzones = {}
+    for subzone in partition_outputs.subzone_summaries:
+        zone_id = subzone.zone_id
+        if zone_id not in zone_to_subzones:
+            zone_to_subzones[zone_id] = []
+        zone_to_subzones[zone_id].append(subzone.subzone_id)
+
+    # 创建修正后的parameter_zones，使用实际的subzone IDs
+    updated_parameter_zones = []
+    for zone in partition_outputs.parameter_zones:
+        # 获取该zone下的所有subzone IDs
+        subzone_ids = zone_to_subzones.get(zone.id, [])
+        if not subzone_ids:
+            continue
+
+        # 使用第一个subzone作为control_point（代表整个zone）
+        control_point = subzone_ids[0] if subzone_ids else zone.id
+
+        updated_zone = ParameterZoneConfig(
+            id=zone.id,
+            description=zone.description,
+            control_points=[control_point],  # 使用实际存在的subzone ID
+            parameters=zone.parameters,
+            explicit_subbasins=subzone_ids,  # 明确列出所有subzones
+        )
+        updated_parameter_zones.append(updated_zone)
+
+    # 从partition_outputs创建包含183个subzones的delineation配置
+    # 每个subzone需要有runoff_model和routing_model参数
+    subzone_list = []
+    zone_models = {zone.id: (zone.parameters.get('runoff_model', 'hbv'),
+                             zone.parameters.get('routing_model', 'muskingum'))
+                   for zone in partition_outputs.parameter_zones}
+
+    for subzone in partition_outputs.subzone_summaries:
+        zone_id = subzone.zone_id
+        runoff_model, routing_model = zone_models.get(zone_id, ('hbv', 'muskingum'))
+
+        subzone_obj = {
+            'id': subzone.subzone_id,
+            'area_km2': subzone.area_km2,
+            'downstream': subzone.downstream_subzone_id,
+            'parameters': {
+                'runoff_model': runoff_model,
+                'routing_model': routing_model,
+            }
+        }
+        subzone_list.append(subzone_obj)
+
+    # 创建新的delineation配置，使用183个subzones作为subbasins
+    simulation_delineation_cfg = DelineationConfig(
+        dem_path=delineation_cfg.dem_path,
+        pour_points_path=delineation_cfg.pour_points_path,
+        flow_direction_path=delineation_cfg.flow_direction_path,
+        flow_accumulation_path=delineation_cfg.flow_accumulation_path,
+        accumulation_threshold=delineation_cfg.accumulation_threshold,
+        intermediate_directory=delineation_cfg.intermediate_directory,
+        parameter_directory=delineation_cfg.parameter_directory,
+        precomputed_subbasins=subzone_list,
+    )
 
     # 配置IO
     io_config = IOConfig(
@@ -1462,10 +1521,10 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
 
     # 构建模型配置
     model_config = ModelConfig(
-        delineation=delineation_cfg,
+        delineation=simulation_delineation_cfg,
         runoff_models=runoff_models,
         routing_models=routing_models,
-        parameter_zones=parameter_zones,
+        parameter_zones=updated_parameter_zones,
         io=io_config,
         evaluation=evaluation_config,
     )
@@ -1473,8 +1532,8 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
     print(f"  ⚙ 配置完成：")
     print(f"     - 产流模型: {len(runoff_models)}个")
     print(f"     - 汇流模型: {len(routing_models)}个")
-    print(f"     - 参数区: {len(parameter_zones)}个")
-    print(f"     - 子流域: {len(subbasins)}个")
+    print(f"     - 参数区: {len(updated_parameter_zones)}个")
+    print(f"     - 子区域: {len(subzone_list)}个")
 
     # 准备forcing数据（使用实际的subbasin_series列）
     # subbasin_series包含所有subzone的降水数据
@@ -1486,8 +1545,15 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
         np.linspace(0, 15, 24),
         15 * np.exp(-np.linspace(0, 3, 48)),
     ])
-    outlet_id = subbasins[-1].id if subbasins else "outlet"
-    observations = {outlet_id: list(synthetic_obs)}
+    # 找到outlet subzone（downstream为None的）
+    outlet_subzone = None
+    for sz in partition_outputs.subzone_summaries:
+        if sz.downstream_subzone_id is None or sz.downstream_subzone_id == "":
+            outlet_subzone = sz.subzone_id
+            break
+    if outlet_subzone is None:
+        outlet_subzone = subzone_list[0]['id']  # 后备方案
+    observations = {outlet_subzone: list(synthetic_obs)}
 
     # 运行模拟
     print(f"  ⚙ 运行水文水动力模拟...")
@@ -1540,17 +1606,17 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
     ax1.legend(loc='upper right')
 
     # 下图：出口流量
-    if outlet_id in aggregated:
-        outlet_discharge = aggregated[outlet_id]
+    if outlet_subzone in aggregated:
+        outlet_discharge = aggregated[outlet_subzone]
         ax2.fill_between(timesteps, 0, outlet_discharge, alpha=0.3, label='Simulated')
         ax2.plot(timesteps, outlet_discharge, linewidth=2, color='blue', label='Simulated')
-        if outlet_id in observations:
-            ax2.plot(timesteps, observations[outlet_id], 'r--',
+        if outlet_subzone in observations:
+            ax2.plot(timesteps, observations[outlet_subzone], 'r--',
                     linewidth=2, label='Observed (Synthetic)')
 
     ax2.set_xlabel('Time Step (hours)')
     ax2.set_ylabel('Discharge (m³/s)')
-    ax2.set_title(f'Outlet Discharge ({outlet_id})')
+    ax2.set_title(f'Outlet Discharge ({outlet_subzone})')
     ax2.grid(True, linestyle='--', alpha=0.6)
     ax2.legend(loc='upper right')
 
