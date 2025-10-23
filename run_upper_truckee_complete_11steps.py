@@ -23,8 +23,9 @@ from __future__ import annotations
 import json
 import sys
 import warnings
+import yaml
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 # 添加项目根目录到Python路径
 REPO_ROOT = Path(__file__).resolve().parent
@@ -79,6 +80,31 @@ try:
 except ImportError:
     HAS_RASTERIO = False
     warnings.warn("rasterio not available - DEM visualization will be limited")
+
+
+# ============================================================================
+# 配置文件加载
+# ============================================================================
+
+def load_config(config_path: Path) -> Dict[str, Any]:
+    """
+    加载YAML配置文件
+
+    Args:
+        config_path: 配置文件路径
+
+    Returns:
+        配置字典
+    """
+    if not config_path.exists():
+        raise FileNotFoundError(f"配置文件不存在: {config_path}")
+
+    with open(config_path, 'r', encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+
+    print(f"✓ 成功加载配置文件: {config_path}")
+    return config
+
 
 # ============================================================================
 # 第1步：DEM处理和地形分析
@@ -249,7 +275,7 @@ def step02_pour_point_generation(
     flow_dir_path: Path,
     flow_acc_path: Path,
     output_dir: Path,
-    main_stream_count: int = 3,
+    config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, object]:
     """
     第2步：汇水点生成（基于深度的编码方案）
@@ -275,9 +301,37 @@ def step02_pour_point_generation(
     - Pour points统计表
     - Pour points位置图
     """
+    # 加载配置参数
+    if config is None:
+        config = {}
+
+    step_config = config.get('step02_pour_points', {})
+    strategy = step_config.get('strategy', {})
+
+    # 主流汇水点数量
+    main_stream_count = strategy.get('main_stream_count', 3)
+
+    # 中间点选择方法和参数
+    intermediate_config = strategy.get('intermediate_points', {})
+    area_ratios = intermediate_config.get('area_ratios', [0.33, 0.67])
+
+    # 支流选择参数
+    tributary_config = strategy.get('tributary_selection', {})
+    enable_tributary = tributary_config.get('enabled', True)
+    min_acc_ratio = tributary_config.get('min_accumulation_ratio', 0.05)
+    max_tribs_per_segment = tributary_config.get('max_tributaries_per_segment', 1)
+
+    # 安全限制
+    tracing_config = strategy.get('main_stream_tracing', {})
+    max_stream_iterations = tracing_config.get('max_iterations', 10000)
+
+    watershed_config = strategy.get('watershed_delineation', {})
+    max_watershed_iterations = watershed_config.get('max_iterations', 100000)
+
     print("\n" + "="*80)
     print(f"第2步：汇水点生成（{main_stream_count}个干流 + {main_stream_count}个支流，深度编码）")
     print("="*80)
+    print(f"  配置：面积分割比例={area_ratios}, 支流累积比例阈值={min_acc_ratio}")
 
     step_dir = output_dir / "step_02_pour_points"
     step_dir.mkdir(parents=True, exist_ok=True)
@@ -360,7 +414,7 @@ def step02_pour_point_generation(
         visited.add(next_cell)
         current = next_cell
 
-        if len(main_stream_cells) > 10000:  # 防止无限循环
+        if len(main_stream_cells) > max_stream_iterations:  # 防止无限循环
             break
 
     print(f"  ✓ 追溯主干流: {len(main_stream_cells)}个格网")
@@ -382,11 +436,10 @@ def step02_pour_point_generation(
         'type': 'main_stream',
     })
 
-    # 上游点：分别控制约1/3和2/3的流域面积
+    # 上游点：根据配置的面积分割比例选择点
     # 这里的"控制面积"是指从该点向上的流域面积
     target_areas = [
-        total_basin_area_km2 * 1.0 / 3.0,  # 约1/3流域
-        total_basin_area_km2 * 2.0 / 3.0,  # 约2/3流域
+        total_basin_area_km2 * ratio for ratio in area_ratios
     ]
 
     for idx, target_area in enumerate(target_areas):
@@ -456,69 +509,78 @@ def step02_pour_point_generation(
                     visited_ws.add((ur, uc))
                     queue.append((ur, uc))
 
-            if len(watershed) > 100000:  # 防止无限循环
+            if len(watershed) > max_watershed_iterations:  # 防止无限循环
                 break
 
         return watershed
 
     tributary_points = []
 
-    # 正向处理（从下游到上游），main_stream_points已按accumulation从大到小排序
-    # 每个干流点的分区 = 本点的上游 - 上游干流点的上游
-    for main_idx in range(len(main_stream_points)):
-        main_point = main_stream_points[main_idx]
-        main_id = main_point['id']
-        main_r, main_c = main_point['row'], main_point['col']
+    if enable_tributary:
+        # 正向处理（从上游到下游）
+        # main_stream_points已按从上游到下游排序：[0]=最上游, [-1]=最下游/出口
+        # 每个干流点的分区 = 本点的流域 - 前一个（更上游）干流点的流域
+        for main_idx in range(len(main_stream_points)):
+            main_point = main_stream_points[main_idx]
+            main_id = main_point['id']
+            main_r, main_c = main_point['row'], main_point['col']
 
-        print(f"  ⚙ 为干流点{main_id}寻找最大支流...")
+            print(f"  ⚙ 为干流点{main_id}寻找最大支流...")
 
-        # 追溯该干流点的流域范围
-        watershed = delineate_watershed(main_r, main_c)
+            # 追溯该干流点的流域范围
+            watershed = delineate_watershed(main_r, main_c)
 
-        # 如果不是最上游的点，需要排除上游干流点的流域
-        if main_idx < len(main_stream_points) - 1:
-            upstream_point = main_stream_points[main_idx + 1]
-            upstream_watershed = delineate_watershed(upstream_point['row'], upstream_point['col'])
-            watershed = watershed - upstream_watershed
+            # 如果不是最上游的点，需要排除前一个（更上游）干流点的流域
+            # 这样得到的是这个干流点所控制的增量流域
+            if main_idx > 0:  # 修复：从 < len-1 改为 > 0
+                upstream_point = main_stream_points[main_idx - 1]  # 修复：从 +1 改为 -1
+                upstream_watershed = delineate_watershed(upstream_point['row'], upstream_point['col'])
+                watershed = watershed - upstream_watershed
+                print(f"    - 排除上游Zone {upstream_point['id']}的流域")
 
-        print(f"    - 本分区流域范围: {len(watershed)}个格网")
+            print(f"    - Zone {main_id}增量流域范围: {len(watershed)}个格网")
 
-        # 在流域内寻找候选支流点（不在主干流上的高流量点）
-        threshold = main_point['accumulation'] * 0.05  # 至少是干流点流量的5%
-        candidate_tribs = []
+            # 在流域内寻找候选支流点（不在主干流上的高流量点）
+            threshold = main_point['accumulation'] * min_acc_ratio  # 使用配置的累积比例阈值
+            candidate_tribs = []
 
-        for wr, wc in watershed:
-            acc = flowacc[wr, wc]
-            # 必须满足：在流域内、不在主干流上、流量足够大
-            if (wr, wc) not in main_stream_set and acc > threshold:
-                candidate_tribs.append((wr, wc, acc))
+            for wr, wc in watershed:
+                acc = flowacc[wr, wc]
+                # 必须满足：在流域内、不在主干流上、流量足够大
+                if (wr, wc) not in main_stream_set and acc > threshold:
+                    candidate_tribs.append((wr, wc, acc))
 
-        # 按流量排序，选择最大的
-        if candidate_tribs:
-            candidate_tribs.sort(key=lambda x: x[2], reverse=True)
-            tr, tc, tacc = candidate_tribs[0]
+            # 按流量排序，选择最大的（限制数量）
+            if candidate_tribs:
+                candidate_tribs.sort(key=lambda x: x[2], reverse=True)
+                # 选择最大的N个支流（根据配置）
+                selected_tribs = candidate_tribs[:max_tribs_per_segment]
 
-            x, y = transform * (tc, tr)
-            trib_area = tacc * cell_area_km2
+                for trib_idx, (tr, tc, tacc) in enumerate(selected_tribs):
+                    x, y = transform * (tc, tr)
+                    trib_area = tacc * cell_area_km2
 
-            # 支流ID：使用主流ID加"t"后缀（例如：主流1的支流为"1t"）
-            trib_id = f"{main_id}t"
+                    # 支流ID：使用主流ID加"t"后缀（如果多个支流，加数字后缀）
+                    if len(selected_tribs) == 1:
+                        trib_id = f"{main_id}t"
+                    else:
+                        trib_id = f"{main_id}t{trib_idx + 1}"
 
-            tributary_points.append({
-                'id': trib_id,
-                'row': int(tr),
-                'col': int(tc),
-                'x': float(x),
-                'y': float(y),
-                'accumulation': float(tacc),
-                'controlled_area_km2': float(trib_area),
-                'type': 'tributary',
-                'main_stream_id': main_id,
-            })
+                    tributary_points.append({
+                        'id': trib_id,
+                        'row': int(tr),
+                        'col': int(tc),
+                        'x': float(x),
+                        'y': float(y),
+                        'accumulation': float(tacc),
+                        'controlled_area_km2': float(trib_area),
+                        'type': 'tributary',
+                        'main_stream_id': main_id,
+                    })
 
-            print(f"    - 选择支流{trib_id}: 控制面积={trib_area:.2f} km²")
-        else:
-            print(f"    - 未找到合适的支流")
+                    print(f"    - 选择支流{trib_id}: 累积={tacc:.0f}, 控制面积={trib_area:.2f} km²")
+            else:
+                print(f"    - 未找到合适的支流")
 
     # 6. 合并所有汇水点
     all_points = main_stream_points + tributary_points
@@ -639,6 +701,7 @@ def step03_parameter_zones_and_subbasins(
     flow_acc_path: Path,
     pour_points_path: Path,
     output_dir: Path,
+    config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, object]:
     """
     第3步：参数分区和子流域划分
@@ -657,9 +720,41 @@ def step03_parameter_zones_and_subbasins(
     - 参数区统计表
     - 可视化地图
     """
+    # 加载配置参数
+    if config is None:
+        config = {}
+
+    step_config = config.get('step03_parameter_zones', {})
+
+    # 流域划分配置
+    delineation_config = step_config.get('delineation', {})
+    accumulation_threshold = delineation_config.get('accumulation_threshold', 15000.0)
+
+    # 参数分区配置
+    partition_config = step_config.get('partition', {})
+    target_subzone_area = partition_config.get('target_subzone_area_km2', 10.0)
+    min_subzone_area = partition_config.get('min_subzone_area_km2', 2.0)
+    max_subzones = partition_config.get('max_subzones_per_zone', None)
+    area_tolerance = partition_config.get('area_balance_tolerance', 0.5)
+    subzone_acc_threshold = partition_config.get('subzone_accumulation_threshold', None)
+
+    # 模型结构配置
+    model_config = step_config.get('model_structure', {})
+    default_runoff = model_config.get('default_runoff_model', 'hbv')
+    default_routing = model_config.get('default_routing_model', 'muskingum')
+
+    # 编码配置
+    encoding_config = step_config.get('encoding', {})
+    use_depth_encoding = encoding_config.get('use_depth_based_encoding', True)
+    subbasin_encoding = encoding_config.get('subbasin_encoding', {})
+    encoding_multiplier = subbasin_encoding.get('multiplier', 100)
+    encoding_start = subbasin_encoding.get('start_index', 1)
+
     print("\n" + "="*80)
     print("第3步：参数分区和子流域划分")
     print("="*80)
+    print(f"  配置：累积阈值={accumulation_threshold}, 目标子区面积={target_subzone_area} km², "
+          f"产流模型={default_runoff}, 汇流模型={default_routing}")
 
     step_dir = output_dir / "step_03_zones_subbasins"
     step_dir.mkdir(parents=True, exist_ok=True)
@@ -679,23 +774,23 @@ def step03_parameter_zones_and_subbasins(
         pour_points_path=pour_points_path,
         flow_direction_path=flow_dir_path,
         flow_accumulation_path=flow_acc_path,
-        accumulation_threshold=15000.0,
+        accumulation_threshold=accumulation_threshold,
         intermediate_directory=intermediate_dir,
         parameter_directory=parameter_dir,
     )
 
     partition_cfg = ParameterPartitionConfig(
         pour_points_path=pour_points_path,
-        target_subzone_area_km2=10.0,  # Smaller target for more subzones
-        min_subzone_area_km2=2.0,       # Lower minimum
-        max_subzones_per_zone=None,     # No limit on subzones
-        area_balance_tolerance=0.5,      # More flexible
-        subzone_accumulation_threshold=None,  # Use area-based subdivision
+        target_subzone_area_km2=target_subzone_area,
+        min_subzone_area_km2=min_subzone_area,
+        max_subzones_per_zone=max_subzones,
+        area_balance_tolerance=area_tolerance,
+        subzone_accumulation_threshold=subzone_acc_threshold,
     )
 
     model_structure = ModelStructureConfig(
-        default_runoff_model="hbv",
-        default_routing_model="muskingum",
+        default_runoff_model=default_runoff,
+        default_routing_model=default_routing,
     )
 
     outputs_cfg = OutputArtifactsConfig()
@@ -843,10 +938,10 @@ def step03_parameter_zones_and_subbasins(
             # 按原ID排序保持一致性
             subzones.sort(key=lambda sz: sz.subzone_id)
 
-            # 生成新的子流域ID：new_zone_id * 100 + index
+            # 生成新的子流域ID：new_zone_id * multiplier + index
             zone_code = int(new_zone_id) if new_zone_id.isdigit() else 1
-            for idx, subzone in enumerate(subzones, start=1):
-                new_subzone_id = str(zone_code * 100 + idx)
+            for idx, subzone in enumerate(subzones, start=encoding_start):
+                new_subzone_id = str(zone_code * encoding_multiplier + idx)
                 id_mapping[subzone.subzone_id] = new_subzone_id
 
         # 更新subzone_summaries中的IDs
@@ -2087,14 +2182,27 @@ def main():
     print("=" * 80)
     print()
 
+    # 加载配置文件
+    config_path = Path("config_upper_truckee_11steps.yml")
+    if config_path.exists():
+        config = load_config(config_path)
+    else:
+        print(f"⚠ 配置文件不存在: {config_path}，使用默认配置")
+        config = {}
+
+    # 从配置文件读取路径（如果存在）
+    global_config = config.get('global', {})
+    input_config = global_config.get('input', {})
+    output_config = global_config.get('output', {})
+
     # 输入数据路径
     dem_dir = Path("data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00")
-    dem_path = dem_dir / "elevation.tif"
-    flow_dir_path = dem_dir / "flowdir.tif"
-    flow_acc_path = dem_dir / "flowaccum.tif"
+    dem_path = Path(input_config.get('dem_path', dem_dir / "elevation.tif"))
+    flow_dir_path = Path(input_config.get('flow_direction_path', dem_dir / "flowdir.tif"))
+    flow_acc_path = Path(input_config.get('flow_accumulation_path', dem_dir / "flowaccum.tif"))
 
     # 输出目录
-    output_root = Path("results/upper_truckee_complete_11steps")
+    output_root = Path(output_config.get('root_dir', "results/upper_truckee_complete_11steps"))
     output_root.mkdir(parents=True, exist_ok=True)
 
     # 检查输入
@@ -2116,17 +2224,18 @@ def main():
         )
         all_results['step01'] = result1
 
-        # 第2步：汇水点生成（6个：3个干流 + 3个支流，Pfafstetter编码）
+        # 第2步：汇水点生成（基于配置的参数）
         result2 = step02_pour_point_generation(
             flow_dir_path, flow_acc_path, output_root,
-            main_stream_count=3
+            config=config
         )
         all_results['step02'] = result2
         pour_points_path = result2['pour_points_path']
 
         # 第3步：参数分区和子流域划分
         result3 = step03_parameter_zones_and_subbasins(
-            dem_path, flow_dir_path, flow_acc_path, pour_points_path, output_root
+            dem_path, flow_dir_path, flow_acc_path, pour_points_path, output_root,
+            config=config
         )
         all_results['step03'] = result3
         partition_outputs = result3['partition_outputs']

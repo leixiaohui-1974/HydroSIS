@@ -1,0 +1,381 @@
+# HydroSIS 11步水文建模工作流配置文件
+# Upper Truckee River 案例配置
+
+# ============================================================================
+# 全局配置
+# ============================================================================
+global:
+  # 项目名称
+  project_name: "upper_truckee_complete_11steps"
+
+  # 输入数据路径
+  input:
+    dem_path: "data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif"
+    flow_direction_path: "data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/flowdir.tif"
+    flow_accumulation_path: "data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/flowaccum.tif"
+
+  # 输出根目录
+  output:
+    root_dir: "results/upper_truckee_complete_11steps"
+    intermediate_dir: "results/upper_truckee_complete_11steps/intermediate"
+    parameter_dir: "results/upper_truckee_complete_11steps/parameters"
+
+  # 可视化全局设置
+  visualization:
+    dpi: 200  # 图像分辨率
+    figure_width: 10  # 图像宽度（英寸）
+    figure_height: 8  # 图像高度（英寸）
+
+# ============================================================================
+# 第1步：DEM处理和地形分析
+# ============================================================================
+step01_dem_processing:
+  enabled: true
+
+  # 可视化设置
+  visualization:
+    # 高程图设置
+    elevation_map:
+      colormap: "terrain"
+      percentiles: [2, 98]  # 用于颜色范围的百分位数
+
+    # 流向图设置
+    flow_direction_map:
+      colormap: "tab10"
+      num_directions: 8  # D8流向
+
+    # 流量累计图设置
+    flow_accumulation_map:
+      colormap: "Blues"
+      use_log_scale: true  # 使用对数尺度
+
+    # 坡度图设置
+    slope_map:
+      colormap: "YlOrRd"
+      min_slope: 0
+      max_slope: 45  # 最大坡度（度）
+
+  # 输出设置
+  outputs:
+    - "1.1_dem_elevation.png"
+    - "1.2_flow_direction.png"
+    - "1.3_flow_accumulation.png"
+    - "1.4_slope_map.png"
+    - "1.5_terrain_statistics.csv"
+
+# ============================================================================
+# 第2步：汇水点生成
+# ============================================================================
+step02_pour_points:
+  enabled: true
+
+  # 汇水点生成策略
+  strategy:
+    # 主流汇水点数量
+    main_stream_count: 3
+
+    # 出口点选择
+    outlet_selection:
+      method: "max_accumulation"  # 使用最大累积数点作为出口
+
+    # 中间主流点选择方法
+    intermediate_points:
+      method: "equal_area_division"  # equal_area_division, equal_distance, manual
+      # 面积分割比例（如果使用equal_area_division）
+      # 例如：[0.33, 0.67] 表示在1/3和2/3流域面积处选择点
+      area_ratios: [0.33, 0.67]
+      # 距离分割比例（如果使用equal_distance）
+      # distance_ratios: [0.33, 0.67]
+
+    # 支流汇水点选择
+    tributary_selection:
+      # 是否为每个主流段选择支流点
+      enabled: true
+      # 支流最小累积数阈值（相对于主流点的比例）
+      min_accumulation_ratio: 0.05  # 支流必须至少是主流点流量的5%
+      # 每个主流段最多选择多少个支流点
+      max_tributaries_per_segment: 1
+
+    # 主流追溯设置
+    main_stream_tracing:
+      max_iterations: 10000  # 最大迭代次数（防止无限循环）
+
+    # 流域划分设置
+    watershed_delineation:
+      max_iterations: 100000  # 最大迭代次数（防止无限循环）
+
+  # 编码方案
+  encoding:
+    scheme: "depth_based"  # depth_based, pfafstetter, sequential
+    # 深度编码：上游（高深度）-> Zone 1，下游（低深度）-> Zone n
+    # 子流域编码：Zone ID × 100 + index
+    # 例如：Zone 1 -> 101, 102, 103, ...
+    main_stream_id_format: "{zone_id}"  # zone_id从1开始
+    tributary_id_format: "{main_stream_id}t"  # 例如："1t", "2t"
+    subbasin_id_format: "{zone_id}0{index}"  # 例如："101", "102"
+
+  # 可视化设置
+  visualization:
+    background_colormap: "Blues"
+    main_stream_color: "red"
+    main_stream_linewidth: 2
+    tributary_color: "green"
+    point_size_main: 12
+    point_size_tributary: 10
+
+  # 输出设置
+  outputs:
+    - "2.1_pour_points.geojson"
+    - "2.2_pour_points_table.csv"
+    - "2.3_pour_points_map.png"
+
+# ============================================================================
+# 第3步：参数分区和子流域划分
+# ============================================================================
+step03_parameter_zones:
+  enabled: true
+
+  # 流域划分配置
+  delineation:
+    # 河道网络提取的累积数阈值
+    accumulation_threshold: 15000.0
+
+    # 是否使用预计算的子流域
+    use_precomputed_subbasins: true
+
+  # 参数分区配置
+  partition:
+    # 目标子区面积（km²）
+    target_subzone_area_km2: 10.0
+
+    # 最小子区面积（km²）
+    min_subzone_area_km2: 2.0
+
+    # 每个参数区的最大子区数量（null表示无限制）
+    max_subzones_per_zone: null
+
+    # 面积平衡容差
+    area_balance_tolerance: 0.5
+
+    # 子区累积数阈值（null表示使用基于面积的细分）
+    subzone_accumulation_threshold: null
+
+  # 模型结构配置
+  model_structure:
+    # 默认产流模型
+    default_runoff_model: "hbv"  # hbv, scs_cn, etc.
+
+    # 默认汇流模型
+    default_routing_model: "muskingum"  # muskingum, kinematic_wave, etc.
+
+  # 编码配置
+  encoding:
+    # 是否使用基于深度的自动编号
+    use_depth_based_encoding: true
+
+    # 子流域编码格式：zone_id × 100 + index
+    subbasin_encoding:
+      multiplier: 100  # Zone 1 -> 100-199, Zone 2 -> 200-299
+      start_index: 1
+
+  # 输出设置
+  outputs:
+    geojson:
+      - "parameter_subbasins.geojson"
+      - "parameter_zones.geojson"
+      - "parameter_channels.geojson"
+    csv:
+      - "parameter_subbasins.csv"
+      - "parameter_zones.csv"
+      - "parameter_channels.csv"
+    visualization:
+      - "parameter_zones_map.png"
+
+# ============================================================================
+# 第4步：河道断面提取
+# ============================================================================
+step04_cross_sections:
+  enabled: true
+
+  # 断面提取配置
+  extraction:
+    # 断面间距（米）
+    spacing_meters: 500.0
+
+    # 断面宽度（米）
+    cross_section_width: 200.0
+
+    # 断面采样点数
+    num_sample_points: 50
+
+  # 输出设置
+  outputs:
+    directory: "step_04_cross_sections"
+    format: "csv"  # csv, geojson, both
+
+# ============================================================================
+# 第5步：雨量站分布
+# ============================================================================
+step05_rain_gauges:
+  enabled: true
+
+  # 雨量站生成配置
+  generation:
+    # 雨量站数量
+    num_stations: 5
+
+    # 分布方法
+    method: "stratified"  # random, stratified, uniform, manual
+
+    # 随机种子（用于可重复性）
+    random_seed: 42
+
+  # 输出设置
+  outputs:
+    - "5.1_rain_gauges.geojson"
+    - "5.2_rain_gauges_map.png"
+
+# ============================================================================
+# 第6步：雨量序列生成
+# ============================================================================
+step06_precipitation:
+  enabled: true
+
+  # 降雨配置
+  precipitation:
+    # 时间序列设置
+    start_date: "2020-01-01"
+    end_date: "2020-12-31"
+    time_step_hours: 1
+
+    # 降雨类型
+    type: "synthetic"  # synthetic, observed, design_storm
+
+    # 合成降雨参数
+    synthetic:
+      mean_annual_precipitation_mm: 800.0
+      num_storm_events: 20
+      storm_duration_hours: 12
+      storm_intensity_mm_per_hour: 5.0
+
+  # 输出设置
+  outputs:
+    - "6.1_precipitation_timeseries.csv"
+    - "6.2_precipitation_plot.png"
+
+# ============================================================================
+# 第7步：泰森多边形
+# ============================================================================
+step07_thiessen:
+  enabled: true
+
+  # 泰森多边形配置
+  thiessen:
+    # 使用的雨量站数据
+    use_rain_gauges_from_step5: true
+
+  # 输出设置
+  outputs:
+    - "7.1_thiessen_polygons.geojson"
+    - "7.2_thiessen_map.png"
+
+# ============================================================================
+# 第8步：面雨量计算
+# ============================================================================
+step08_areal_precipitation:
+  enabled: true
+
+  # 面雨量计算配置
+  areal_precipitation:
+    # 插值方法
+    method: "thiessen"  # thiessen, idw, kriging
+
+    # IDW参数（如果使用IDW）
+    idw_power: 2.0
+
+  # 输出设置
+  outputs:
+    - "8.1_subbasin_precipitation.csv"
+    - "8.2_precipitation_distribution_map.png"
+
+# ============================================================================
+# 第9步：水文模拟（产流）
+# ============================================================================
+step09_runoff_simulation:
+  enabled: true
+
+  # 产流模型配置
+  runoff_model:
+    # 模型类型（从step03继承，也可在此覆盖）
+    model_type: "hbv"
+
+    # HBV模型参数
+    hbv_parameters:
+      FC: 250.0      # 最大土壤含水量 (mm)
+      BETA: 2.0      # 形状系数
+      LP: 0.7        # 蒸散限制因子
+      K0: 0.05       # 快速响应系数
+      K1: 0.01       # 慢速响应系数
+      K2: 0.001      # 基流系数
+      PERC: 2.0      # 渗透率 (mm/day)
+
+  # 时间步长
+  time_step_hours: 1
+
+  # 输出设置
+  outputs:
+    - "9.1_runoff_timeseries.csv"
+    - "9.2_runoff_hydrograph.png"
+
+# ============================================================================
+# 第10步：水动力模拟（汇流）
+# ============================================================================
+step10_routing_simulation:
+  enabled: true
+
+  # 汇流模型配置
+  routing_model:
+    # 模型类型（从step03继承，也可在此覆盖）
+    model_type: "muskingum"
+
+    # Muskingum模型参数
+    muskingum_parameters:
+      K: 1.0         # 蓄量常数 (hours)
+      X: 0.2         # 权重系数
+
+  # 时间步长
+  time_step_hours: 1
+
+  # 输出设置
+  outputs:
+    - "10.1_streamflow_timeseries.csv"
+    - "10.2_streamflow_hydrograph.png"
+
+# ============================================================================
+# 第11步：结果报告
+# ============================================================================
+step11_report:
+  enabled: true
+
+  # 报告配置
+  report:
+    # 报告标题
+    title: "Upper Truckee River 水文模拟报告"
+
+    # 报告语言
+    language: "zh-CN"  # zh-CN, en-US
+
+    # 包含的章节
+    sections:
+      - "executive_summary"
+      - "watershed_characteristics"
+      - "model_setup"
+      - "precipitation_analysis"
+      - "runoff_results"
+      - "routing_results"
+      - "conclusions"
+
+  # 输出设置
+  outputs:
+    - "11.1_final_report.pdf"
+    - "11.2_results_summary.csv"
