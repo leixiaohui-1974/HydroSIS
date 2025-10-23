@@ -14,7 +14,7 @@
 
 | 步骤 | 内容 | 图表数 | 数据表数 |
 |------|------|--------|----------|
-| 步骤1 | DEM和地形分析 | 0 | 0 |
+| 步骤1 | DEM和地形分析 | 7 | 2 |
 | 步骤2 | 子流域划分 | 2 | 1 |
 | 步骤3 | 降雨数据生成 | 2 | 1 |
 | 步骤4 | 产流模型配置 | 1 | 3 |
@@ -24,7 +24,7 @@
 | 步骤8 | 汇流结果分析 | 1 | 1 |
 | 步骤9 | 模型评估验证 | 2 | 1 |
 | 步骤10 | 综合结果报告 | 1 | 0 |
-| **总计** | **10个步骤** | **11张图表** | **9个数据表** |
+| **总计** | **10个步骤** | **18张图表** | **11个数据表** |
 
 ---
 
@@ -32,7 +32,25 @@
 
 ### 步骤1: DEM和地形分析
 **目录**: `step_01/`
-- *注: 需要安装 rasterio 库才能生成DEM可视化*
+
+**图表**:
+- `1.1_dem_elevation.png` - DEM高程图
+- `1.2_dem_histogram.png` - DEM高程分布直方图
+- `1.4_flow_direction.png` - 流向图 (D8算法)
+- `1.5_flow_accumulation.png` - 流量累积图 (对数刻度)
+- `1.6_stream_network.png` - 河网提取图
+- `1.7_slope.png` - 坡度图
+- `1.8_slope_histogram.png` - 坡度分布直方图
+
+**数据表**:
+- `1.3_dem_statistics.csv` - DEM统计表
+- `1.9_terrain_statistics.csv` - 地形综合统计表（高程+坡度）
+
+**关键信息**:
+- 高程范围: 1800-3100m (有效数据)
+- 平均坡度: 9.47°
+- 分辨率: 112.6m
+- 数据规模: 884×590像元
 
 ### 步骤2: 子流域划分
 **目录**: `step_02/`
@@ -174,6 +192,15 @@ upper_truckee_detailed/
 │   ├── W180.csv
 │   └── W190.csv
 ├── step_01/                     # DEM和地形分析
+│   ├── 1.1_dem_elevation.png
+│   ├── 1.2_dem_histogram.png
+│   ├── 1.3_dem_statistics.csv
+│   ├── 1.4_flow_direction.png
+│   ├── 1.5_flow_accumulation.png
+│   ├── 1.6_stream_network.png
+│   ├── 1.7_slope.png
+│   ├── 1.8_slope_histogram.png
+│   └── 1.9_terrain_statistics.csv
 ├── step_02/                     # 子流域划分
 │   ├── 2.1_subbasin_area_pie.png
 │   ├── 2.2_subbasin_topology.png

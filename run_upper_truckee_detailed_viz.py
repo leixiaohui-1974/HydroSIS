@@ -133,6 +133,118 @@ def main():
         stats_df.to_csv(step1_dir / "1.3_dem_statistics.csv", index=False, encoding='utf-8-sig')
         print("  ✓ DEM统计表已保存")
 
+    # 图1.3: 流向图 (Flow Direction)
+    flowdir_path = dem_dir / "flowdir.tif"
+    if has_rasterio and flowdir_path.exists():
+        with rasterio.open(flowdir_path) as src:
+            flowdir_data = src.read(1)
+
+            fig, ax = plt.subplots(figsize=(12, 10))
+            # 使用离散颜色映射显示8个方向
+            cmap = plt.cm.get_cmap('tab10', 8)
+            im = ax.imshow(flowdir_data, cmap=cmap, aspect='auto', vmin=0, vmax=7)
+            ax.set_title('Upper Truckee River - Flow Direction (D8)', fontsize=14, fontweight='bold', pad=20)
+            ax.set_xlabel('Column', fontsize=12)
+            ax.set_ylabel('Row', fontsize=12)
+            cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04, ticks=range(8))
+            cbar.set_label('Flow Direction', fontsize=12)
+            cbar.ax.set_yticklabels(['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'])
+            plt.tight_layout()
+            plt.savefig(step1_dir / "1.4_flow_direction.png", dpi=150, bbox_inches='tight')
+            plt.close()
+            print("  ✓ 流向图已保存")
+
+    # 图1.4: 流量累积图 (Flow Accumulation)
+    flowaccum_path = dem_dir / "flowaccum.tif"
+    if has_rasterio and flowaccum_path.exists():
+        with rasterio.open(flowaccum_path) as src:
+            flowaccum_data = src.read(1)
+
+            fig, ax = plt.subplots(figsize=(12, 10))
+            # 使用对数刻度显示流量累积
+            flowaccum_log = np.log10(flowaccum_data + 1)
+            im = ax.imshow(flowaccum_log, cmap='Blues', aspect='auto')
+            ax.set_title('Upper Truckee River - Flow Accumulation (log scale)',
+                        fontsize=14, fontweight='bold', pad=20)
+            ax.set_xlabel('Column', fontsize=12)
+            ax.set_ylabel('Row', fontsize=12)
+            cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            cbar.set_label('log10(Flow Accumulation + 1)', fontsize=12)
+            plt.tight_layout()
+            plt.savefig(step1_dir / "1.5_flow_accumulation.png", dpi=150, bbox_inches='tight')
+            plt.close()
+            print("  ✓ 流量累积图已保存")
+
+            # 图1.5: 河网提取 (Stream Network)
+            fig, ax = plt.subplots(figsize=(12, 10))
+            # 叠加DEM和河网
+            ax.imshow(dem_data, cmap='terrain', aspect='auto', alpha=0.6)
+            # 提取河网（流量累积阈值）
+            threshold = np.percentile(flowaccum_data[flowaccum_data > 0], 95)
+            stream_network = flowaccum_data > threshold
+            ax.imshow(np.ma.masked_where(~stream_network, flowaccum_data),
+                     cmap='Blues', aspect='auto', alpha=0.9)
+            ax.set_title(f'Upper Truckee River - Stream Network (threshold={threshold:.0f} cells)',
+                        fontsize=14, fontweight='bold', pad=20)
+            ax.set_xlabel('Column', fontsize=12)
+            ax.set_ylabel('Row', fontsize=12)
+            plt.tight_layout()
+            plt.savefig(step1_dir / "1.6_stream_network.png", dpi=150, bbox_inches='tight')
+            plt.close()
+            print("  ✓ 河网提取图已保存")
+
+    # 图1.6: 坡度分析 (Slope)
+    if has_rasterio and dem_path.exists():
+        with rasterio.open(dem_path) as src:
+            dem_data = src.read(1)
+            res = abs(dem_transform[0])  # 分辨率
+
+            # 计算坡度（使用numpy gradient）
+            dy, dx = np.gradient(dem_data, res, res)
+            slope = np.arctan(np.sqrt(dx**2 + dy**2)) * 180 / np.pi  # 转换为度
+
+            fig, ax = plt.subplots(figsize=(12, 10))
+            im = ax.imshow(slope, cmap='YlOrRd', aspect='auto', vmin=0, vmax=45)
+            ax.set_title('Upper Truckee River - Slope', fontsize=14, fontweight='bold', pad=20)
+            ax.set_xlabel('Column', fontsize=12)
+            ax.set_ylabel('Row', fontsize=12)
+            cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            cbar.set_label('Slope (degrees)', fontsize=12)
+            plt.tight_layout()
+            plt.savefig(step1_dir / "1.7_slope.png", dpi=150, bbox_inches='tight')
+            plt.close()
+            print("  ✓ 坡度图已保存")
+
+            # 坡度统计
+            slope_stats = {
+                "最小坡度 (度)": float(np.nanmin(slope)),
+                "最大坡度 (度)": float(np.nanmax(slope)),
+                "平均坡度 (度)": float(np.nanmean(slope)),
+                "标准差 (度)": float(np.nanstd(slope)),
+            }
+
+            # 图1.7: 坡度直方图
+            fig, ax = plt.subplots(figsize=(10, 6))
+            valid_slope = slope[~np.isnan(slope)]
+            ax.hist(valid_slope, bins=50, color='orange', alpha=0.7, edgecolor='black')
+            ax.axvline(slope_stats["平均坡度 (度)"], color='red', linestyle='--',
+                      linewidth=2, label=f'Mean: {slope_stats["平均坡度 (度)"]:.2f}°')
+            ax.set_xlabel('Slope (degrees)', fontsize=12)
+            ax.set_ylabel('Cell Count', fontsize=12)
+            ax.set_title('Upper Truckee River - Slope Distribution', fontsize=14, fontweight='bold')
+            ax.legend(fontsize=11)
+            ax.grid(True, alpha=0.3)
+            plt.tight_layout()
+            plt.savefig(step1_dir / "1.8_slope_histogram.png", dpi=150, bbox_inches='tight')
+            plt.close()
+            print("  ✓ 坡度直方图已保存")
+
+            # 更新统计表
+            combined_stats = {**dem_stats, **slope_stats}
+            stats_df = pd.DataFrame(list(combined_stats.items()), columns=['Property', 'Value'])
+            stats_df.to_csv(step1_dir / "1.9_terrain_statistics.csv", index=False, encoding='utf-8-sig')
+            print("  ✓ 地形统计表已保存")
+
     # ========================================================================
     # 步骤2: 子流域划分可视化
     # ========================================================================
