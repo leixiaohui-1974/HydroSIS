@@ -370,4 +370,145 @@ def _plot_metric_bars_svg(
     return _write_svg(output_path, "".join(parts))
 
 
-__all__ = ["plot_hydrograph", "plot_metric_bars"]
+def plot_scatter(
+    output_path: Path,
+    observed: Sequence[float],
+    simulated: Sequence[float],
+    title: str | None = None,
+    xlabel: str = "Observed",
+    ylabel: str = "Simulated",
+    equal_axis: bool = True,
+) -> Path:
+    """
+    Plot observed vs simulated scatter plot with 1:1 line.
+
+    Parameters
+    ----------
+    output_path : Path
+        Path to save the plot
+    observed : Sequence[float]
+        Observed values
+    simulated : Sequence[float]
+        Simulated values
+    title : str or None, optional
+        Plot title
+    xlabel : str, optional
+        X-axis label. Default is "Observed".
+    ylabel : str, optional
+        Y-axis label. Default is "Simulated".
+    equal_axis : bool, optional
+        If True, use equal aspect ratio for axes. Default is True.
+
+    Returns
+    -------
+    Path
+        Path to the saved plot file
+    """
+    output_path = Path(output_path)
+
+    if len(observed) != len(simulated):
+        raise ValueError("Observed and simulated must have the same length")
+
+    plt = _get_matplotlib()
+    if plt is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        fig, ax = plt.subplots(figsize=(8, 8))
+
+        # Scatter plot
+        ax.scatter(observed, simulated, alpha=0.5, s=20, color="#1f77b4")
+
+        # 1:1 line
+        min_val = min(min(observed), min(simulated))
+        max_val = max(max(observed), max(simulated))
+        ax.plot([min_val, max_val], [min_val, max_val], 'k--', lw=2, label='1:1 Line')
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        if title:
+            ax.set_title(title)
+        ax.legend(loc='upper left')
+        ax.grid(True, linestyle=":", linewidth=0.5, alpha=0.3)
+
+        if equal_axis:
+            ax.set_aspect('equal', adjustable='box')
+
+        fig.tight_layout()
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
+        return output_path
+
+    # Fallback to simple visualization without matplotlib
+    return output_path
+
+
+def plot_convergence(
+    output_path: Path,
+    convergence_history: Sequence[float],
+    title: str | None = None,
+    xlabel: str = "Iteration",
+    ylabel: str = "Objective Value",
+    maximize: bool = True,
+) -> Path:
+    """
+    Plot calibration convergence history.
+
+    Parameters
+    ----------
+    output_path : Path
+        Path to save the plot
+    convergence_history : Sequence[float]
+        History of objective function values at each iteration
+    title : str or None, optional
+        Plot title
+    xlabel : str, optional
+        X-axis label. Default is "Iteration".
+    ylabel : str, optional
+        Y-axis label. Default is "Objective Value".
+    maximize : bool, optional
+        If True, indicates objective was maximized (for annotation).
+        Default is True.
+
+    Returns
+    -------
+    Path
+        Path to the saved plot file
+    """
+    output_path = Path(output_path)
+
+    if not convergence_history:
+        raise ValueError("Convergence history cannot be empty")
+
+    plt = _get_matplotlib()
+    if plt is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        iterations = range(len(convergence_history))
+        ax.plot(iterations, convergence_history, 'b-', linewidth=2)
+
+        # Annotate best value
+        best_value = max(convergence_history) if maximize else min(convergence_history)
+        best_iter = convergence_history.index(best_value)
+        ax.plot(best_iter, best_value, 'ro', markersize=10, label=f'Best: {best_value:.4f}')
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        if title:
+            ax.set_title(title)
+        ax.legend(loc='best')
+        ax.grid(True, linestyle=":", linewidth=0.5, alpha=0.3)
+
+        fig.tight_layout()
+        fig.savefig(output_path, dpi=150)
+        plt.close(fig)
+        return output_path
+
+    return output_path
+
+
+__all__ = [
+    "plot_hydrograph",
+    "plot_metric_bars",
+    "plot_scatter",
+    "plot_convergence",
+]

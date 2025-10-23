@@ -9,6 +9,13 @@ from .metrics import (
     percent_bias,
     rmse,
 )
+from .water_balance import (
+    WaterBalanceResult,
+    calculate_water_balance,
+    compare_water_balance,
+    precip_mmh_to_m3s,
+    runoff_m3s_to_mm,
+)
 
 __all__ = [
     "ModelComparator",
@@ -20,4 +27,9 @@ __all__ = [
     "nash_sutcliffe_efficiency",
     "percent_bias",
     "rmse",
+    "WaterBalanceResult",
+    "calculate_water_balance",
+    "compare_water_balance",
+    "precip_mmh_to_m3s",
+    "runoff_m3s_to_mm",
 ]
