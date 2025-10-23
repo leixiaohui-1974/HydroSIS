@@ -1,0 +1,178 @@
+COULD NOT LOAD RichDEM ENGINE! NOTHING WILL WORK!
+SALib not available. Sobol and Morris methods will not work. Install with: pip install SALib
+================================================================================
+Zone 1 HBV参数自动率定
+================================================================================
+
+步骤 1: 加载Zone 1的数据
+--------------------------------------------------------------------------------
+✓ 加载观测径流: results/upper_truckee_complete_11steps/estimated_observations/zone_1_estimated_runoff.csv
+  时间范围: 2024-01-01 00:00:00 到 2024-01-05 23:00:00
+  数据点数: 120
+  流量范围: 21.34 - 288.09 m³/s
+  平均流量: 142.04 m³/s
+
+✓ 加载降雨数据: results/upper_truckee_complete_11steps/step_08_areal_rainfall/8.2_subbasin_areal_precipitation.csv
+  Zone 1子分区: 14个
+  降雨范围: 0.75 - 20.09 mm/h
+  平均降雨: 8.89 mm/h
+
+✓ 生成温度数据（简化）
+  温度范围: 4.1 - 18.0 °C
+
+✓ Zone 1流域面积: 140.00 km²
+
+步骤 2: 定义HBV模型和目标函数
+--------------------------------------------------------------------------------
+待率定参数: 6个
+  FC        : [ 50.000, 500.000]
+  BETA      : [  1.000,   6.000]
+  K0        : [  0.050,   0.500]
+  K1        : [  0.010,   0.300]
+  K2        : [  0.001,   0.100]
+  PERC      : [  0.000,  10.000]
+
+固定参数: 6个
+  LP        :   0.700
+  MAXBAS    :   3.000
+  TT        :   0.000
+  CFMAX     :   3.500
+  CFR       :   0.050
+  CWH       :   0.100
+
+测试HBV模型运行...
+  模型输出长度: 120
+  输出范围: 8.93 - 646.61 m³/s
+  初始NSE (默认参数): -6.4534
+
+步骤 3: 多算法参数率定
+--------------------------------------------------------------------------------
+
+运行SCE-UA率定...
+  这可能需要几分钟时间...
+  ✓ 完成!
+    最优NSE: 0.084819
+    迭代次数: 26
+    函数评估: 2456
+    计算时间: 0.75秒
+
+运行PSO率定...
+  这可能需要几分钟时间...
+  ✓ 完成!
+    最优NSE: 0.084819
+    迭代次数: 54
+    函数评估: 2200
+    计算时间: 0.55秒
+
+步骤 4: 率定结果对比
+--------------------------------------------------------------------------------
+
+算法                     NSE      时间(s)       评估次数
+--------------------------------------------------
+SCE-UA            0.084819       0.75       2456
+PSO               0.084819       0.55       2200
+
+✓ 最佳算法: SCE-UA (NSE=0.084819)
+
+最优参数:
+  FC        :    50.0000  (搜索空间的  0.0%)
+  BETA      :     4.0758  (搜索空间的 61.5%)
+  K0        :     0.0500  (搜索空间的  0.0%)
+  K1        :     0.2958  (搜索空间的 98.5%)
+  K2        :     0.0035  (搜索空间的  2.5%)
+  PERC      :    10.0000  (搜索空间的100.0%)
+
+步骤 5: 使用最优参数运行HBV模型
+--------------------------------------------------------------------------------
+
+率定后性能指标:
+  NSE       :   0.0848
+  RMSE      :  68.4637
+  MAE       :  57.6031
+  PBIAS     :  15.0318
+  KGE       :   0.4648
+  LOG_NSE   :  -3.6784
+
+步骤 6: 保存最优参数到YAML配置文件
+--------------------------------------------------------------------------------
+✓ 保存参数配置: results/upper_truckee_complete_11steps/calibration/zone1_calibrated_parameters.yaml
+✓ 保存率定结果: results/upper_truckee_complete_11steps/calibration/zone1_calibration_sce_ua.json
+
+步骤 7: 生成分析图表
+--------------------------------------------------------------------------------
+  1. 水文过程对比图...
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:91: UserWarning: Glyph 27169 (\N{CJK UNIFIED IDEOGRAPH-6A21}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:91: UserWarning: Glyph 22411 (\N{CJK UNIFIED IDEOGRAPH-578B}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:91: UserWarning: Glyph 29575 (\N{CJK UNIFIED IDEOGRAPH-7387}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:91: UserWarning: Glyph 23450 (\N{CJK UNIFIED IDEOGRAPH-5B9A}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:91: UserWarning: Glyph 32467 (\N{CJK UNIFIED IDEOGRAPH-7ED3}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:91: UserWarning: Glyph 26524 (\N{CJK UNIFIED IDEOGRAPH-679C}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:94: UserWarning: Glyph 27169 (\N{CJK UNIFIED IDEOGRAPH-6A21}) missing from font(s) DejaVu Sans.
+  plt.savefig(save_path, dpi=300, bbox_inches='tight')
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:94: UserWarning: Glyph 22411 (\N{CJK UNIFIED IDEOGRAPH-578B}) missing from font(s) DejaVu Sans.
+  plt.savefig(save_path, dpi=300, bbox_inches='tight')
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:94: UserWarning: Glyph 29575 (\N{CJK UNIFIED IDEOGRAPH-7387}) missing from font(s) DejaVu Sans.
+  plt.savefig(save_path, dpi=300, bbox_inches='tight')
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:94: UserWarning: Glyph 23450 (\N{CJK UNIFIED IDEOGRAPH-5B9A}) missing from font(s) DejaVu Sans.
+  plt.savefig(save_path, dpi=300, bbox_inches='tight')
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:94: UserWarning: Glyph 32467 (\N{CJK UNIFIED IDEOGRAPH-7ED3}) missing from font(s) DejaVu Sans.
+  plt.savefig(save_path, dpi=300, bbox_inches='tight')
+/home/user/HydroSIS/hydrosis/analysis/visualization.py:94: UserWarning: Glyph 26524 (\N{CJK UNIFIED IDEOGRAPH-679C}) missing from font(s) DejaVu Sans.
+  plt.savefig(save_path, dpi=300, bbox_inches='tight')
+  2. 散点图...
+  3. SCE-UA收敛历史...
+  3. PSO收敛历史...
+
+✓ 所有图表已保存到: results/upper_truckee_complete_11steps/calibration
+
+步骤 8: 保存模拟结果
+--------------------------------------------------------------------------------
+✓ 保存径流对比数据: zone1_calibrated_runoff.csv
+
+================================================================================
+Zone 1 HBV参数率定完成！
+================================================================================
+
+1. 率定数据:
+   - 时间步数: 120
+   - 平均流量: 142.04 m³/s
+   - 峰值流量: 288.09 m³/s
+
+2. 率定结果:
+   - 最佳算法: SCE-UA
+   - 最优NSE: 0.084819
+   - 计算时间: 0.75秒
+
+3. 性能指标:
+   - NSE: 0.084819
+   - RMSE: 68.4637 m³/s
+   - PBIAS: 15.03%
+   - KGE: 0.464806
+
+4. 最优参数:
+   - FC: 50.0000
+   - BETA: 4.0758
+   - K0: 0.0500
+   - K1: 0.2958
+   - K2: 0.0035
+   - PERC: 10.0000
+
+5. 输出文件:
+   - 参数配置: zone1_calibrated_parameters.yaml
+   - 率定结果: zone1_calibration_sce_ua.json
+   - 径流数据: zone1_calibrated_runoff.csv
+   - 分析图表: zone1_*.png
+
+6. 下一步操作:
+   使用率定后的参数重新运行完整工作流:
+   python rerun_step09_10.py --calibration results/upper_truckee_complete_11steps/calibration/zone1_calibrated_parameters.yaml
+
+================================================================================
+✓ Zone 1参数率定完成！参数已保存到YAML配置文件。
+================================================================================

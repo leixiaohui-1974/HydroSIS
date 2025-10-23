@@ -177,13 +177,10 @@ def run_hbv_model(FC, BETA, K0, K1, K2, PERC):
 
         subbasin = MockSubbasin(zone1_area_km2)
 
-        # 运行HBV模型（返回mm/h）
-        runoff_mm = hbv.simulate(subbasin, precipitation.tolist())
+        # 运行HBV模型（HBV.simulate已经返回m³/s，不需要额外转换！）
+        runoff_m3s = hbv.simulate(subbasin, precipitation.tolist())
 
-        # 转换为m³/s
-        runoff_m3s = np.array(runoff_mm) * zone1_area_km2 / 3.6
-
-        return runoff_m3s
+        return np.array(runoff_m3s)
 
     except Exception as e:
         print(f"模型运行错误: {e}")
@@ -228,21 +225,22 @@ print(f"  初始NSE (默认参数): {initial_nse:.4f}")
 print("\n步骤 3: 多算法参数率定")
 print("-" * 80)
 
-# 定义率定配置
+# 定义率定配置（高精度模式）
 calibration_configs = {
     'SCE-UA': {
         'method': 'sce_ua',
         'n_complexes': 5,
-        'max_iterations': 30,  # 快速测试用30，生产环境建议50-100
-        'patience': 10,
+        'max_iterations': 100,  # 提高到100以获得更高精度
+        'patience': 20,
     },
     'PSO': {
         'method': 'pso',
-        'n_particles': 30,
-        'max_iterations': 30,
+        'n_particles': 40,  # 增加粒子数
+        'max_iterations': 100,  # 提高到100
         'w': 0.7,
         'c1': 1.5,
         'c2': 1.5,
+        'patience': 20,
     },
 }
 

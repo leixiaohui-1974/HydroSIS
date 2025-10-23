@@ -1,0 +1,19 @@
+description: "Zone 1 \u7B80\u5355\u6A21\u578B\u7387\u5B9A\u9A8C\u8BC1 (SCE-UA)"
+date: '2025-10-23 12:44:44'
+validation_result: PASSED
+nse: 0.9999997766061935
+true_parameters:
+  runoff_coefficient: 0.35
+  lag_hours: 1.5
+  attenuation_factor: 0.85
+  baseflow_ratio: 0.08
+calibrated_parameters:
+  runoff_coefficient: 0.3498194726604502
+  lag_hours: 1.9741347712238488
+  attenuation_factor: 0.8501756838073775
+  baseflow_ratio: 0.07997714501615472
+parameter_recovery_errors:
+  runoff_coefficient: 0.051579239871360885
+  lag_hours: 31.608984748256592
+  attenuation_factor: 0.02066868322088656
+  baseflow_ratio: 0.028568729806607157
