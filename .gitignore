@@ -13,6 +13,8 @@ results/*
 !results/upper_truckee_run/**
 !results/upper_truckee_complete_run/
 !results/upper_truckee_complete_run/**
+!results/upper_truckee_complete_11steps/
+!results/upper_truckee_complete_11steps/**
 
 # generated reports/assets under config/
 config/results/
