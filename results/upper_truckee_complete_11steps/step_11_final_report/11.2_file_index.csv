@@ -9,6 +9,7 @@ Step,File,Path,Type
 02_汇水点生成,2.3_pour_points_map.png,step_02_pour_points/2.3_pour_points_map.png,PNG
 03_参数分区和子流域划分,3.1_subbasins.geojson,step_03_zones_subbasins/3.1_subbasins.geojson,GEOJSON
 03_参数分区和子流域划分,3.4_subzone_statistics.csv,step_03_zones_subbasins/3.4_subzone_statistics.csv,CSV
+03_参数分区和子流域划分,3.5_subbasin_map.png,step_03_zones_subbasins/3.5_subbasin_map.png,PNG
 06_07_08_雨量处理,6.1_rain_gauge_forcing.csv,step_06_rain_series/6.1_rain_gauge_forcing.csv,CSV
 06_07_08_雨量处理,7.1_thiessen_polygons.geojson,step_07_thiessen/7.1_thiessen_polygons.geojson,GEOJSON
 06_07_08_雨量处理,7.2_gauge_locations.geojson,step_07_thiessen/7.2_gauge_locations.geojson,GEOJSON
@@ -16,7 +17,8 @@ Step,File,Path,Type
 06_07_08_雨量处理,8.2_subbasin_areal_precipitation.csv,step_08_areal_rainfall/8.2_subbasin_areal_precipitation.csv,CSV
 06_07_08_雨量处理,8.3_basin_average_precipitation.csv,step_08_areal_rainfall/8.3_basin_average_precipitation.csv,CSV
 06_07_08_雨量处理,6.2_gauge_timeseries_sample.png,step_06_rain_series/6.2_gauge_timeseries_sample.png,PNG
-06_07_08_雨量处理,8.4_basin_precipitation_hyetograph.png,step_08_areal_rainfall/8.4_basin_precipitation_hyetograph.png,PNG
+06_07_08_雨量处理,8.4_subbasin_precipitation_hyetograph.png,step_08_areal_rainfall/8.4_subbasin_precipitation_hyetograph.png,PNG
+06_07_08_雨量处理,8.5_basin_precipitation_hyetograph.png,step_08_areal_rainfall/8.5_basin_precipitation_hyetograph.png,PNG
 09_10_水文水动力模拟,10.1_discharge_timeseries.csv,step_10_routing/10.1_discharge_timeseries.csv,CSV
 09_10_水文水动力模拟,10.2_discharge_statistics.csv,step_10_routing/10.2_discharge_statistics.csv,CSV
 09_10_水文水动力模拟,10.3_discharge_hydrographs.png,step_10_routing/10.3_discharge_hydrographs.png,PNG
