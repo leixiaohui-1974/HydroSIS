@@ -24,8 +24,10 @@ def main():
     dem_path = Path("data/upper_truckee/upper_truckee_dem_10m.tif")
 
     # Step 1: 创建DelineationConfig
+    pour_points_path = base_dir / "step_02_pour_points" / "2.1_pour_points.geojson"
     delineation_cfg = DelineationConfig(
         dem_path=dem_path,
+        pour_points_path=pour_points_path,
         flow_direction_path=base_dir / "intermediate" / "flow_direction.tif",
         flow_accumulation_path=base_dir / "intermediate" / "flow_accumulation.tif",
         intermediate_directory=base_dir / "intermediate",
@@ -34,7 +36,7 @@ def main():
 
     # Step 2: 创建PartitionConfig
     partition_cfg = ParameterPartitionConfig(
-        pour_points_path=base_dir / "step_02_pour_points" / "2.1_pour_points.geojson",
+        pour_points_path=pour_points_path,
         subzone_accumulation_threshold=None,
         target_subzone_area_km2=10.0,
         min_subzone_area_km2=5.0,
@@ -51,7 +53,8 @@ def main():
     # Step 4: 创建OutputConfig
     outputs_cfg = OutputArtifactsConfig(
         enable_figures=True,
-        enable_diagnostics=True,
+        enable_tables=True,
+        enable_reports=True,
     )
 
     print("开始生成参数分区...")
