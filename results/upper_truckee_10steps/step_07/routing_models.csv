@@ -1,4 +1,0 @@
-Model_ID,Type,K (hours),x
-muskingum_upper,muskingum,8,0.25
-muskingum_main,muskingum,12,0.2
-muskingum_outlet,muskingum,15,0.15
