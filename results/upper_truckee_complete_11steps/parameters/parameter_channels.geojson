@@ -97,13 +97,13 @@
         ]
       },
       "properties": {
-        "segment_id": "214",
-        "zone_id": "20",
-        "subzone_id": "214",
+        "segment_id": "41",
+        "zone_id": "2",
+        "subzone_id": "41",
         "length_m": 2785.08242227908,
         "slope": 0.0187880155561718,
         "drop_m": 52.326171875,
-        "downstream_id": "208",
+        "downstream_id": "36",
         "upstream_ids": []
       }
     },
@@ -143,13 +143,13 @@
         ]
       },
       "properties": {
-        "segment_id": "224",
-        "zone_id": "20",
-        "subzone_id": "224",
+        "segment_id": "50",
+        "zone_id": "2",
+        "subzone_id": "50",
         "length_m": 722.4267935245193,
         "slope": 0.008210715159194436,
         "drop_m": 5.931640625,
-        "downstream_id": "217",
+        "downstream_id": "44",
         "upstream_ids": []
       }
     },
@@ -177,13 +177,13 @@
         ]
       },
       "properties": {
-        "segment_id": "229",
-        "zone_id": "20",
-        "subzone_id": "229",
+        "segment_id": "55",
+        "zone_id": "2",
+        "subzone_id": "55",
         "length_m": 431.1921181103871,
         "slope": 0.035815495521294365,
         "drop_m": 15.443359375,
-        "downstream_id": "209",
+        "downstream_id": "37",
         "upstream_ids": []
       }
     },
@@ -647,13 +647,13 @@
         ]
       },
       "properties": {
-        "segment_id": "207",
-        "zone_id": "20",
-        "subzone_id": "207",
+        "segment_id": "35",
+        "zone_id": "2",
+        "subzone_id": "35",
         "length_m": 15366.950208709286,
         "slope": 0.020853080008412114,
         "drop_m": 320.4482421875,
-        "downstream_id": "237",
+        "downstream_id": "26",
         "upstream_ids": []
       }
     },
@@ -861,14 +861,14 @@
         ]
       },
       "properties": {
-        "segment_id": "208",
-        "zone_id": "20",
-        "subzone_id": "208",
+        "segment_id": "36",
+        "zone_id": "2",
+        "subzone_id": "36",
         "length_m": 6432.549080779208,
         "slope": 0.02932261196243396,
         "drop_m": 188.619140625,
-        "downstream_id": "237",
-        "upstream_ids": "['20_sub22']"
+        "downstream_id": "26",
+        "upstream_ids": "['222']"
       }
     },
     {
@@ -931,14 +931,14 @@
         ]
       },
       "properties": {
-        "segment_id": "209",
-        "zone_id": "20",
-        "subzone_id": "209",
+        "segment_id": "37",
+        "zone_id": "2",
+        "subzone_id": "37",
         "length_m": 1491.5060679481917,
         "slope": 0.07008534332518787,
         "drop_m": 104.53271484375,
-        "downstream_id": "205",
-        "upstream_ids": "['20_sub36']"
+        "downstream_id": "33",
+        "upstream_ids": "['236']"
       }
     },
     {
@@ -1373,13 +1373,13 @@
         ]
       },
       "properties": {
-        "segment_id": "210",
-        "zone_id": "20",
-        "subzone_id": "210",
+        "segment_id": "38",
+        "zone_id": "2",
+        "subzone_id": "38",
         "length_m": 14391.936920384744,
         "slope": 0.020546308221805,
         "drop_m": 295.701171875,
-        "downstream_id": "237",
+        "downstream_id": "26",
         "upstream_ids": []
       }
     },
@@ -1483,13 +1483,13 @@
         ]
       },
       "properties": {
-        "segment_id": "212",
-        "zone_id": "20",
-        "subzone_id": "212",
+        "segment_id": "39",
+        "zone_id": "2",
+        "subzone_id": "39",
         "length_m": 2944.363955282662,
         "slope": 0.04879290219615805,
         "drop_m": 143.6640625,
-        "downstream_id": "237",
+        "downstream_id": "26",
         "upstream_ids": []
       }
     },
@@ -1889,13 +1889,13 @@
         ]
       },
       "properties": {
-        "segment_id": "215",
-        "zone_id": "20",
-        "subzone_id": "215",
+        "segment_id": "42",
+        "zone_id": "2",
+        "subzone_id": "42",
         "length_m": 13145.013046951804,
         "slope": 0.02043966685619259,
         "drop_m": 268.6796875,
-        "downstream_id": "237",
+        "downstream_id": "26",
         "upstream_ids": []
       }
     },
@@ -1967,14 +1967,14 @@
         ]
       },
       "properties": {
-        "segment_id": "217",
-        "zone_id": "20",
-        "subzone_id": "217",
+        "segment_id": "44",
+        "zone_id": "2",
+        "subzone_id": "44",
         "length_m": 1856.721614852372,
         "slope": 0.05172665165269608,
         "drop_m": 96.0419921875,
-        "downstream_id": "237",
-        "upstream_ids": "['20_sub31']"
+        "downstream_id": "26",
+        "upstream_ids": "['231']"
       }
     },
     {
@@ -2417,13 +2417,13 @@
         ]
       },
       "properties": {
-        "segment_id": "218",
-        "zone_id": "20",
-        "subzone_id": "218",
+        "segment_id": "45",
+        "zone_id": "2",
+        "subzone_id": "45",
         "length_m": 14663.84750549248,
         "slope": 0.020550647596896107,
         "drop_m": 301.3515625,
-        "downstream_id": "237",
+        "downstream_id": "26",
         "upstream_ids": []
       }
     },
@@ -2735,13 +2735,13 @@
         ]
       },
       "properties": {
-        "segment_id": "219",
-        "zone_id": "20",
-        "subzone_id": "219",
+        "segment_id": "46",
+        "zone_id": "2",
+        "subzone_id": "46",
         "length_m": 10107.34412987166,
         "slope": 0.021931473042198144,
         "drop_m": 221.6689453125,
-        "downstream_id": "237",
+        "downstream_id": "26",
         "upstream_ids": []
       }
     },
@@ -2849,14 +2849,14 @@
         ]
       },
       "properties": {
-        "segment_id": "237",
-        "zone_id": "20",
-        "subzone_id": "237",
+        "segment_id": "26",
+        "zone_id": "2",
+        "subzone_id": "26",
         "length_m": 3010.340526487937,
         "slope": 0.07559247202399906,
         "drop_m": 227.55908203125,
-        "downstream_id": "236",
-        "upstream_ids": "['20_sub16', '20_sub17', '20_sub19', '20_sub20', '20_sub23', '20_sub25', '20_sub26', '20_sub27']"
+        "downstream_id": "25",
+        "upstream_ids": "['216', '217', '219', '220', '223', '225', '226', '227']"
       }
     },
     {
@@ -2971,14 +2971,14 @@
         ]
       },
       "properties": {
-        "segment_id": "205",
-        "zone_id": "20",
-        "subzone_id": "205",
+        "segment_id": "33",
+        "zone_id": "2",
+        "subzone_id": "33",
         "length_m": 3142.293668898488,
         "slope": 0.07368193359173254,
         "drop_m": 231.5302734375,
-        "downstream_id": "201",
-        "upstream_ids": "['20_sub18']"
+        "downstream_id": "29",
+        "upstream_ids": "['218']"
       }
     },
     {
@@ -3073,13 +3073,13 @@
         ]
       },
       "properties": {
-        "segment_id": "221",
-        "zone_id": "20",
-        "subzone_id": "221",
+        "segment_id": "48",
+        "zone_id": "2",
+        "subzone_id": "48",
         "length_m": 2812.410812871951,
         "slope": 0.10423594431271564,
         "drop_m": 293.154296875,
-        "downstream_id": "206",
+        "downstream_id": "34",
         "upstream_ids": []
       }
     },
@@ -3131,13 +3131,13 @@
         ]
       },
       "properties": {
-        "segment_id": "223",
-        "zone_id": "20",
-        "subzone_id": "223",
+        "segment_id": "49",
+        "zone_id": "2",
+        "subzone_id": "49",
         "length_m": 1200.271392534718,
         "slope": 0.03600097258733101,
         "drop_m": 43.2109375,
-        "downstream_id": "203",
+        "downstream_id": "31",
         "upstream_ids": []
       }
     },
@@ -3429,13 +3429,13 @@
         ]
       },
       "properties": {
-        "segment_id": "213",
-        "zone_id": "21",
-        "subzone_id": "213",
+        "segment_id": "21",
+        "zone_id": "1",
+        "subzone_id": "21",
         "length_m": 8051.319480588598,
         "slope": 0.11291536473904626,
         "drop_m": 909.11767578125,
-        "downstream_id": "219",
+        "downstream_id": "14",
         "upstream_ids": []
       }
     },
@@ -3623,13 +3623,13 @@
         ]
       },
       "properties": {
-        "segment_id": "215",
-        "zone_id": "21",
-        "subzone_id": "215",
+        "segment_id": "23",
+        "zone_id": "1",
+        "subzone_id": "23",
         "length_m": 5029.6591640790375,
         "slope": 0.11265275876253117,
         "drop_m": 566.60498046875,
-        "downstream_id": "219",
+        "downstream_id": "14",
         "upstream_ids": []
       }
     },
@@ -3885,14 +3885,14 @@
         ]
       },
       "properties": {
-        "segment_id": "236",
-        "zone_id": "20",
-        "subzone_id": "236",
+        "segment_id": "25",
+        "zone_id": "2",
+        "subzone_id": "25",
         "length_m": 7690.792744234432,
         "slope": 0.06651178068684509,
         "drop_m": 511.5283203125,
-        "downstream_id": "235",
-        "upstream_ids": "['20_sub7']"
+        "downstream_id": "24",
+        "upstream_ids": "['207']"
       }
     },
     {
@@ -4019,14 +4019,14 @@
         ]
       },
       "properties": {
-        "segment_id": "201",
-        "zone_id": "20",
-        "subzone_id": "201",
+        "segment_id": "29",
+        "zone_id": "2",
+        "subzone_id": "29",
         "length_m": 3666.790748807567,
         "slope": 0.04864062137354052,
         "drop_m": 178.35498046875,
-        "downstream_id": "235",
-        "upstream_ids": "['20_sub14']"
+        "downstream_id": "24",
+        "upstream_ids": "['214']"
       }
     },
     {
@@ -4257,14 +4257,14 @@
         ]
       },
       "properties": {
-        "segment_id": "203",
-        "zone_id": "20",
-        "subzone_id": "203",
+        "segment_id": "31",
+        "zone_id": "2",
+        "subzone_id": "31",
         "length_m": 7015.0184316062705,
         "slope": 0.04429510201017392,
         "drop_m": 310.73095703125,
-        "downstream_id": "239",
-        "upstream_ids": "['20_sub30']"
+        "downstream_id": "28",
+        "upstream_ids": "['230']"
       }
     },
     {
@@ -4363,14 +4363,14 @@
         ]
       },
       "properties": {
-        "segment_id": "206",
-        "zone_id": "20",
-        "subzone_id": "206",
+        "segment_id": "34",
+        "zone_id": "2",
+        "subzone_id": "34",
         "length_m": 2738.4299413808585,
         "slope": 0.04754823834039465,
         "drop_m": 130.20751953125,
-        "downstream_id": "235",
-        "upstream_ids": "['20_sub29']"
+        "downstream_id": "24",
+        "upstream_ids": "['229']"
       }
     },
     {
@@ -4573,13 +4573,13 @@
         ]
       },
       "properties": {
-        "segment_id": "230",
-        "zone_id": "20",
-        "subzone_id": "230",
+        "segment_id": "56",
+        "zone_id": "2",
+        "subzone_id": "56",
         "length_m": 6086.657624179947,
         "slope": 0.04745515183428208,
         "drop_m": 288.84326171875,
-        "downstream_id": "239",
+        "downstream_id": "28",
         "upstream_ids": []
       }
     },
@@ -4759,13 +4759,13 @@
         ]
       },
       "properties": {
-        "segment_id": "317",
-        "zone_id": "31",
-        "subzone_id": "317",
+        "segment_id": "45",
+        "zone_id": "3",
+        "subzone_id": "45",
         "length_m": 5644.145716048437,
         "slope": 0.1589697680208776,
         "drop_m": 897.24853515625,
-        "downstream_id": "325",
+        "downstream_id": "36",
         "upstream_ids": []
       }
     },
@@ -4881,14 +4881,14 @@
         ]
       },
       "properties": {
-        "segment_id": "219",
-        "zone_id": "21",
-        "subzone_id": "219",
+        "segment_id": "14",
+        "zone_id": "1",
+        "subzone_id": "14",
         "length_m": 3282.2511115956745,
         "slope": 0.08463965257519333,
         "drop_m": 277.80859375,
-        "downstream_id": "218",
-        "upstream_ids": "['21_sub12', '21_sub14']"
+        "downstream_id": "13",
+        "upstream_ids": "['112', '114']"
       }
     },
     {
@@ -5059,13 +5059,13 @@
         ]
       },
       "properties": {
-        "segment_id": "222",
-        "zone_id": "21",
-        "subzone_id": "222",
+        "segment_id": "17",
+        "zone_id": "1",
+        "subzone_id": "17",
         "length_m": 5045.667764651604,
         "slope": 0.10172779737196819,
         "drop_m": 513.28466796875,
-        "downstream_id": "218",
+        "downstream_id": "13",
         "upstream_ids": []
       }
     },
@@ -5153,13 +5153,13 @@
         ]
       },
       "properties": {
-        "segment_id": "313",
-        "zone_id": "30",
-        "subzone_id": "313",
+        "segment_id": "60",
+        "zone_id": "4",
+        "subzone_id": "60",
         "length_m": 2540.500227764101,
         "slope": 0.0954772827582966,
         "drop_m": 242.56005859375,
-        "downstream_id": "307",
+        "downstream_id": "55",
         "upstream_ids": []
       }
     },
@@ -5211,14 +5211,14 @@
         ]
       },
       "properties": {
-        "segment_id": "235",
-        "zone_id": "20",
-        "subzone_id": "235",
+        "segment_id": "24",
+        "zone_id": "2",
+        "subzone_id": "24",
         "length_m": 1293.5763543311614,
         "slope": 0.04823337600335184,
         "drop_m": 62.3935546875,
-        "downstream_id": "233",
-        "upstream_ids": "['20_sub6', '20_sub10', '20_sub15']"
+        "downstream_id": "23",
+        "upstream_ids": "['206', '210', '215']"
       }
     },
     {
@@ -5553,14 +5553,14 @@
         ]
       },
       "properties": {
-        "segment_id": "239",
-        "zone_id": "20",
-        "subzone_id": "239",
+        "segment_id": "28",
+        "zone_id": "2",
+        "subzone_id": "28",
         "length_m": 11016.380846992632,
         "slope": 0.06017481608646617,
         "drop_m": 662.90869140625,
-        "downstream_id": "238",
-        "upstream_ids": "['20_sub12', '20_sub37']"
+        "downstream_id": "27",
+        "upstream_ids": "['212', '237']"
       }
     },
     {
@@ -5695,13 +5695,13 @@
         ]
       },
       "properties": {
-        "segment_id": "213",
-        "zone_id": "20",
-        "subzone_id": "213",
+        "segment_id": "40",
+        "zone_id": "2",
+        "subzone_id": "40",
         "length_m": 3705.43892942063,
         "slope": 0.20814762704322712,
         "drop_m": 771.2783203125,
-        "downstream_id": "204",
+        "downstream_id": "32",
         "upstream_ids": []
       }
     },
@@ -5761,13 +5761,13 @@
         ]
       },
       "properties": {
-        "segment_id": "227",
-        "zone_id": "20",
-        "subzone_id": "227",
+        "segment_id": "53",
+        "zone_id": "2",
+        "subzone_id": "53",
         "length_m": 1472.1819776415239,
         "slope": 0.14768483014634587,
         "drop_m": 217.4189453125,
-        "downstream_id": "204",
+        "downstream_id": "32",
         "upstream_ids": []
       }
     },
@@ -5791,13 +5791,13 @@
         ]
       },
       "properties": {
-        "segment_id": "228",
-        "zone_id": "20",
-        "subzone_id": "228",
+        "segment_id": "54",
+        "zone_id": "2",
+        "subzone_id": "54",
         "length_m": 271.91058510680574,
         "slope": 0.007653452279846213,
         "drop_m": 2.0810546875,
-        "downstream_id": "233",
+        "downstream_id": "23",
         "upstream_ids": []
       }
     },
@@ -6117,13 +6117,13 @@
         ]
       },
       "properties": {
-        "segment_id": "231",
-        "zone_id": "20",
-        "subzone_id": "231",
+        "segment_id": "57",
+        "zone_id": "2",
+        "subzone_id": "57",
         "length_m": 10379.254714980056,
         "slope": 0.0638686215542523,
         "drop_m": 662.90869140625,
-        "downstream_id": "238",
+        "downstream_id": "27",
         "upstream_ids": []
       }
     },
@@ -6299,13 +6299,13 @@
         ]
       },
       "properties": {
-        "segment_id": "232",
-        "zone_id": "20",
-        "subzone_id": "232",
+        "segment_id": "58",
+        "zone_id": "2",
+        "subzone_id": "58",
         "length_m": 5624.8216257428585,
         "slope": 0.06496646987258714,
         "drop_m": 365.4248046875,
-        "downstream_id": "238",
+        "downstream_id": "27",
         "upstream_ids": []
       }
     },
@@ -6393,14 +6393,14 @@
         ]
       },
       "properties": {
-        "segment_id": "325",
-        "zone_id": "31",
-        "subzone_id": "325",
+        "segment_id": "36",
+        "zone_id": "3",
+        "subzone_id": "36",
         "length_m": 2540.5002277647595,
         "slope": 0.18968028706849638,
         "drop_m": 481.8828125,
-        "downstream_id": "324",
-        "upstream_ids": "['31_sub16']"
+        "downstream_id": "35",
+        "upstream_ids": "['316']"
       }
     },
     {
@@ -6595,13 +6595,13 @@
         ]
       },
       "properties": {
-        "segment_id": "318",
-        "zone_id": "31",
-        "subzone_id": "318",
+        "segment_id": "46",
+        "zone_id": "3",
+        "subzone_id": "46",
         "length_m": 6001.356962669208,
         "slope": 0.18591034701133935,
         "drop_m": 1115.71435546875,
-        "downstream_id": "326",
+        "downstream_id": "37",
         "upstream_ids": []
       }
     },
@@ -6641,14 +6641,14 @@
         ]
       },
       "properties": {
-        "segment_id": "218",
-        "zone_id": "21",
-        "subzone_id": "218",
+        "segment_id": "13",
+        "zone_id": "1",
+        "subzone_id": "13",
         "length_m": 675.7743126256391,
         "slope": 0.02426180975834557,
         "drop_m": 16.3955078125,
-        "downstream_id": "217",
-        "upstream_ids": "['21_sub5', '21_sub8']"
+        "downstream_id": "12",
+        "upstream_ids": "['105', '108']"
       }
     },
     {
@@ -6679,14 +6679,14 @@
         ]
       },
       "properties": {
-        "segment_id": "307",
-        "zone_id": "30",
-        "subzone_id": "307",
+        "segment_id": "55",
+        "zone_id": "4",
+        "subzone_id": "55",
         "length_m": 497.1686893165939,
         "slope": 0.030972259176591816,
         "drop_m": 15.3984375,
-        "downstream_id": "305",
-        "upstream_ids": "['30_sub21']"
+        "downstream_id": "53",
+        "upstream_ids": "['421']"
       }
     },
     {
@@ -6717,13 +6717,13 @@
         ]
       },
       "properties": {
-        "segment_id": "310",
-        "zone_id": "30",
-        "subzone_id": "310",
+        "segment_id": "58",
+        "zone_id": "4",
+        "subzone_id": "58",
         "length_m": 450.51620841771364,
         "slope": 0.025415723338156806,
         "drop_m": 11.4501953125,
-        "downstream_id": "305",
+        "downstream_id": "53",
         "upstream_ids": []
       }
     },
@@ -6743,13 +6743,13 @@
         ]
       },
       "properties": {
-        "segment_id": "329",
-        "zone_id": "30",
-        "subzone_id": "329",
+        "segment_id": "75",
+        "zone_id": "4",
+        "subzone_id": "75",
         "length_m": 112.62905210442841,
         "slope": 0.11113553394859696,
         "drop_m": 12.51708984375,
-        "downstream_id": "305",
+        "downstream_id": "53",
         "upstream_ids": []
       }
     },
@@ -6969,14 +6969,14 @@
         ]
       },
       "properties": {
-        "segment_id": "233",
-        "zone_id": "20",
-        "subzone_id": "233",
+        "segment_id": "23",
+        "zone_id": "2",
+        "subzone_id": "23",
         "length_m": 6583.826313496701,
         "slope": 0.06216932103443696,
         "drop_m": 409.31201171875,
-        "downstream_id": "222",
-        "upstream_ids": "['20_sub5', '20_sub35']"
+        "downstream_id": "22",
+        "upstream_ids": "['205', '235']"
       }
     },
     {
@@ -7227,14 +7227,14 @@
         ]
       },
       "properties": {
-        "segment_id": "238",
-        "zone_id": "20",
-        "subzone_id": "238",
+        "segment_id": "27",
+        "zone_id": "2",
+        "subzone_id": "27",
         "length_m": 7624.81617302811,
         "slope": 0.06133088433059014,
         "drop_m": 467.63671875,
-        "downstream_id": "222",
-        "upstream_ids": "['20_sub9', '20_sub38', '20_sub39']"
+        "downstream_id": "22",
+        "upstream_ids": "['209', '238', '239']"
       }
     },
     {
@@ -7381,14 +7381,14 @@
         ]
       },
       "properties": {
-        "segment_id": "204",
-        "zone_id": "20",
-        "subzone_id": "204",
+        "segment_id": "32",
+        "zone_id": "2",
+        "subzone_id": "32",
         "length_m": 4416.54593292221,
         "slope": 0.08847444830834332,
         "drop_m": 390.75146484375,
-        "downstream_id": "222",
-        "upstream_ids": "['20_sub21', '20_sub34']"
+        "downstream_id": "22",
+        "upstream_ids": "['221', '234']"
       }
     },
     {
@@ -7467,13 +7467,13 @@
         ]
       },
       "properties": {
-        "segment_id": "220",
-        "zone_id": "20",
-        "subzone_id": "220",
+        "segment_id": "47",
+        "zone_id": "2",
+        "subzone_id": "47",
         "length_m": 2268.5896426570225,
         "slope": 0.15376172890239048,
         "drop_m": 348.822265625,
-        "downstream_id": "222",
+        "downstream_id": "22",
         "upstream_ids": []
       }
     },
@@ -7593,14 +7593,14 @@
         ]
       },
       "properties": {
-        "segment_id": "324",
-        "zone_id": "31",
-        "subzone_id": "324",
+        "segment_id": "35",
+        "zone_id": "3",
+        "subzone_id": "35",
         "length_m": 3628.142568193845,
         "slope": 0.0009393796029070229,
         "drop_m": 3.408203125,
-        "downstream_id": "322",
-        "upstream_ids": "['31_sub7']"
+        "downstream_id": "33",
+        "upstream_ids": "['307']"
       }
     },
     {
@@ -7627,14 +7627,14 @@
         ]
       },
       "properties": {
-        "segment_id": "326",
-        "zone_id": "31",
-        "subzone_id": "326",
+        "segment_id": "37",
+        "zone_id": "3",
+        "subzone_id": "37",
         "length_m": 384.53963721150694,
         "slope": -0.0011250262538268561,
         "drop_m": -0.4326171875,
-        "downstream_id": "322",
-        "upstream_ids": "['31_sub17']"
+        "downstream_id": "33",
+        "upstream_ids": "['317']"
       }
     },
     {
@@ -7777,13 +7777,13 @@
         ]
       },
       "properties": {
-        "segment_id": "327",
-        "zone_id": "31",
-        "subzone_id": "327",
+        "segment_id": "38",
+        "zone_id": "3",
+        "subzone_id": "38",
         "length_m": 4350.569361718364,
         "slope": 0.0007903509349272595,
         "drop_m": 3.4384765625,
-        "downstream_id": "322",
+        "downstream_id": "33",
         "upstream_ids": []
       }
     },
@@ -7859,13 +7859,13 @@
         ]
       },
       "properties": {
-        "segment_id": "313",
-        "zone_id": "31",
-        "subzone_id": "313",
+        "segment_id": "41",
+        "zone_id": "3",
+        "subzone_id": "41",
         "length_m": 2109.3081096531682,
         "slope": 2.5463770444058855e-05,
         "drop_m": 0.0537109375,
-        "downstream_id": "322",
+        "downstream_id": "33",
         "upstream_ids": []
       }
     },
@@ -7913,13 +7913,13 @@
         ]
       },
       "properties": {
-        "segment_id": "314",
-        "zone_id": "31",
-        "subzone_id": "314",
+        "segment_id": "42",
+        "zone_id": "3",
+        "subzone_id": "42",
         "length_m": 1087.6423404302898,
         "slope": -6.105522700939406e-05,
         "drop_m": -0.06640625,
-        "downstream_id": "322",
+        "downstream_id": "33",
         "upstream_ids": []
       }
     },
@@ -7955,14 +7955,14 @@
         ]
       },
       "properties": {
-        "segment_id": "217",
-        "zone_id": "21",
-        "subzone_id": "217",
+        "segment_id": "12",
+        "zone_id": "1",
+        "subzone_id": "12",
         "length_m": 609.7977414210222,
         "slope": 0.012902907846402778,
         "drop_m": 7.8681640625,
-        "downstream_id": "216",
-        "upstream_ids": "['21_sub4']"
+        "downstream_id": "11",
+        "upstream_ids": "['104']"
       }
     },
     {
@@ -8125,13 +8125,13 @@
         ]
       },
       "properties": {
-        "segment_id": "221",
-        "zone_id": "21",
-        "subzone_id": "221",
+        "segment_id": "16",
+        "zone_id": "1",
+        "subzone_id": "16",
         "length_m": 5286.9344694305055,
         "slope": 0.05182846003849108,
         "drop_m": 274.013671875,
-        "downstream_id": "216",
+        "downstream_id": "11",
         "upstream_ids": []
       }
     },
@@ -8275,13 +8275,13 @@
         ]
       },
       "properties": {
-        "segment_id": "211",
-        "zone_id": "21",
-        "subzone_id": "211",
+        "segment_id": "19",
+        "zone_id": "1",
+        "subzone_id": "19",
         "length_m": 4630.4842471115335,
         "slope": 0.057049855465124755,
         "drop_m": 264.16845703125,
-        "downstream_id": "216",
+        "downstream_id": "11",
         "upstream_ids": []
       }
     },
@@ -8449,13 +8449,13 @@
         ]
       },
       "properties": {
-        "segment_id": "212",
-        "zone_id": "21",
-        "subzone_id": "212",
+        "segment_id": "20",
+        "zone_id": "1",
+        "subzone_id": "20",
         "length_m": 4979.691193443262,
         "slope": 0.10429255678470965,
         "drop_m": 519.3447265625,
-        "downstream_id": "220",
+        "downstream_id": "15",
         "upstream_ids": []
       }
     },
@@ -8511,13 +8511,13 @@
         ]
       },
       "properties": {
-        "segment_id": "214",
-        "zone_id": "21",
-        "subzone_id": "214",
+        "segment_id": "22",
+        "zone_id": "1",
+        "subzone_id": "22",
         "length_m": 1359.5529255370952,
         "slope": 0.0023254858522708797,
         "drop_m": 3.16162109375,
-        "downstream_id": "223",
+        "downstream_id": "18",
         "upstream_ids": []
       }
     },
@@ -8665,14 +8665,14 @@
         ]
       },
       "properties": {
-        "segment_id": "305",
-        "zone_id": "30",
-        "subzone_id": "305",
+        "segment_id": "53",
+        "zone_id": "4",
+        "subzone_id": "53",
         "length_m": 4276.588490226614,
         "slope": 0.0352944740302221,
         "drop_m": 150.93994140625,
-        "downstream_id": "304",
-        "upstream_ids": "['30_sub16', '30_sub19', '30_sub36']"
+        "downstream_id": "52",
+        "upstream_ids": "['416', '419', '436']"
       }
     },
     {
@@ -8695,13 +8695,13 @@
         ]
       },
       "properties": {
-        "segment_id": "319",
-        "zone_id": "30",
-        "subzone_id": "319",
+        "segment_id": "66",
+        "zone_id": "4",
+        "subzone_id": "66",
         "length_m": 225.25810420885682,
         "slope": 0.01042857526480788,
         "drop_m": 2.34912109375,
-        "downstream_id": "308",
+        "downstream_id": "56",
         "upstream_ids": []
       }
     },
@@ -8733,13 +8733,13 @@
         ]
       },
       "properties": {
-        "segment_id": "321",
-        "zone_id": "30",
-        "subzone_id": "321",
+        "segment_id": "68",
+        "zone_id": "4",
+        "subzone_id": "68",
         "length_m": 590.4736511143544,
         "slope": -0.0006541028003893106,
         "drop_m": -0.38623046875,
-        "downstream_id": "304",
+        "downstream_id": "52",
         "upstream_ids": []
       }
     },
@@ -8771,13 +8771,13 @@
         ]
       },
       "properties": {
-        "segment_id": "323",
-        "zone_id": "30",
-        "subzone_id": "323",
+        "segment_id": "69",
+        "zone_id": "4",
+        "subzone_id": "69",
         "length_m": 637.1261320132346,
         "slope": -0.000606207231729081,
         "drop_m": -0.38623046875,
-        "downstream_id": "304",
+        "downstream_id": "52",
         "upstream_ids": []
       }
     },
@@ -8865,14 +8865,14 @@
         ]
       },
       "properties": {
-        "segment_id": "222",
-        "zone_id": "20",
-        "subzone_id": "222",
+        "segment_id": "22",
+        "zone_id": "2",
+        "subzone_id": "22",
         "length_m": 2493.8477468658793,
         "slope": 0.1273671489139359,
         "drop_m": 317.63427734375,
-        "downstream_id": "211",
-        "upstream_ids": "['20_sub4', '20_sub8', '20_sub13', '20_sub28']"
+        "downstream_id": "21",
+        "upstream_ids": "['204', '208', '213', '228']"
       }
     },
     {
@@ -9143,13 +9143,13 @@
         ]
       },
       "properties": {
-        "segment_id": "216",
-        "zone_id": "20",
-        "subzone_id": "216",
+        "segment_id": "43",
+        "zone_id": "2",
+        "subzone_id": "43",
         "length_m": 8094.65647175206,
         "slope": 0.07455258183821104,
         "drop_m": 603.4775390625,
-        "downstream_id": "202",
+        "downstream_id": "30",
         "upstream_ids": []
       }
     },
@@ -9257,13 +9257,13 @@
         ]
       },
       "properties": {
-        "segment_id": "226",
-        "zone_id": "20",
-        "subzone_id": "226",
+        "segment_id": "52",
+        "zone_id": "2",
+        "subzone_id": "52",
         "length_m": 2963.688045589057,
         "slope": 0.08041771068558243,
         "drop_m": 238.3330078125,
-        "downstream_id": "202",
+        "downstream_id": "30",
         "upstream_ids": []
       }
     },
@@ -9359,14 +9359,14 @@
         ]
       },
       "properties": {
-        "segment_id": "322",
-        "zone_id": "31",
-        "subzone_id": "322",
+        "segment_id": "33",
+        "zone_id": "3",
+        "subzone_id": "33",
         "length_m": 2672.453370174652,
         "slope": 0.00042680819531959024,
         "drop_m": 1.140625,
-        "downstream_id": "321",
-        "upstream_ids": "['31_sub6', '31_sub8', '31_sub9', '31_sub12', '31_sub13']"
+        "downstream_id": "32",
+        "upstream_ids": "['306', '308', '309', '312', '313']"
       }
     },
     {
@@ -9513,13 +9513,13 @@
         ]
       },
       "properties": {
-        "segment_id": "311",
-        "zone_id": "31",
-        "subzone_id": "311",
+        "segment_id": "39",
+        "zone_id": "3",
+        "subzone_id": "39",
         "length_m": 4509.850894721014,
         "slope": 0.09361007499447849,
         "drop_m": 422.16748046875,
-        "downstream_id": "323",
+        "downstream_id": "34",
         "upstream_ids": []
       }
     },
@@ -9555,13 +9555,13 @@
         ]
       },
       "properties": {
-        "segment_id": "315",
-        "zone_id": "31",
-        "subzone_id": "315",
+        "segment_id": "43",
+        "zone_id": "3",
+        "subzone_id": "43",
         "length_m": 749.7551841170045,
         "slope": 0.20647104235406252,
         "drop_m": 154.802734375,
-        "downstream_id": "312",
+        "downstream_id": "40",
         "upstream_ids": []
       }
     },
@@ -9881,14 +9881,14 @@
         ]
       },
       "properties": {
-        "segment_id": "216",
-        "zone_id": "21",
-        "subzone_id": "216",
+        "segment_id": "11",
+        "zone_id": "1",
+        "subzone_id": "11",
         "length_m": 9866.077425092488,
         "slope": 0.10329066827277578,
         "drop_m": 1019.07373046875,
-        "downstream_id": "210",
-        "upstream_ids": "['21_sub3', '21_sub7', '21_sub10']"
+        "downstream_id": "10",
+        "upstream_ids": "['103', '107', '110']"
       }
     },
     {
@@ -10015,14 +10015,14 @@
         ]
       },
       "properties": {
-        "segment_id": "220",
-        "zone_id": "21",
-        "subzone_id": "220",
+        "segment_id": "15",
+        "zone_id": "1",
+        "subzone_id": "15",
         "length_m": 3713.443229705789,
         "slope": 0.14325590115245884,
         "drop_m": 531.97265625,
-        "downstream_id": "210",
-        "upstream_ids": "['21_sub11']"
+        "downstream_id": "10",
+        "upstream_ids": "['111']"
       }
     },
     {
@@ -10313,14 +10313,14 @@
         ]
       },
       "properties": {
-        "segment_id": "223",
-        "zone_id": "21",
-        "subzone_id": "223",
+        "segment_id": "18",
+        "zone_id": "1",
+        "subzone_id": "18",
         "length_m": 8891.064136767285,
         "slope": 0.11367199960723365,
         "drop_m": 1010.6650390625,
-        "downstream_id": "210",
-        "upstream_ids": "['21_sub13']"
+        "downstream_id": "10",
+        "upstream_ids": "['113']"
       }
     },
     {
@@ -10343,14 +10343,14 @@
         ]
       },
       "properties": {
-        "segment_id": "304",
-        "zone_id": "30",
-        "subzone_id": "304",
+        "segment_id": "52",
+        "zone_id": "4",
+        "subzone_id": "52",
         "length_m": 318.5630660059587,
         "slope": -0.00260722756301719,
         "drop_m": -0.83056640625,
-        "downstream_id": "303",
-        "upstream_ids": "['30_sub14', '30_sub29', '30_sub30']"
+        "downstream_id": "51",
+        "upstream_ids": "['414', '429', '430']"
       }
     },
     {
@@ -10529,14 +10529,14 @@
         ]
       },
       "properties": {
-        "segment_id": "308",
-        "zone_id": "30",
-        "subzone_id": "308",
+        "segment_id": "56",
+        "zone_id": "4",
+        "subzone_id": "56",
         "length_m": 5784.10315874578,
         "slope": 0.11505841914640204,
         "drop_m": 665.509765625,
-        "downstream_id": "306",
-        "upstream_ids": "['30_sub27']"
+        "downstream_id": "54",
+        "upstream_ids": "['427']"
       }
     },
     {
@@ -10615,14 +10615,14 @@
         ]
       },
       "properties": {
-        "segment_id": "211",
-        "zone_id": "20",
-        "subzone_id": "211",
+        "segment_id": "21",
+        "zone_id": "2",
+        "subzone_id": "21",
         "length_m": 2221.9371617582556,
         "slope": 0.042155114571683264,
         "drop_m": 93.666015625,
-        "downstream_id": "200",
-        "upstream_ids": "['20_sub3']"
+        "downstream_id": "20",
+        "upstream_ids": "['203']"
       }
     },
     {
@@ -10829,14 +10829,14 @@
         ]
       },
       "properties": {
-        "segment_id": "202",
-        "zone_id": "20",
-        "subzone_id": "202",
+        "segment_id": "30",
+        "zone_id": "2",
+        "subzone_id": "30",
         "length_m": 5966.0242717912915,
         "slope": 0.10896885601314442,
         "drop_m": 650.11083984375,
-        "downstream_id": "200",
-        "upstream_ids": "['20_sub24', '20_sub33']"
+        "downstream_id": "20",
+        "upstream_ids": "['224', '233']"
       }
     },
     {
@@ -10907,13 +10907,13 @@
         ]
       },
       "properties": {
-        "segment_id": "225",
-        "zone_id": "20",
-        "subzone_id": "225",
+        "segment_id": "51",
+        "zone_id": "2",
+        "subzone_id": "51",
         "length_m": 1950.026576650518,
         "slope": 0.030024630856860912,
         "drop_m": 58.548828125,
-        "downstream_id": "200",
+        "downstream_id": "20",
         "upstream_ids": []
       }
     },
@@ -10957,13 +10957,13 @@
         ]
       },
       "properties": {
-        "segment_id": "234",
-        "zone_id": "20",
-        "subzone_id": "234",
+        "segment_id": "59",
+        "zone_id": "2",
+        "subzone_id": "59",
         "length_m": 975.0132883255885,
         "slope": 0.00956968127303535,
         "drop_m": 9.33056640625,
-        "downstream_id": "200",
+        "downstream_id": "20",
         "upstream_ids": []
       }
     },
@@ -11147,14 +11147,14 @@
         ]
       },
       "properties": {
-        "segment_id": "321",
-        "zone_id": "31",
-        "subzone_id": "321",
+        "segment_id": "32",
+        "zone_id": "3",
+        "subzone_id": "32",
         "length_m": 5383.554920964617,
         "slope": 0.03613525554553892,
         "drop_m": 194.5361328125,
-        "downstream_id": "320",
-        "upstream_ids": "['31_sub4']"
+        "downstream_id": "31",
+        "upstream_ids": "['304']"
       }
     },
     {
@@ -11297,14 +11297,14 @@
         ]
       },
       "properties": {
-        "segment_id": "323",
-        "zone_id": "31",
-        "subzone_id": "323",
+        "segment_id": "34",
+        "zone_id": "3",
+        "subzone_id": "34",
         "length_m": 3977.349514528367,
         "slope": 0.049167209234926616,
         "drop_m": 195.55517578125,
-        "downstream_id": "320",
-        "upstream_ids": "['31_sub10']"
+        "downstream_id": "31",
+        "upstream_ids": "['310']"
       }
     },
     {
@@ -11407,14 +11407,14 @@
         ]
       },
       "properties": {
-        "segment_id": "312",
-        "zone_id": "31",
-        "subzone_id": "312",
+        "segment_id": "40",
+        "zone_id": "3",
+        "subzone_id": "40",
         "length_m": 2711.1015507883735,
         "slope": 0.05152588050072428,
         "drop_m": 139.69189453125,
-        "downstream_id": "320",
-        "upstream_ids": "['31_sub14']"
+        "downstream_id": "31",
+        "upstream_ids": "['314']"
       }
     },
     {
@@ -11433,14 +11433,14 @@
         ]
       },
       "properties": {
-        "segment_id": "210",
-        "zone_id": "21",
-        "subzone_id": "210",
+        "segment_id": "10",
+        "zone_id": "1",
+        "subzone_id": "10",
         "length_m": 159.28153300330865,
         "slope": 0.01534907514168146,
         "drop_m": 2.44482421875,
-        "downstream_id": "200",
-        "upstream_ids": "['21_sub2', '21_sub6', '21_sub9']"
+        "downstream_id": "20",
+        "upstream_ids": "['102', '106', '109']"
       }
     },
     {
@@ -11507,14 +11507,14 @@
         ]
       },
       "properties": {
-        "segment_id": "303",
-        "zone_id": "30",
-        "subzone_id": "303",
+        "segment_id": "51",
+        "zone_id": "4",
+        "subzone_id": "51",
         "length_m": 1977.3549672432762,
         "slope": 0.0006153659283018839,
         "drop_m": 1.216796875,
-        "downstream_id": "302",
-        "upstream_ids": "['30_sub13']"
+        "downstream_id": "50",
+        "upstream_ids": "['413']"
       }
     },
     {
@@ -13817,14 +13817,14 @@
         ]
       },
       "properties": {
-        "segment_id": "306",
-        "zone_id": "30",
-        "subzone_id": "306",
+        "segment_id": "54",
+        "zone_id": "4",
+        "subzone_id": "54",
         "length_m": 77486.51245532001,
         "slope": 0.011106223422140413,
         "drop_m": 860.58251953125,
-        "downstream_id": "334",
-        "upstream_ids": "['30_sub17']"
+        "downstream_id": "45",
+        "upstream_ids": "['417']"
       }
     },
     {
@@ -13871,14 +13871,14 @@
         ]
       },
       "properties": {
-        "segment_id": "200",
-        "zone_id": "20",
-        "subzone_id": "200",
+        "segment_id": "20",
+        "zone_id": "2",
+        "subzone_id": "20",
         "length_m": 1087.642340429631,
         "slope": 0.0062042885093407125,
         "drop_m": 6.748046875,
-        "downstream_id": "334",
-        "upstream_ids": "['20_sub2', '20_sub11', '20_sub32', '20_sub40', '21_sub1']"
+        "downstream_id": "45",
+        "upstream_ids": "['202', '211', '232', '240', '101']"
       }
     },
     {
@@ -14169,14 +14169,14 @@
         ]
       },
       "properties": {
-        "segment_id": "320",
-        "zone_id": "31",
-        "subzone_id": "320",
+        "segment_id": "31",
+        "zone_id": "3",
+        "subzone_id": "31",
         "length_m": 9404.24142665474,
         "slope": 0.11127303405849899,
         "drop_m": 1046.4384765625,
-        "downstream_id": "310",
-        "upstream_ids": "['31_sub3', '31_sub5', '31_sub11']"
+        "downstream_id": "30",
+        "upstream_ids": "['303', '305', '311']"
       }
     },
     {
@@ -14423,13 +14423,13 @@
         ]
       },
       "properties": {
-        "segment_id": "316",
-        "zone_id": "31",
-        "subzone_id": "316",
+        "segment_id": "44",
+        "zone_id": "3",
+        "subzone_id": "44",
         "length_m": 7885.406968114067,
         "slope": 0.11970093982679349,
         "drop_m": 943.890625,
-        "downstream_id": "310",
+        "downstream_id": "30",
         "upstream_ids": []
       }
     },
@@ -14473,13 +14473,13 @@
         ]
       },
       "properties": {
-        "segment_id": "319",
-        "zone_id": "31",
-        "subzone_id": "319",
+        "segment_id": "47",
+        "zone_id": "3",
+        "subzone_id": "47",
         "length_m": 881.7083265278279,
         "slope": 0.03957217169384278,
         "drop_m": 34.89111328125,
-        "downstream_id": "310",
+        "downstream_id": "30",
         "upstream_ids": []
       }
     },
@@ -14611,14 +14611,14 @@
         ]
       },
       "properties": {
-        "segment_id": "334",
-        "zone_id": "30",
-        "subzone_id": "334",
+        "segment_id": "45",
+        "zone_id": "4",
+        "subzone_id": "45",
         "length_m": 3919.377243606933,
         "slope": 0.01515830937412521,
         "drop_m": 59.4111328125,
-        "downstream_id": "333",
-        "upstream_ids": "['30_sub15', '20_sub1']"
+        "downstream_id": "44",
+        "upstream_ids": "['415', '201']"
       }
     },
     {
@@ -14749,14 +14749,14 @@
         ]
       },
       "properties": {
-        "segment_id": "302",
-        "zone_id": "30",
-        "subzone_id": "302",
+        "segment_id": "50",
+        "zone_id": "4",
+        "subzone_id": "50",
         "length_m": 3779.419800910133,
         "slope": 0.0,
         "drop_m": 0.0,
-        "downstream_id": "301",
-        "upstream_ids": "['30_sub12']"
+        "downstream_id": "49",
+        "upstream_ids": "['412']"
       }
     },
     {
@@ -14811,13 +14811,13 @@
         ]
       },
       "properties": {
-        "segment_id": "318",
-        "zone_id": "30",
-        "subzone_id": "318",
+        "segment_id": "65",
+        "zone_id": "4",
+        "subzone_id": "65",
         "length_m": 1452.8578873339245,
         "slope": 0.0,
         "drop_m": 0.0,
-        "downstream_id": "301",
+        "downstream_id": "49",
         "upstream_ids": []
       }
     },
@@ -14933,13 +14933,13 @@
         ]
       },
       "properties": {
-        "segment_id": "326",
-        "zone_id": "30",
-        "subzone_id": "326",
+        "segment_id": "72",
+        "zone_id": "4",
+        "subzone_id": "72",
         "length_m": 3048.9887071016587,
         "slope": 0.26617768442892126,
         "drop_m": 811.57275390625,
-        "downstream_id": "309",
+        "downstream_id": "57",
         "upstream_ids": []
       }
     },
@@ -15143,13 +15143,13 @@
         ]
       },
       "properties": {
-        "segment_id": "327",
-        "zone_id": "30",
-        "subzone_id": "327",
+        "segment_id": "73",
+        "zone_id": "4",
+        "subzone_id": "73",
         "length_m": 6086.657624183285,
         "slope": 0.16038193729308642,
         "drop_m": 976.18994140625,
-        "downstream_id": "312",
+        "downstream_id": "59",
         "upstream_ids": []
       }
     },
@@ -15213,13 +15213,13 @@
         ]
       },
       "properties": {
-        "segment_id": "330",
-        "zone_id": "30",
-        "subzone_id": "330",
+        "segment_id": "76",
+        "zone_id": "4",
+        "subzone_id": "76",
         "length_m": 1538.1585488466862,
         "slope": 0.00908179348073328,
         "drop_m": 13.96923828125,
-        "downstream_id": "333",
+        "downstream_id": "44",
         "upstream_ids": []
       }
     },
@@ -15311,13 +15311,13 @@
         ]
       },
       "properties": {
-        "segment_id": "331",
-        "zone_id": "30",
-        "subzone_id": "331",
+        "segment_id": "77",
+        "zone_id": "4",
+        "subzone_id": "77",
         "length_m": 2559.8243180711547,
         "slope": 0.14168605387860775,
         "drop_m": 362.69140625,
-        "downstream_id": "315",
+        "downstream_id": "62",
         "upstream_ids": []
       }
     },
@@ -15401,14 +15401,14 @@
         ]
       },
       "properties": {
-        "segment_id": "310",
-        "zone_id": "31",
-        "subzone_id": "310",
+        "segment_id": "30",
+        "zone_id": "3",
+        "subzone_id": "30",
         "length_m": 2334.5662138616394,
         "slope": 0.009608483362695248,
         "drop_m": 22.431640625,
-        "downstream_id": "333",
-        "upstream_ids": "['31_sub2', '31_sub15', '31_sub18']"
+        "downstream_id": "44",
+        "upstream_ids": "['302', '315', '318']"
       }
     },
     {
@@ -15627,14 +15627,14 @@
         ]
       },
       "properties": {
-        "segment_id": "333",
-        "zone_id": "30",
-        "subzone_id": "333",
+        "segment_id": "44",
+        "zone_id": "4",
+        "subzone_id": "44",
         "length_m": 6583.826313498016,
         "slope": 0.007880417603799783,
         "drop_m": 51.88330078125,
-        "downstream_id": "332",
-        "upstream_ids": "['30_sub6', '30_sub37', '31_sub1']"
+        "downstream_id": "43",
+        "upstream_ids": "['406', '437', '301']"
       }
     },
     {
@@ -15757,14 +15757,14 @@
         ]
       },
       "properties": {
-        "segment_id": "301",
-        "zone_id": "30",
-        "subzone_id": "301",
+        "segment_id": "49",
+        "zone_id": "4",
+        "subzone_id": "49",
         "length_m": 3740.771620298546,
         "slope": 0.0,
         "drop_m": 0.0,
-        "downstream_id": "337",
-        "upstream_ids": "['30_sub11', '30_sub26']"
+        "downstream_id": "48",
+        "upstream_ids": "['411', '426']"
       }
     },
     {
@@ -15975,14 +15975,14 @@
         ]
       },
       "properties": {
-        "segment_id": "309",
-        "zone_id": "30",
-        "subzone_id": "309",
+        "segment_id": "57",
+        "zone_id": "4",
+        "subzone_id": "57",
         "length_m": 6311.915728390938,
         "slope": 0.008938482029905454,
         "drop_m": 56.4189453125,
-        "downstream_id": "332",
-        "upstream_ids": "['30_sub33']"
+        "downstream_id": "43",
+        "upstream_ids": "['433']"
       }
     },
     {
@@ -16069,14 +16069,14 @@
         ]
       },
       "properties": {
-        "segment_id": "312",
-        "zone_id": "30",
-        "subzone_id": "312",
+        "segment_id": "59",
+        "zone_id": "4",
+        "subzone_id": "59",
         "length_m": 2307.2378232694273,
         "slope": 0.011775528746317432,
         "drop_m": 27.1689453125,
-        "downstream_id": "332",
-        "upstream_ids": "['30_sub34']"
+        "downstream_id": "43",
+        "upstream_ids": "['434']"
       }
     },
     {
@@ -16115,14 +16115,14 @@
         ]
       },
       "properties": {
-        "segment_id": "315",
-        "zone_id": "30",
-        "subzone_id": "315",
+        "segment_id": "62",
+        "zone_id": "4",
+        "subzone_id": "62",
         "length_m": 769.0792744230139,
         "slope": 0.01580750771319473,
         "drop_m": 12.1572265625,
-        "downstream_id": "332",
-        "upstream_ids": "['30_sub38']"
+        "downstream_id": "43",
+        "upstream_ids": "['438']"
       }
     },
     {
@@ -16197,14 +16197,14 @@
         ]
       },
       "properties": {
-        "segment_id": "332",
-        "zone_id": "30",
-        "subzone_id": "332",
+        "segment_id": "43",
+        "zone_id": "4",
+        "subzone_id": "43",
         "length_m": 2016.0031478563394,
         "slope": 0.005025946625888914,
         "drop_m": 10.13232421875,
-        "downstream_id": "322",
-        "upstream_ids": "['30_sub5', '30_sub18', '30_sub20', '30_sub23']"
+        "downstream_id": "42",
+        "upstream_ids": "['405', '418', '420', '423']"
       }
     },
     {
@@ -16411,14 +16411,14 @@
         ]
       },
       "properties": {
-        "segment_id": "337",
-        "zone_id": "30",
-        "subzone_id": "337",
+        "segment_id": "48",
+        "zone_id": "4",
+        "subzone_id": "48",
         "length_m": 6479.201561679134,
         "slope": 0.14448455142787547,
         "drop_m": 936.14453125,
-        "downstream_id": "336",
-        "upstream_ids": "['30_sub10']"
+        "downstream_id": "47",
+        "upstream_ids": "['410']"
       }
     },
     {
@@ -16661,13 +16661,13 @@
         ]
       },
       "properties": {
-        "segment_id": "325",
-        "zone_id": "30",
-        "subzone_id": "325",
+        "segment_id": "71",
+        "zone_id": "4",
+        "subzone_id": "71",
         "length_m": 7586.167992415432,
         "slope": 0.159881213202783,
         "drop_m": 1212.8857421875,
-        "downstream_id": "322",
+        "downstream_id": "42",
         "upstream_ids": []
       }
     },
@@ -16743,13 +16743,13 @@
         ]
       },
       "properties": {
-        "segment_id": "328",
-        "zone_id": "30",
-        "subzone_id": "328",
+        "segment_id": "74",
+        "zone_id": "4",
+        "subzone_id": "74",
         "length_m": 1922.6981860589644,
         "slope": 0.04054284792145709,
         "drop_m": 77.95166015625,
-        "downstream_id": "336",
+        "downstream_id": "47",
         "upstream_ids": []
       }
     },
@@ -16889,13 +16889,13 @@
         ]
       },
       "properties": {
-        "segment_id": "115",
-        "zone_id": "10",
-        "subzone_id": "115",
+        "segment_id": "82",
+        "zone_id": "6",
+        "subzone_id": "82",
         "length_m": 4237.940309612892,
         "slope": 0.17481429301446957,
         "drop_m": 740.8525390625,
-        "downstream_id": "112",
+        "downstream_id": "79",
         "upstream_ids": []
       }
     },
@@ -16935,14 +16935,14 @@
         ]
       },
       "properties": {
-        "segment_id": "322",
-        "zone_id": "30",
-        "subzone_id": "322",
+        "segment_id": "42",
+        "zone_id": "4",
+        "subzone_id": "42",
         "length_m": 815.7317553225525,
         "slope": -0.0006458685288544068,
         "drop_m": -0.52685546875,
-        "downstream_id": "311",
-        "upstream_ids": "['30_sub4', '30_sub32']"
+        "downstream_id": "41",
+        "upstream_ids": "['404', '432']"
       }
     },
     {
@@ -17049,14 +17049,14 @@
         ]
       },
       "properties": {
-        "segment_id": "336",
-        "zone_id": "30",
-        "subzone_id": "336",
+        "segment_id": "47",
+        "zone_id": "4",
+        "subzone_id": "47",
         "length_m": 3056.993007387476,
         "slope": 0.04984409401878838,
         "drop_m": 152.373046875,
-        "downstream_id": "335",
-        "upstream_ids": "['30_sub9', '30_sub35']"
+        "downstream_id": "46",
+        "upstream_ids": "['409', '435']"
       }
     },
     {
@@ -17099,13 +17099,13 @@
         ]
       },
       "properties": {
-        "segment_id": "320",
-        "zone_id": "30",
-        "subzone_id": "320",
+        "segment_id": "67",
+        "zone_id": "4",
+        "subzone_id": "67",
         "length_m": 928.3608074260496,
         "slope": 0.027470398580221673,
         "drop_m": 25.50244140625,
-        "downstream_id": "314",
+        "downstream_id": "61",
         "upstream_ids": []
       }
     },
@@ -17189,14 +17189,14 @@
         ]
       },
       "properties": {
-        "segment_id": "112",
-        "zone_id": "10",
-        "subzone_id": "112",
+        "segment_id": "79",
+        "zone_id": "6",
+        "subzone_id": "79",
         "length_m": 2474.5236565589385,
         "slope": 0.029107559169654858,
         "drop_m": 72.02734375,
-        "downstream_id": "106",
-        "upstream_ids": "['10_sub23']"
+        "downstream_id": "74",
+        "upstream_ids": "['623']"
       }
     },
     {
@@ -17467,14 +17467,14 @@
         ]
       },
       "properties": {
-        "segment_id": "311",
-        "zone_id": "30",
-        "subzone_id": "311",
+        "segment_id": "41",
+        "zone_id": "4",
+        "subzone_id": "41",
         "length_m": 8607.83376164056,
         "slope": 0.006151452857943921,
         "drop_m": 52.95068359375,
-        "downstream_id": "300",
-        "upstream_ids": "['30_sub3']"
+        "downstream_id": "40",
+        "upstream_ids": "['403']"
       }
     },
     {
@@ -17493,14 +17493,14 @@
         ]
       },
       "properties": {
-        "segment_id": "335",
-        "zone_id": "30",
-        "subzone_id": "335",
+        "segment_id": "46",
+        "zone_id": "4",
+        "subzone_id": "46",
         "length_m": 112.62905210349709,
         "slope": 0.03178211817374298,
         "drop_m": 3.57958984375,
-        "downstream_id": "300",
-        "upstream_ids": "['30_sub8']"
+        "downstream_id": "40",
+        "upstream_ids": "['408']"
       }
     },
     {
@@ -17595,14 +17595,14 @@
         ]
       },
       "properties": {
-        "segment_id": "314",
-        "zone_id": "30",
-        "subzone_id": "314",
+        "segment_id": "61",
+        "zone_id": "4",
+        "subzone_id": "61",
         "length_m": 2625.800889276703,
         "slope": 0.00708470601092467,
         "drop_m": 18.60302734375,
-        "downstream_id": "300",
-        "upstream_ids": "['30_sub28']"
+        "downstream_id": "40",
+        "upstream_ids": "['428']"
       }
     },
     {
@@ -18033,13 +18033,13 @@
         ]
       },
       "properties": {
-        "segment_id": "316",
-        "zone_id": "30",
-        "subzone_id": "316",
+        "segment_id": "63",
+        "zone_id": "4",
+        "subzone_id": "63",
         "length_m": 13439.563212102947,
         "slope": 0.07375244775076678,
         "drop_m": 991.20068359375,
-        "downstream_id": "300",
+        "downstream_id": "40",
         "upstream_ids": []
       }
     },
@@ -18259,13 +18259,13 @@
         ]
       },
       "properties": {
-        "segment_id": "317",
-        "zone_id": "30",
-        "subzone_id": "317",
+        "segment_id": "64",
+        "zone_id": "4",
+        "subzone_id": "64",
         "length_m": 6770.436237094197,
         "slope": 0.005789546276426241,
         "drop_m": 39.19775390625,
-        "downstream_id": "300",
+        "downstream_id": "40",
         "upstream_ids": []
       }
     },
@@ -18469,13 +18469,13 @@
         ]
       },
       "properties": {
-        "segment_id": "324",
-        "zone_id": "30",
-        "subzone_id": "324",
+        "segment_id": "70",
+        "zone_id": "4",
+        "subzone_id": "70",
         "length_m": 6226.615066877791,
         "slope": 0.0066198468732255435,
         "drop_m": 41.21923828125,
-        "downstream_id": "300",
+        "downstream_id": "40",
         "upstream_ids": []
       }
     },
@@ -18715,13 +18715,13 @@
         ]
       },
       "properties": {
-        "segment_id": "126",
-        "zone_id": "11",
-        "subzone_id": "126",
+        "segment_id": "58",
+        "zone_id": "5",
+        "subzone_id": "58",
         "length_m": 7380.23397851297,
         "slope": 0.13124120768155642,
         "drop_m": 968.5908203125,
-        "downstream_id": "123",
+        "downstream_id": "55",
         "upstream_ids": []
       }
     },
@@ -18741,13 +18741,13 @@
         ]
       },
       "properties": {
-        "segment_id": "113",
-        "zone_id": "11",
-        "subzone_id": "113",
+        "segment_id": "61",
+        "zone_id": "5",
+        "subzone_id": "61",
         "length_m": 112.62905210442841,
         "slope": 0.03236304899263805,
         "drop_m": 3.64501953125,
-        "downstream_id": "124",
+        "downstream_id": "56",
         "upstream_ids": []
       }
     },
@@ -18907,13 +18907,13 @@
         ]
       },
       "properties": {
-        "segment_id": "116",
-        "zone_id": "11",
-        "subzone_id": "116",
+        "segment_id": "64",
+        "zone_id": "5",
+        "subzone_id": "64",
         "length_m": 4521.170684742798,
         "slope": 0.1512711859940336,
         "drop_m": 683.9228515625,
-        "downstream_id": "123",
+        "downstream_id": "55",
         "upstream_ids": []
       }
     },
@@ -19029,14 +19029,14 @@
         ]
       },
       "properties": {
-        "segment_id": "106",
-        "zone_id": "10",
-        "subzone_id": "106",
+        "segment_id": "74",
+        "zone_id": "6",
+        "subzone_id": "74",
         "length_m": 3328.903592493623,
         "slope": 0.0420211260125335,
         "drop_m": 139.88427734375,
-        "downstream_id": "104",
-        "upstream_ids": "['10_sub20']"
+        "downstream_id": "72",
+        "upstream_ids": "['620']"
       }
     },
     {
@@ -19215,13 +19215,13 @@
         ]
       },
       "properties": {
-        "segment_id": "116",
-        "zone_id": "10",
-        "subzone_id": "116",
+        "segment_id": "83",
+        "zone_id": "6",
+        "subzone_id": "83",
         "length_m": 5690.798196948407,
         "slope": 0.042040781835673134,
         "drop_m": 239.24560546875,
-        "downstream_id": "104",
+        "downstream_id": "72",
         "upstream_ids": []
       }
     },
@@ -19241,14 +19241,14 @@
         ]
       },
       "properties": {
-        "segment_id": "300",
-        "zone_id": "30",
-        "subzone_id": "300",
+        "segment_id": "40",
+        "zone_id": "4",
+        "subzone_id": "40",
         "length_m": 112.62905210442841,
         "slope": -0.004278945660513563,
         "drop_m": -0.48193359375,
-        "downstream_id": "103",
-        "upstream_ids": "['30_sub2', '30_sub7', '30_sub22', '30_sub24', '30_sub25', '30_sub31']"
+        "downstream_id": "71",
+        "upstream_ids": "['402', '407', '422', '424', '425', '431']"
       }
     },
     {
@@ -19423,14 +19423,14 @@
         ]
       },
       "properties": {
-        "segment_id": "123",
-        "zone_id": "11",
-        "subzone_id": "123",
+        "segment_id": "55",
+        "zone_id": "5",
+        "subzone_id": "55",
         "length_m": 5484.864183045944,
         "slope": 0.018344962709791707,
         "drop_m": 100.61962890625,
-        "downstream_id": "122",
-        "upstream_ids": "['11_sub9', '11_sub15']"
+        "downstream_id": "54",
+        "upstream_ids": "['509', '515']"
       }
     },
     {
@@ -19633,14 +19633,14 @@
         ]
       },
       "properties": {
-        "segment_id": "124",
-        "zone_id": "11",
-        "subzone_id": "124",
+        "segment_id": "56",
+        "zone_id": "5",
+        "subzone_id": "56",
         "length_m": 6553.18243316918,
         "slope": 0.019361269273582647,
         "drop_m": 126.8779296875,
-        "downstream_id": "122",
-        "upstream_ids": "['11_sub12']"
+        "downstream_id": "54",
+        "upstream_ids": "['512']"
       }
     },
     {
@@ -19787,13 +19787,13 @@
         ]
       },
       "properties": {
-        "segment_id": "117",
-        "zone_id": "11",
-        "subzone_id": "117",
+        "segment_id": "65",
+        "zone_id": "5",
+        "subzone_id": "65",
         "length_m": 4463.198413822134,
         "slope": 0.016097795703523758,
         "drop_m": 71.84765625,
-        "downstream_id": "122",
+        "downstream_id": "54",
         "upstream_ids": []
       }
     },
@@ -19949,14 +19949,14 @@
         ]
       },
       "properties": {
-        "segment_id": "103",
-        "zone_id": "10",
-        "subzone_id": "103",
+        "segment_id": "71",
+        "zone_id": "6",
+        "subzone_id": "71",
         "length_m": 4641.804037132223,
         "slope": 0.004867976163037307,
         "drop_m": 22.59619140625,
-        "downstream_id": "102",
-        "upstream_ids": "['30_sub1']"
+        "downstream_id": "70",
+        "upstream_ids": "['401']"
       }
     },
     {
@@ -19995,14 +19995,14 @@
         ]
       },
       "properties": {
-        "segment_id": "104",
-        "zone_id": "10",
-        "subzone_id": "104",
+        "segment_id": "72",
+        "zone_id": "6",
+        "subzone_id": "72",
         "length_m": 815.7317553218941,
         "slope": 0.004542628605634894,
         "drop_m": 3.70556640625,
-        "downstream_id": "102",
-        "upstream_ids": "['10_sub15', '10_sub24']"
+        "downstream_id": "70",
+        "upstream_ids": "['615', '624']"
       }
     },
     {
@@ -20089,14 +20089,14 @@
         ]
       },
       "properties": {
-        "segment_id": "122",
-        "zone_id": "11",
-        "subzone_id": "122",
+        "segment_id": "54",
+        "zone_id": "5",
+        "subzone_id": "54",
         "length_m": 2353.8903041693516,
         "slope": 0.006128277491605729,
         "drop_m": 14.42529296875,
-        "downstream_id": "121",
-        "upstream_ids": "['11_sub6', '11_sub7', '11_sub16']"
+        "downstream_id": "53",
+        "upstream_ids": "['506', '507', '516']"
       }
     },
     {
@@ -20127,13 +20127,13 @@
         ]
       },
       "properties": {
-        "segment_id": "115",
-        "zone_id": "11",
-        "subzone_id": "115",
+        "segment_id": "63",
+        "zone_id": "5",
+        "subzone_id": "63",
         "length_m": 450.5162084167823,
         "slope": 0.025058060707010665,
         "drop_m": 11.2890625,
-        "downstream_id": "112",
+        "downstream_id": "60",
         "upstream_ids": []
       }
     },
@@ -20345,14 +20345,14 @@
         ]
       },
       "properties": {
-        "segment_id": "102",
-        "zone_id": "10",
-        "subzone_id": "102",
+        "segment_id": "70",
+        "zone_id": "6",
+        "subzone_id": "70",
         "length_m": 6685.13557558148,
         "slope": 0.003207252527094044,
         "drop_m": 21.44091796875,
-        "downstream_id": "101",
-        "upstream_ids": "['10_sub12', '10_sub13']"
+        "downstream_id": "69",
+        "upstream_ids": "['612', '613']"
       }
     },
     {
@@ -20543,13 +20543,13 @@
         ]
       },
       "properties": {
-        "segment_id": "119",
-        "zone_id": "10",
-        "subzone_id": "119",
+        "segment_id": "86",
+        "zone_id": "6",
+        "subzone_id": "86",
         "length_m": 6028.685353260919,
         "slope": 0.00348164564309143,
         "drop_m": 20.98974609375,
-        "downstream_id": "101",
+        "downstream_id": "69",
         "upstream_ids": []
       }
     },
@@ -20653,13 +20653,13 @@
         ]
       },
       "properties": {
-        "segment_id": "121",
-        "zone_id": "10",
-        "subzone_id": "121",
+        "segment_id": "88",
+        "zone_id": "6",
+        "subzone_id": "88",
         "length_m": 2897.711474383782,
         "slope": 0.0029785088858218403,
         "drop_m": 8.630859375,
-        "downstream_id": "101",
+        "downstream_id": "69",
         "upstream_ids": []
       }
     },
@@ -20731,14 +20731,14 @@
         ]
       },
       "properties": {
-        "segment_id": "121",
-        "zone_id": "11",
-        "subzone_id": "121",
+        "segment_id": "53",
+        "zone_id": "5",
+        "subzone_id": "53",
         "length_m": 1950.0265766510638,
         "slope": 0.0034952949105214346,
         "drop_m": 6.81591796875,
-        "downstream_id": "120",
-        "upstream_ids": "['11_sub5']"
+        "downstream_id": "52",
+        "upstream_ids": "['505']"
       }
     },
     {
@@ -20941,13 +20941,13 @@
         ]
       },
       "properties": {
-        "segment_id": "125",
-        "zone_id": "11",
-        "subzone_id": "125",
+        "segment_id": "57",
+        "zone_id": "5",
+        "subzone_id": "57",
         "length_m": 6646.487394967214,
         "slope": 0.009065379366118127,
         "drop_m": 60.2529296875,
-        "downstream_id": "120",
+        "downstream_id": "52",
         "upstream_ids": []
       }
     },
@@ -21107,14 +21107,14 @@
         ]
       },
       "properties": {
-        "segment_id": "112",
-        "zone_id": "11",
-        "subzone_id": "112",
+        "segment_id": "60",
+        "zone_id": "5",
+        "subzone_id": "60",
         "length_m": 4894.390531933453,
         "slope": 0.006332783823700285,
         "drop_m": 30.9951171875,
-        "downstream_id": "120",
-        "upstream_ids": "['11_sub14']"
+        "downstream_id": "52",
+        "upstream_ids": "['514']"
       }
     },
     {
@@ -21217,14 +21217,14 @@
         ]
       },
       "properties": {
-        "segment_id": "101",
-        "zone_id": "10",
-        "subzone_id": "101",
+        "segment_id": "69",
+        "zone_id": "6",
+        "subzone_id": "69",
         "length_m": 2944.363955280799,
         "slope": 0.00227510272863368,
         "drop_m": 6.69873046875,
-        "downstream_id": "130",
-        "upstream_ids": "['10_sub11', '10_sub27', '10_sub29']"
+        "downstream_id": "68",
+        "upstream_ids": "['611', '627', '629']"
       }
     },
     {
@@ -21319,13 +21319,13 @@
         ]
       },
       "properties": {
-        "segment_id": "114",
-        "zone_id": "10",
-        "subzone_id": "114",
+        "segment_id": "81",
+        "zone_id": "6",
+        "subzone_id": "81",
         "length_m": 2439.1909656809094,
         "slope": 0.012865473879569645,
         "drop_m": 31.38134765625,
-        "downstream_id": "109",
+        "downstream_id": "77",
         "upstream_ids": []
       }
     },
@@ -21349,14 +21349,14 @@
         ]
       },
       "properties": {
-        "segment_id": "120",
-        "zone_id": "11",
-        "subzone_id": "120",
+        "segment_id": "52",
+        "zone_id": "5",
+        "subzone_id": "52",
         "length_m": 271.91058510680574,
         "slope": 0.004667133382290077,
         "drop_m": 1.26904296875,
-        "downstream_id": "119",
-        "upstream_ids": "['11_sub4', '11_sub8', '11_sub11']"
+        "downstream_id": "51",
+        "upstream_ids": "['504', '508', '511']"
       }
     },
     {
@@ -21391,13 +21391,13 @@
         ]
       },
       "properties": {
-        "segment_id": "114",
-        "zone_id": "11",
-        "subzone_id": "114",
+        "segment_id": "62",
+        "zone_id": "5",
+        "subzone_id": "62",
         "length_m": 796.4076650152263,
         "slope": 0.004823294353497413,
         "drop_m": 3.84130859375,
-        "downstream_id": "111",
+        "downstream_id": "59",
         "upstream_ids": []
       }
     },
@@ -21425,14 +21425,14 @@
         ]
       },
       "properties": {
-        "segment_id": "130",
-        "zone_id": "10",
-        "subzone_id": "130",
+        "segment_id": "68",
+        "zone_id": "6",
+        "subzone_id": "68",
         "length_m": 477.84459900926737,
         "slope": 0.0012977381951908874,
         "drop_m": 0.6201171875,
-        "downstream_id": "129",
-        "upstream_ids": "['10_sub10']"
+        "downstream_id": "67",
+        "upstream_ids": "['610']"
       }
     },
     {
@@ -21579,14 +21579,14 @@
         ]
       },
       "properties": {
-        "segment_id": "109",
-        "zone_id": "10",
-        "subzone_id": "109",
+        "segment_id": "77",
+        "zone_id": "6",
+        "subzone_id": "77",
         "length_m": 4463.198413822135,
         "slope": 0.00758656649850866,
         "drop_m": 33.8603515625,
-        "downstream_id": "129",
-        "upstream_ids": "['10_sub22']"
+        "downstream_id": "67",
+        "upstream_ids": "['622']"
       }
     },
     {
@@ -21737,14 +21737,14 @@
         ]
       },
       "properties": {
-        "segment_id": "119",
-        "zone_id": "11",
-        "subzone_id": "119",
+        "segment_id": "51",
+        "zone_id": "5",
+        "subzone_id": "51",
         "length_m": 4529.174985027297,
         "slope": 0.003954397061100093,
         "drop_m": 17.91015625,
-        "downstream_id": "110",
-        "upstream_ids": "['11_sub3']"
+        "downstream_id": "50",
+        "upstream_ids": "['503']"
       }
     },
     {
@@ -21895,14 +21895,14 @@
         ]
       },
       "properties": {
-        "segment_id": "111",
-        "zone_id": "11",
-        "subzone_id": "111",
+        "segment_id": "59",
+        "zone_id": "5",
+        "subzone_id": "59",
         "length_m": 4575.827465926178,
         "slope": 0.003994432081925197,
         "drop_m": 18.27783203125,
-        "downstream_id": "110",
-        "upstream_ids": "['11_sub13']"
+        "downstream_id": "50",
+        "upstream_ids": "['513']"
       }
     },
     {
@@ -21969,13 +21969,13 @@
         ]
       },
       "properties": {
-        "segment_id": "118",
-        "zone_id": "11",
-        "subzone_id": "118",
+        "segment_id": "66",
+        "zone_id": "5",
+        "subzone_id": "66",
         "length_m": 1697.4400818481322,
         "slope": 0.0047736750359562725,
         "drop_m": 8.10302734375,
-        "downstream_id": "110",
+        "downstream_id": "50",
         "upstream_ids": []
       }
     },
@@ -22067,14 +22067,14 @@
         ]
       },
       "properties": {
-        "segment_id": "129",
-        "zone_id": "10",
-        "subzone_id": "129",
+        "segment_id": "67",
+        "zone_id": "6",
+        "subzone_id": "67",
         "length_m": 2559.8243180689065,
         "slope": 0.002003044259739694,
         "drop_m": 5.12744140625,
-        "downstream_id": "128",
-        "upstream_ids": "['10_sub9', '10_sub18']"
+        "downstream_id": "66",
+        "upstream_ids": "['609', '618']"
       }
     },
     {
@@ -22113,13 +22113,13 @@
         ]
       },
       "properties": {
-        "segment_id": "124",
-        "zone_id": "10",
-        "subzone_id": "124",
+        "segment_id": "90",
+        "zone_id": "6",
+        "subzone_id": "90",
         "length_m": 815.7317553212356,
         "slope": 0.005312403330483888,
         "drop_m": 4.33349609375,
-        "downstream_id": "128",
+        "downstream_id": "66",
         "upstream_ids": []
       }
     },
@@ -22179,14 +22179,14 @@
         ]
       },
       "properties": {
-        "segment_id": "110",
-        "zone_id": "11",
-        "subzone_id": "110",
+        "segment_id": "50",
+        "zone_id": "5",
+        "subzone_id": "50",
         "length_m": 1472.1819776395482,
         "slope": 0.0011253624255789108,
         "drop_m": 1.65673828125,
-        "downstream_id": "128",
-        "upstream_ids": "['11_sub2', '11_sub10', '11_sub17']"
+        "downstream_id": "66",
+        "upstream_ids": "['502', '510', '517']"
       }
     },
     {
@@ -22377,14 +22377,14 @@
         ]
       },
       "properties": {
-        "segment_id": "128",
-        "zone_id": "10",
-        "subzone_id": "128",
+        "segment_id": "66",
+        "zone_id": "6",
+        "subzone_id": "66",
         "length_m": 6075.337834157664,
         "slope": 0.0014496525373014248,
         "drop_m": 8.80712890625,
-        "downstream_id": "127",
-        "upstream_ids": "['10_sub8', '10_sub31', '11_sub1']"
+        "downstream_id": "65",
+        "upstream_ids": "['608', '631', '501']"
       }
     },
     {
@@ -22471,14 +22471,14 @@
         ]
       },
       "properties": {
-        "segment_id": "127",
-        "zone_id": "10",
-        "subzone_id": "127",
+        "segment_id": "65",
+        "zone_id": "6",
+        "subzone_id": "65",
         "length_m": 2493.8477468642895,
         "slope": 0.0007009437032384822,
         "drop_m": 1.748046875,
-        "downstream_id": "126",
-        "upstream_ids": "['10_sub7']"
+        "downstream_id": "64",
+        "upstream_ids": "['607']"
       }
     },
     {
@@ -22521,13 +22521,13 @@
         ]
       },
       "properties": {
-        "segment_id": "117",
-        "zone_id": "10",
-        "subzone_id": "117",
+        "segment_id": "84",
+        "zone_id": "6",
+        "subzone_id": "84",
         "length_m": 975.0132883245441,
         "slope": -0.00012770258645803696,
         "drop_m": -0.12451171875,
-        "downstream_id": "107",
+        "downstream_id": "75",
         "upstream_ids": []
       }
     },
@@ -22695,14 +22695,14 @@
         ]
       },
       "properties": {
-        "segment_id": "126",
-        "zone_id": "10",
-        "subzone_id": "126",
+        "segment_id": "64",
+        "zone_id": "6",
+        "subzone_id": "64",
         "length_m": 5119.648636142695,
         "slope": 0.0011750073935801113,
         "drop_m": 6.015625,
-        "downstream_id": "125",
-        "upstream_ids": "['10_sub6']"
+        "downstream_id": "63",
+        "upstream_ids": "['606']"
       }
     },
     {
@@ -22849,14 +22849,14 @@
         ]
       },
       "properties": {
-        "segment_id": "107",
-        "zone_id": "10",
-        "subzone_id": "107",
+        "segment_id": "75",
+        "zone_id": "6",
+        "subzone_id": "75",
         "length_m": 4509.850894722605,
         "slope": 0.001953730924133348,
         "drop_m": 8.81103515625,
-        "downstream_id": "105",
-        "upstream_ids": "['10_sub25']"
+        "downstream_id": "73",
+        "upstream_ids": "['625']"
       }
     },
     {
@@ -23143,14 +23143,14 @@
         ]
       },
       "properties": {
-        "segment_id": "125",
-        "zone_id": "10",
-        "subzone_id": "125",
+        "segment_id": "63",
+        "zone_id": "6",
+        "subzone_id": "63",
         "length_m": 9291.612374551743,
         "slope": 0.0010280504296447074,
         "drop_m": 9.55224609375,
-        "downstream_id": "122",
-        "upstream_ids": "['10_sub5']"
+        "downstream_id": "62",
+        "upstream_ids": "['605']"
       }
     },
     {
@@ -23381,14 +23381,14 @@
         ]
       },
       "properties": {
-        "segment_id": "105",
-        "zone_id": "10",
-        "subzone_id": "105",
+        "segment_id": "73",
+        "zone_id": "6",
+        "subzone_id": "73",
         "length_m": 7621.500683294782,
         "slope": 0.0009255015817240174,
         "drop_m": 7.0537109375,
-        "downstream_id": "122",
-        "upstream_ids": "['10_sub16']"
+        "downstream_id": "62",
+        "upstream_ids": "['616']"
       }
     },
     {
@@ -23535,13 +23535,13 @@
         ]
       },
       "properties": {
-        "segment_id": "118",
-        "zone_id": "10",
-        "subzone_id": "118",
+        "segment_id": "85",
+        "zone_id": "6",
+        "subzone_id": "85",
         "length_m": 4883.070741912875,
         "slope": 0.007870283756875316,
         "drop_m": 38.43115234375,
-        "downstream_id": "110",
+        "downstream_id": "78",
         "upstream_ids": []
       }
     },
@@ -23653,13 +23653,13 @@
         ]
       },
       "properties": {
-        "segment_id": "123",
-        "zone_id": "10",
-        "subzone_id": "123",
+        "segment_id": "89",
+        "zone_id": "6",
+        "subzone_id": "89",
         "length_m": 3309.5795021885447,
         "slope": 0.0011398611016914272,
         "drop_m": 3.7724609375,
-        "downstream_id": "122",
+        "downstream_id": "62",
         "upstream_ids": []
       }
     },
@@ -23679,14 +23679,14 @@
         ]
       },
       "properties": {
-        "segment_id": "122",
-        "zone_id": "10",
-        "subzone_id": "122",
+        "segment_id": "62",
+        "zone_id": "6",
+        "subzone_id": "62",
         "length_m": 112.62905210442841,
         "slope": 0.00973275887320461,
         "drop_m": 1.09619140625,
-        "downstream_id": "111",
-        "upstream_ids": "['10_sub4', '10_sub14', '10_sub30']"
+        "downstream_id": "61",
+        "upstream_ids": "['604', '614', '630']"
       }
     },
     {
@@ -23785,14 +23785,14 @@
         ]
       },
       "properties": {
-        "segment_id": "110",
-        "zone_id": "10",
-        "subzone_id": "110",
+        "segment_id": "78",
+        "zone_id": "6",
+        "subzone_id": "78",
         "length_m": 3018.344826773754,
         "slope": 0.004106885331256145,
         "drop_m": 12.39599609375,
-        "downstream_id": "108",
-        "upstream_ids": "['10_sub26']"
+        "downstream_id": "76",
+        "upstream_ids": "['626']"
       }
     },
     {
@@ -24219,14 +24219,14 @@
         ]
       },
       "properties": {
-        "segment_id": "111",
-        "zone_id": "10",
-        "subzone_id": "111",
+        "segment_id": "61",
+        "zone_id": "6",
+        "subzone_id": "61",
         "length_m": 14446.593701568778,
         "slope": 0.0009000350999584106,
         "drop_m": 13.00244140625,
-        "downstream_id": "100",
-        "upstream_ids": "['10_sub3']"
+        "downstream_id": "60",
+        "upstream_ids": "['603']"
       }
     },
     {
@@ -24605,14 +24605,14 @@
         ]
       },
       "properties": {
-        "segment_id": "108",
-        "zone_id": "10",
-        "subzone_id": "108",
+        "segment_id": "76",
+        "zone_id": "6",
+        "subzone_id": "76",
         "length_m": 12815.130190924607,
         "slope": 0.0008064274418038021,
         "drop_m": 10.33447265625,
-        "downstream_id": "100",
-        "upstream_ids": "['10_sub19']"
+        "downstream_id": "60",
+        "upstream_ids": "['619']"
       }
     },
     {
@@ -24831,13 +24831,13 @@
         ]
       },
       "properties": {
-        "segment_id": "113",
-        "zone_id": "10",
-        "subzone_id": "113",
+        "segment_id": "80",
+        "zone_id": "6",
+        "subzone_id": "80",
         "length_m": 7236.961046080256,
         "slope": 0.0008098481954555217,
         "drop_m": 5.86083984375,
-        "downstream_id": "100",
+        "downstream_id": "60",
         "upstream_ids": []
       }
     },
@@ -24985,13 +24985,13 @@
         ]
       },
       "properties": {
-        "segment_id": "120",
-        "zone_id": "10",
-        "subzone_id": "120",
+        "segment_id": "87",
+        "zone_id": "6",
+        "subzone_id": "87",
         "length_m": 4789.7657801148425,
         "slope": 0.000255366251169942,
         "drop_m": 1.22314453125,
-        "downstream_id": "100",
+        "downstream_id": "60",
         "upstream_ids": []
       }
     },
@@ -25011,14 +25011,14 @@
         ]
       },
       "properties": {
-        "segment_id": "100",
-        "zone_id": "10",
-        "subzone_id": "100",
+        "segment_id": "60",
+        "zone_id": "6",
+        "subzone_id": "60",
         "length_m": 159.28153300330865,
         "slope": 0.0,
         "drop_m": 0.0,
         "downstream_id": "",
-        "upstream_ids": "['10_sub2', '10_sub17', '10_sub21', '10_sub28']"
+        "upstream_ids": "['602', '617', '621', '628']"
       }
     }
   ]
