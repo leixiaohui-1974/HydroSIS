@@ -1,0 +1,4 @@
+Model_ID,Type,Parameters
+mountain_zone,hbv,"{'degree_day_factor': 3.5, 'snow_threshold': 2.0, 'field_capacity': 180, 'beta': 1.8, 'k0': 0.5, 'k1': 0.15, 'k2': 0.03, 'percolation': 3.0, 'initial_snow': 0.0, 'initial_soil': 0.0, 'initial_upper': 0.0, 'initial_lower': 0.0}"
+forest_zone,scs_curve_number,"{'curve_number': 65, 'initial_abstraction_ratio': 0.05}"
+valley_zone,scs_curve_number,"{'curve_number': 72, 'initial_abstraction_ratio': 0.05}"

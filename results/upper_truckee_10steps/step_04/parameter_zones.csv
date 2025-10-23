@@ -1,0 +1,4 @@
+id,description,subbasins,characteristics
+Upper_Mountain,上游高山区 (2000-3000m),"['W170', 'W160']","High elevation, steep slopes, snow accumulation"
+Middle_Forest,中游森林区 (1500-2000m),['W180'],"Forested, moderate slopes"
+Lower_Valley,下游河谷区 (1200-1500m),['W190'],"Valley, gentler slopes, meadows"
