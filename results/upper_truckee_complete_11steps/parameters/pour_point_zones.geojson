@@ -6,16 +6,16 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6709039.509979715,
-          6599600.153922984
+          -6692483.039320384,
+          6653662.098933043
         ]
       },
       "properties": {
         "id": "10",
         "zone_id": "10",
-        "row": 498,
-        "col": 269,
-        "accumulation": 30723.0
+        "row": 18,
+        "col": 416,
+        "accumulation": 122946.0
       }
     },
     {
@@ -23,16 +23,16 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6706786.928937629,
-          6604668.461267677
+          -6708588.993771297,
+          6600388.557287714
         ]
       },
       "properties": {
         "id": "20",
         "zone_id": "20",
-        "row": 453,
-        "col": 289,
-        "accumulation": 61327.0
+        "row": 491,
+        "col": 273,
+        "accumulation": 42065.0
       }
     },
     {
@@ -40,33 +40,16 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6704309.089791334,
-          6624153.287281719
+          -6705322.751260273,
+          6619084.979937026
         ]
       },
       "properties": {
         "id": "30",
         "zone_id": "30",
-        "row": 280,
-        "col": 311,
-        "accumulation": 92232.0
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -6705435.380312377,
-          6619084.979937026
-        ]
-      },
-      "properties": {
-        "id": "31",
-        "zone_id": "31",
         "row": 325,
-        "col": 301,
-        "accumulation": 11877.0
+        "col": 302,
+        "accumulation": 85748.0
       }
     },
     {
@@ -79,8 +62,8 @@
         ]
       },
       "properties": {
-        "id": "21",
-        "zone_id": "21",
+        "id": "31",
+        "zone_id": "31",
         "row": 472,
         "col": 285,
         "accumulation": 13949.0
@@ -96,11 +79,28 @@
         ]
       },
       "properties": {
-        "id": "11",
-        "zone_id": "11",
+        "id": "21",
+        "zone_id": "21",
         "row": 566,
         "col": 231,
         "accumulation": 22344.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6707237.445146046,
+          6602528.509277696
+        ]
+      },
+      "properties": {
+        "id": "11",
+        "zone_id": "11",
+        "row": 472,
+        "col": 285,
+        "accumulation": 13949.0
       }
     }
   ]
