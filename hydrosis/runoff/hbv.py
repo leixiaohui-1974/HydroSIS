@@ -95,8 +95,12 @@ class HBVRunoff(RunoffModel):
             self.soil += effective_precip - recharge
 
             quickflow = self.k0 * self.upper
-            self.upper += recharge - quickflow - self.percolation
-            self.lower += self.percolation - self.k2 * self.lower
+            # Limit percolation to available water in upper reservoir
+            actual_percolation = min(self.percolation, max(0.0, self.upper + recharge - quickflow))
+            self.upper += recharge - quickflow - actual_percolation
+            self.upper = max(0.0, self.upper)  # Ensure non-negative
+            self.lower += actual_percolation - self.k2 * self.lower
+            self.lower = max(0.0, self.lower)  # Ensure non-negative
             baseflow = self.k1 * self.upper + self.k2 * self.lower
 
             flows.append((quickflow + baseflow) * subbasin.area_km2)
