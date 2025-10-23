@@ -202,16 +202,20 @@ step04_cross_sections:
     # 断面间距（米）
     spacing_meters: 500.0
 
-    # 断面宽度（米）
-    cross_section_width: 200.0
+    # 断面半宽度（米）- 从河道中心线向两侧延伸的距离
+    half_width_meters: 150.0
 
     # 断面采样点数
-    num_sample_points: 50
+    num_sample_points: 41
+
+    # 是否为特定分区提取（null表示所有河道）
+    # 例如：只提取最下游分区（出口分区）的断面
+    target_zone_ids: null  # [6] 表示只提取Zone 6
 
   # 输出设置
   outputs:
     directory: "step_04_cross_sections"
-    format: "csv"  # csv, geojson, both
+    format: "csv"  # csv格式，每条河道一个文件
 
 # ============================================================================
 # 第5步：雨量站分布
@@ -221,19 +225,25 @@ step05_rain_gauges:
 
   # 雨量站生成配置
   generation:
-    # 雨量站数量
-    num_stations: 5
+    # 雨量站总数量（建议不少于50个）
+    num_stations: 50
 
     # 分布方法
-    method: "stratified"  # random, stratified, uniform, manual
+    method: "stratified"  # stratified=分层采样（按分区均匀分布）, random=随机
+
+    # 分配策略（仅当method=stratified时有效）
+    allocation_method: "proportional"  # proportional=按面积比例, equal=均等分配
+
+    # 每个分区最少雨量站数
+    min_stations_per_zone: 3
 
     # 随机种子（用于可重复性）
     random_seed: 42
 
   # 输出设置
   outputs:
-    - "5.1_rain_gauges.geojson"
-    - "5.2_rain_gauges_map.png"
+    - "5.1_rain_gauge_locations.geojson"
+    - "5.2_rain_gauge_distribution_map.png"
 
 # ============================================================================
 # 第6步：雨量序列生成
@@ -244,24 +254,31 @@ step06_precipitation:
   # 降雨配置
   precipitation:
     # 时间序列设置
-    start_date: "2020-01-01"
-    end_date: "2020-12-31"
+    total_hours: 120  # 模拟时长（小时）
     time_step_hours: 1
 
     # 降雨类型
-    type: "synthetic"  # synthetic, observed, design_storm
+    type: "synthetic"  # synthetic=合成降雨（三角形暴雨过程）
 
     # 合成降雨参数
     synthetic:
-      mean_annual_precipitation_mm: 800.0
-      num_storm_events: 20
-      storm_duration_hours: 12
-      storm_intensity_mm_per_hour: 5.0
+      # 峰值时刻（小时）
+      peak_hour: 60  # 第60小时达到峰值
+
+      # 峰值强度（mm/hr）
+      peak_intensity: 15.0
+
+      # 空间异质性强度（0-1）
+      heterogeneity_strength: 0.6
+
+      # 局部突发事件范围
+      min_burst_events: 2
+      max_burst_events: 4
 
   # 输出设置
   outputs:
-    - "6.1_precipitation_timeseries.csv"
-    - "6.2_precipitation_plot.png"
+    - "6.1_rain_gauge_forcing.csv"  # 雨量站时间序列
+    - "6.2_gauge_timeseries_sample.png"  # 时间序列图（样本）
 
 # ============================================================================
 # 第7步：泰森多边形
@@ -271,13 +288,16 @@ step07_thiessen:
 
   # 泰森多边形配置
   thiessen:
-    # 使用的雨量站数据
+    # 使用的雨量站数据（从第5步生成）
     use_rain_gauges_from_step5: true
+
+    # 计算方法
+    method: "voronoi"  # Voronoi图法
 
   # 输出设置
   outputs:
-    - "7.1_thiessen_polygons.geojson"
-    - "7.2_thiessen_map.png"
+    - "7.1_thiessen_polygons.geojson"  # 泰森多边形
+    - "7.2_gauge_locations.geojson"   # 雨量站位置
 
 # ============================================================================
 # 第8步：面雨量计算
@@ -287,16 +307,15 @@ step08_areal_precipitation:
 
   # 面雨量计算配置
   areal_precipitation:
-    # 插值方法
-    method: "thiessen"  # thiessen, idw, kriging
-
-    # IDW参数（如果使用IDW）
-    idw_power: 2.0
+    # 插值方法（基于泰森多边形权重）
+    method: "thiessen"  # thiessen=泰森多边形法
 
   # 输出设置
   outputs:
-    - "8.1_subbasin_precipitation.csv"
-    - "8.2_precipitation_distribution_map.png"
+    - "8.1_parameter_areal_precipitation.csv"  # 参数区面雨量
+    - "8.2_subbasin_areal_precipitation.csv"   # 子流域面雨量
+    - "8.3_basin_average_precipitation.csv"    # 流域平均雨量
+    - "8.4_subbasin_timeseries.png"            # 子流域时间序列图
 
 # ============================================================================
 # 第9步：水文模拟（产流）

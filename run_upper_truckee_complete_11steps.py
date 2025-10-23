@@ -1285,12 +1285,26 @@ def step03_parameter_zones_and_subbasins(
 
     print(f"  ✓ 加载{len(subbasin_geometries)}个子流域几何形状")
 
+    # 加载parameter_zones.geojson获取zone几何体
+    zone_geometries = {}
+    param_zones_geojson = parameter_dir / "parameter_zones.geojson"
+    if param_zones_geojson.exists():
+        geojson_data = json.loads(param_zones_geojson.read_text(encoding='utf-8'))
+        for feature in geojson_data['features']:
+            zone_id = feature['properties'].get('zone_id', feature['properties'].get('id'))
+            if zone_id:
+                geom = shapely_shape(feature['geometry'])
+                zone_geometries[str(zone_id)] = geom
+
+    print(f"  ✓ 加载{len(zone_geometries)}个分区几何形状")
+
     results["partition_outputs"] = partition_outputs
     results["delineation_cfg"] = delineation_cfg_updated
     results["intermediate_dir"] = intermediate_dir
     results["parameter_dir"] = parameter_dir
     results["subbasins"] = subbasins
     results["subbasin_geometries"] = subbasin_geometries
+    results["zone_geometries"] = zone_geometries
 
     print(f"第3步完成：生成{len(results['outputs'])}个输出文件")
     return results
@@ -1303,9 +1317,7 @@ def step04_channel_cross_sections(
     dem_path: Path,
     parameter_dir: Path,
     output_dir: Path,
-    spacing_m: float = 500.0,
-    half_width_m: float = 150.0,
-    n_points: int = 41,
+    config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, object]:
     """
     第4步：河道断面提取
@@ -1318,9 +1330,24 @@ def step04_channel_cross_sections(
     - 河道断面CSV文件（每条河道一个）
     - 断面统计汇总表
     """
+    # 加载配置参数
+    if config is None:
+        config = {}
+
+    step_config = config.get('step04_cross_sections', {})
+    extraction_config = step_config.get('extraction', {})
+
+    spacing_m = extraction_config.get('spacing_meters', 500.0)
+    half_width_m = extraction_config.get('half_width_meters', 150.0)
+    n_points = extraction_config.get('num_sample_points', 41)
+    target_zone_ids = extraction_config.get('target_zone_ids', None)
+
     print("\n" + "="*80)
     print("第4步：河道断面提取")
     print("="*80)
+    print(f"  配置：间距={spacing_m}m, 半宽={half_width_m}m, 采样点={n_points}")
+    if target_zone_ids:
+        print(f"  目标分区：{target_zone_ids}")
 
     step_dir = output_dir / "step_04_cross_sections"
     step_dir.mkdir(parents=True, exist_ok=True)
@@ -1345,7 +1372,7 @@ def step04_channel_cross_sections(
 
     from shapely.geometry import LineString, shape
 
-    print(f"  ⚙ 提取河道断面 (间距={spacing_m}m, 半宽={half_width_m}m)...")
+    print(f"  ⚙ 提取河道断面...")
 
     with rasterio.open(dem_path) as dem:
         transform = dem.transform
@@ -1356,6 +1383,16 @@ def step04_channel_cross_sections(
             segment_id = props.get('segment_id') or props.get('subzone_id')
             if not segment_id:
                 continue
+
+            # 如果指定了target_zone_ids，只处理目标分区的河道
+            if target_zone_ids is not None:
+                # 从segment_id提取zone_id (例如：201 -> 2, 301 -> 3)
+                try:
+                    zone_id = int(str(segment_id)[0])  # 取第一位数字
+                    if zone_id not in target_zone_ids:
+                        continue
+                except (ValueError, IndexError):
+                    continue
 
             geom = shape(feature.get('geometry'))
             if not isinstance(geom, LineString):
@@ -1484,11 +1521,10 @@ def step06_to_08_precipitation_processing(
     partition_outputs,
     subbasins: Sequence[Subbasin],
     subbasin_geometries: Dict,
+    zone_geometries: Dict,
     intermediate_dir: Path,
     output_dir: Path,
-    station_count: int = 10,
-    rng_seed: int = 42,
-    total_hours: int = 120,
+    config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, object]:
     """
     第6-8步：雨量处理（合并执行）
@@ -1499,6 +1535,7 @@ def step06_to_08_precipitation_processing(
     输入：
     - 参数分区输出
     - 子流域信息
+    - 分区几何体
 
     输出：
     - 雨量站时间序列CSV
@@ -1510,9 +1547,35 @@ def step06_to_08_precipitation_processing(
     - 流域平均雨量CSV
     - 可视化图表
     """
+    # 加载配置参数
+    if config is None:
+        config = {}
+
+    # 第5步配置（雨量站生成）
+    step5_config = config.get('step05_rain_gauges', {})
+    gen_config = step5_config.get('generation', {})
+    station_count = gen_config.get('num_stations', 50)
+    sampling_method = gen_config.get('method', 'stratified')
+    allocation_method = gen_config.get('allocation_method', 'proportional')
+    min_stations_per_zone = gen_config.get('min_stations_per_zone', 3)
+    rng_seed = gen_config.get('random_seed', 42)
+
+    # 第6步配置（降雨序列）
+    step6_config = config.get('step06_precipitation', {})
+    precip_config = step6_config.get('precipitation', {})
+    total_hours = precip_config.get('total_hours', 120)
+    synthetic_config = precip_config.get('synthetic', {})
+    peak_hour = synthetic_config.get('peak_hour', 60)
+    peak_intensity = synthetic_config.get('peak_intensity', 15.0)
+    heterogeneity = synthetic_config.get('heterogeneity_strength', 0.6)
+    min_burst = synthetic_config.get('min_burst_events', 2)
+    max_burst = synthetic_config.get('max_burst_events', 4)
+
     print("\n" + "="*80)
     print("第6-8步：雨量处理（序列生成+泰森多边形+面雨量计算）")
     print("="*80)
+    print(f"  配置：{station_count}个雨量站（{sampling_method}采样），{total_hours}小时模拟")
+    print(f"  峰值时刻：第{peak_hour}小时，峰值强度：{peak_intensity} mm/hr")
 
     step6_dir = output_dir / "step_06_rain_series"
     step7_dir = output_dir / "step_07_thiessen"
@@ -1536,34 +1599,87 @@ def step06_to_08_precipitation_processing(
     timestamps = pd.date_range('2024-01-01', periods=total_hours, freq='h')
 
     # 简单的三角形暴雨过程
-    peak_hour = 48 + 12  # 峰值在第60小时
     base_precip = np.zeros(total_hours)
     for i in range(total_hours):
         if i < peak_hour:
-            base_precip[i] = (i / peak_hour) * 15.0  # 上升到15 mm/hr
+            base_precip[i] = (i / peak_hour) * peak_intensity
         else:
             remaining = total_hours - peak_hour
             if remaining > 0:
-                base_precip[i] = 15.0 * (1.0 - (i - peak_hour) / remaining)
+                base_precip[i] = peak_intensity * (1.0 - (i - peak_hour) / remaining)
 
     base_precip = np.maximum(base_precip, 0.0)
     base_series = pd.Series(base_precip, index=timestamps, name='precipitation_mm_per_hr')
 
     print(f"  ✓ 生成基础降雨序列：{total_hours}小时，总雨量{base_precip.sum():.1f}mm")
 
-    # 使用HydroSIS的降雨生成功能
-    from hydrosis.precipitation import generate_rain_gauge_inputs
+    # 使用分层采样生成雨量站
+    if sampling_method == 'stratified' and zone_geometries:
+        print(f"  ⚙ 使用分层采样生成{station_count}个雨量站...")
+        from hydrosis.precipitation.stratified_sampling import stratified_station_sampling
+        from hydrosis.precipitation.thiessen import thiessen_polygons_for_stations
 
-    print(f"  ⚙ 生成{station_count}个合成雨量站...")
-    rain_inputs = generate_rain_gauge_inputs(
-        base_series,
-        parameter_geometries,
-        station_count=station_count,
-        rng_seed=rng_seed,
-        heterogeneity_strength=0.6,
-        min_burst_events=2,
-        max_burst_events=4,
-    )
+        # 生成雨量站位置
+        station_positions = stratified_station_sampling(
+            zone_geometries=zone_geometries,
+            total_stations=station_count,
+            min_stations_per_zone=min_stations_per_zone,
+            allocation_method=allocation_method,
+            rng=np.random.default_rng(rng_seed),
+        )
+
+        # 计算泰森多边形
+        from shapely.ops import unary_union
+        basins_union = unary_union(list(parameter_geometries.values()))
+        thiessen_polygons = thiessen_polygons_for_stations(station_positions, basins_union)
+
+        print(f"  ✓ 生成{len(station_positions)}个雨量站（分层采样）")
+
+        # 生成雨量站时间序列
+        from hydrosis.precipitation.rain_gauge_generator import _generate_station_series
+
+        station_series = _generate_station_series(
+            base_series,
+            station_positions,
+            rng=np.random.default_rng(rng_seed),
+            heterogeneity=heterogeneity,
+            min_events=min_burst,
+            max_events=max_burst,
+        )
+
+        # 计算权重并插值
+        from hydrosis.precipitation.thiessen import (
+            compute_subbasin_station_weights,
+            interpolate_station_series,
+        )
+
+        station_weights = compute_subbasin_station_weights(parameter_geometries, thiessen_polygons)
+        subbasin_series = interpolate_station_series(station_series, station_weights)
+        subbasin_series.index.name = station_series.index.name
+
+        # 封装为RainGaugeInputs对象
+        from hydrosis.precipitation.rain_gauge_generator import RainGaugeInputs
+        rain_inputs = RainGaugeInputs(
+            station_series=station_series,
+            subbasin_series=subbasin_series,
+            station_positions=dict(station_positions),
+            thiessen_polygons=dict(thiessen_polygons),
+            station_weights=station_weights,
+        )
+    else:
+        # 使用随机采样
+        from hydrosis.precipitation import generate_rain_gauge_inputs
+
+        print(f"  ⚙ 使用随机采样生成{station_count}个合成雨量站...")
+        rain_inputs = generate_rain_gauge_inputs(
+            base_series,
+            parameter_geometries,
+            station_count=station_count,
+            rng_seed=rng_seed,
+            heterogeneity_strength=heterogeneity,
+            min_burst_events=min_burst,
+            max_burst_events=max_burst,
+        )
 
     # 保存雨量站输出
     gauge_paths = rain_inputs.write(
@@ -1638,9 +1754,14 @@ def step06_to_08_precipitation_processing(
         area_lookup = {sub.id: float(sub.area_km2) for sub in subbasins if sub.id in actual_ids}
 
     total_area = sum(area_lookup.values())
-    weighted_series = sum(
-        subbasin_series[sub_id] * area for sub_id, area in area_lookup.items()
-    ) / total_area
+    if total_area == 0:
+        print(f"  ⚠ 警告：无法匹配子流域ID，使用平均值")
+        # 如果没有匹配的面积，使用平均值
+        weighted_series = subbasin_series.mean(axis=1)
+    else:
+        weighted_series = sum(
+            subbasin_series[sub_id] * area for sub_id, area in area_lookup.items()
+        ) / total_area
     basin_series = pd.DataFrame(
         {'precipitation_mm_per_hr': weighted_series},
         index=subbasin_series.index
