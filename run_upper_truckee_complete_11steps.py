@@ -252,18 +252,18 @@ def step02_pour_point_generation(
     main_stream_count: int = 3,
 ) -> Dict[str, object]:
     """
-    第2步：汇水点生成（Pfafstetter编码方案）
+    第2步：汇水点生成（基于深度的编码方案）
 
     策略：
     1. 找到流域出口点（最大累积数点）
     2. 从出口点向上追溯主干流
     3. 在主干流上选3个点，使它们控制的流域面积基本3等分
     4. 对每个主干流分区，选择1个最大支流汇入点
-    5. 使用Pfafstetter风格的数字编码
+    5. 使用基于深度的数字编码（上游编号小，下游编号大）
 
     编码方案：
-    - 主干流（从下游到上游）：10, 20, 30
-    - 对应的支流：11, 21, 31
+    - 主干流（从上游到下游）：1, 2, 3（Zone 1 = 最上游，Zone 3 = 最下游/出口）
+    - 对应的子流域：Zone 1 -> 101,102,...; Zone 2 -> 201,202,...; Zone 3 -> 301,302,...
 
     输入：
     - 流向栅格
@@ -276,7 +276,7 @@ def step02_pour_point_generation(
     - Pour points位置图
     """
     print("\n" + "="*80)
-    print(f"第2步：汇水点生成（{main_stream_count}个干流 + {main_stream_count}个支流，Pfafstetter编码）")
+    print(f"第2步：汇水点生成（{main_stream_count}个干流 + {main_stream_count}个支流，深度编码）")
     print("="*80)
 
     step_dir = output_dir / "step_02_pour_points"
@@ -366,14 +366,13 @@ def step02_pour_point_generation(
     print(f"  ✓ 追溯主干流: {len(main_stream_cells)}个格网")
 
     # 4. 在主干流上选择3个点
-    # 修正：第一个点（10号）应该在流域出口（最大累积数点）
-    # 上游两个点（20号、30号）分别控制约1/3和2/3的流域面积
+    # 新编码规则：Zone 1 = 最上游（最小accumulation），Zone n = 最下游/出口（最大accumulation）
     main_stream_points = []
 
-    # 第一个干流点（10号）：直接设在流域出口
+    # 第一个干流点：流域出口（最大累积数点）
     x, y = transform * (outlet_col, outlet_row)
     main_stream_points.append({
-        'id': '10',
+        'id': 'temp_outlet',  # 临时ID，后续会基于深度重新编号
         'row': int(outlet_row),
         'col': int(outlet_col),
         'x': float(x),
@@ -381,14 +380,13 @@ def step02_pour_point_generation(
         'accumulation': float(outlet_acc),
         'controlled_area_km2': float(total_basin_area_km2),
         'type': 'main_stream',
-        'pfafstetter_code': 10,
     })
 
-    # 上游两个点（20号、30号）：分别控制约1/3和2/3的流域面积
+    # 上游点：分别控制约1/3和2/3的流域面积
     # 这里的"控制面积"是指从该点向上的流域面积
     target_areas = [
-        total_basin_area_km2 * 1.0 / 3.0,  # 20号点：约1/3流域
-        total_basin_area_km2 * 2.0 / 3.0,  # 30号点：约2/3流域
+        total_basin_area_km2 * 1.0 / 3.0,  # 约1/3流域
+        total_basin_area_km2 * 2.0 / 3.0,  # 约2/3流域
     ]
 
     for idx, target_area in enumerate(target_areas):
@@ -408,11 +406,8 @@ def step02_pour_point_generation(
             x, y = transform * (c, r)
             controlled_area = flowacc[r, c] * cell_area_km2
 
-            # Pfafstetter编码：20, 30（从下游到上游）
-            pfaf_code = (idx + 2) * 10
-
             main_stream_points.append({
-                'id': str(pfaf_code),
+                'id': f'temp_{idx}',  # 临时ID
                 'row': int(r),
                 'col': int(c),
                 'x': float(x),
@@ -420,17 +415,25 @@ def step02_pour_point_generation(
                 'accumulation': float(flowacc[r, c]),
                 'controlled_area_km2': float(controlled_area),
                 'type': 'main_stream',
-                'pfafstetter_code': pfaf_code,
             })
 
-    # 按照accumulation从大到小排序，确保顺序是从下游到上游
-    # 这样在后续分区计算时才能正确处理
+    # 按照accumulation从大到小排序（下游到上游）
     main_stream_points.sort(key=lambda p: p['accumulation'], reverse=True)
 
-    print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点（按流量从下游到上游排列）")
+    # 然后反转顺序（变成从上游到下游），并基于深度重新编号
+    # Zone 1 = 最上游（最小accumulation，最大depth）
+    # Zone n = 最下游/出口（最大accumulation，depth=0）
+    main_stream_points.reverse()
+
+    for idx, point in enumerate(main_stream_points, start=1):
+        point['id'] = str(idx)
+        point['zone_id'] = idx
+        point['depth'] = len(main_stream_points) - idx  # 最上游depth最大
+
+    print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点（基于深度编号：Zone 1=最上游，Zone {len(main_stream_points)}=最下游）")
     for p in main_stream_points:
         pct = p['controlled_area_km2'] / total_basin_area_km2 * 100
-        print(f"    - {p['id']}号点: 累积={p['accumulation']:.0f}, 控制面积={p['controlled_area_km2']:.2f} km² ({pct:.1f}%)")
+        print(f"    - Zone {p['id']}: 累积={p['accumulation']:.0f}, 控制面积={p['controlled_area_km2']:.2f} km² ({pct:.1f}%), depth={p['depth']}")
 
     # 5. 为每个干流分区找到1个最大支流汇入点
     main_stream_set = set(main_stream_cells)
@@ -498,11 +501,11 @@ def step02_pour_point_generation(
             x, y = transform * (tc, tr)
             trib_area = tacc * cell_area_km2
 
-            # Pfafstetter编码：11, 21, 31（与对应干流相关）
-            pfaf_code = int(main_id) + 1
+            # 支流ID：使用主流ID加"t"后缀（例如：主流1的支流为"1t"）
+            trib_id = f"{main_id}t"
 
             tributary_points.append({
-                'id': str(pfaf_code),
+                'id': trib_id,
                 'row': int(tr),
                 'col': int(tc),
                 'x': float(x),
@@ -511,10 +514,9 @@ def step02_pour_point_generation(
                 'controlled_area_km2': float(trib_area),
                 'type': 'tributary',
                 'main_stream_id': main_id,
-                'pfafstetter_code': pfaf_code,
             })
 
-            print(f"    - 选择支流{pfaf_code}: 控制面积={trib_area:.2f} km²")
+            print(f"    - 选择支流{trib_id}: 控制面积={trib_area:.2f} km²")
         else:
             print(f"    - 未找到合适的支流")
 
@@ -538,9 +540,13 @@ def step02_pour_point_generation(
                 'col': point['col'],
                 'accumulation': point['accumulation'],
                 'controlled_area_km2': point['controlled_area_km2'],
-                'pfafstetter_code': point['pfafstetter_code'],
             }
         }
+        # 添加主流汇水点的zone_id和depth信息
+        if point['type'] == 'main_stream':
+            feature['properties']['zone_id'] = point['zone_id']
+            feature['properties']['depth'] = point['depth']
+        # 添加支流的关联主流信息
         if point['type'] == 'tributary':
             feature['properties']['main_stream_id'] = point['main_stream_id']
         features.append(feature)
@@ -558,8 +564,21 @@ def step02_pour_point_generation(
 
     # 8. 保存统计表
     stats_df = pd.DataFrame(all_points)
-    stats_df = stats_df[['id', 'type', 'pfafstetter_code', 'row', 'col', 'x', 'y',
-                          'accumulation', 'controlled_area_km2']]
+    # 选择要输出的列（主流和支流的列不完全相同）
+    base_cols = ['id', 'type', 'row', 'col', 'x', 'y', 'accumulation', 'controlled_area_km2']
+    # 为主流添加zone_id和depth列
+    for point in all_points:
+        if point['type'] == 'main_stream':
+            if 'zone_id' not in stats_df.columns:
+                break
+
+    # 重新排列列顺序
+    if 'zone_id' in stats_df.columns:
+        stats_df = stats_df[['id', 'type', 'zone_id', 'depth', 'row', 'col', 'x', 'y',
+                              'accumulation', 'controlled_area_km2']]
+    else:
+        stats_df = stats_df[base_cols]
+
     stats_path = step_dir / "2.2_pour_points_table.csv"
     stats_df.to_csv(stats_path, index=False)
     results["outputs"].append(str(stats_path))
@@ -761,11 +780,35 @@ def step03_parameter_zones_and_subbasins(
         print(f"  ✓ 生成{subzone_count}个参数子区")
         print(f"  ✓ 生成{zone_count}个参数区")
 
-        # 重新编码子流域ID为Pfafstetter数字编码
-        # Zone 10 -> 100, 101, 102, ...
-        # Zone 11 -> 110, 111, 112, ...
-        # Zone 20 -> 200, 201, 202, ...
-        print("  ⚙ 应用Pfafstetter数字编码...")
+        # 基于汇水点depth自动生成zone编号
+        # 读取汇水点GeoJSON，获取depth信息
+        print("  ⚙ 根据汇水点深度信息自动生成zone编号...")
+        pour_points_geojson_path = pour_points_path
+        if pour_points_geojson_path and pour_points_geojson_path.exists():
+            with open(pour_points_geojson_path, 'r', encoding='utf-8') as f:
+                pour_points_data = json.load(f)
+
+            # 提取主流汇水点的depth和zone_id信息
+            # depth大的应该对应zone 1（最上游），depth小的对应zone n（最下游）
+            pour_point_mapping = {}  # old_zone_id -> depth
+            for feature in pour_points_data['features']:
+                props = feature['properties']
+                if props.get('type') == 'main_stream' and 'zone_id' in props and 'depth' in props:
+                    old_zone_id = props['id']  # 汇水点的ID
+                    depth = props['depth']
+                    pour_point_mapping[old_zone_id] = depth
+
+            # 按depth排序，生成新的zone编号
+            # depth大的（上游）-> zone 1, depth小的（下游）-> zone n
+            sorted_zones = sorted(pour_point_mapping.items(), key=lambda x: x[1], reverse=True)
+            old_to_new_zone = {}  # 汇水点ID -> 新zone编号
+            for idx, (old_id, depth) in enumerate(sorted_zones, start=1):
+                old_to_new_zone[old_id] = str(idx)
+                print(f"    - 汇水点ID={old_id}, depth={depth} -> Zone {idx}")
+        else:
+            # 如果无法读取汇水点信息，使用默认的顺序编号
+            print("    ⚠ 无法读取汇水点depth信息，使用默认编号")
+            old_to_new_zone = {}
 
         # 按zone分组子流域
         zone_subzones = {}
@@ -775,19 +818,36 @@ def step03_parameter_zones_and_subbasins(
                 zone_subzones[zone_id] = []
             zone_subzones[zone_id].append(subzone)
 
-        # 创建ID映射：old_id -> new_id
+        # 创建子流域ID映射：old_subzone_id -> new_subzone_id
+        # 新编号规则：zone_id * 100 + index
+        # 例如：Zone 1 -> 101, 102, 103, ...
+        #       Zone 2 -> 201, 202, 203, ...
+        print("  ⚙ 应用基于深度的分层编码...")
         id_mapping = {}
-        for zone_id in sorted(zone_subzones.keys()):
-            subzones = zone_subzones[zone_id]
+        zone_id_mapping = {}  # old_zone_id -> new_zone_id
+
+        for old_zone_id in sorted(zone_subzones.keys()):
+            # 获取新的zone编号
+            if old_zone_id in old_to_new_zone:
+                new_zone_id = old_to_new_zone[old_zone_id]
+            elif old_zone_id.isdigit():
+                # 如果old_zone_id本身是数字，尝试直接映射
+                new_zone_id = old_to_new_zone.get(old_zone_id, old_zone_id)
+            else:
+                # 其他情况：保持原编号或使用默认规则
+                new_zone_id = old_zone_id
+
+            zone_id_mapping[old_zone_id] = new_zone_id
+
+            subzones = zone_subzones[old_zone_id]
             # 按原ID排序保持一致性
             subzones.sort(key=lambda sz: sz.subzone_id)
 
-            # 生成新ID：zone_code * 10 + index
-            # 例如：zone 10 -> 100, 101, 102, ...
-            zone_code = int(zone_id) if zone_id.isdigit() else int(zone_id.split('_')[0])
-            for idx, subzone in enumerate(subzones):
-                new_id = str(zone_code * 10 + idx)
-                id_mapping[subzone.subzone_id] = new_id
+            # 生成新的子流域ID：new_zone_id * 100 + index
+            zone_code = int(new_zone_id) if new_zone_id.isdigit() else 1
+            for idx, subzone in enumerate(subzones, start=1):
+                new_subzone_id = str(zone_code * 100 + idx)
+                id_mapping[subzone.subzone_id] = new_subzone_id
 
         # 更新subzone_summaries中的IDs
         for subzone in partition_outputs.subzone_summaries:
@@ -796,7 +856,7 @@ def step03_parameter_zones_and_subbasins(
             if subzone.downstream_subzone_id and subzone.downstream_subzone_id in id_mapping:
                 subzone.downstream_subzone_id = id_mapping[subzone.downstream_subzone_id]
 
-        print(f"  ✓ 重新编码{len(id_mapping)}个子流域为Pfafstetter数字编码")
+        print(f"  ✓ 重新编码{len(id_mapping)}个子流域为基于深度的分层编码")
 
         # 更新parameter目录下的GeoJSON和CSV文件中的IDs
         print("  ⚙ 更新输出文件中的IDs...")
@@ -850,9 +910,9 @@ def step03_parameter_zones_and_subbasins(
         if param_subbasin_csv.exists():
             df = pd.read_csv(param_subbasin_csv)
             if 'subzone_id' in df.columns:
-                df['subzone_id'] = df['subzone_id'].map(lambda x: id_mapping.get(x, x))
+                df['subzone_id'] = df['subzone_id'].astype(str).map(lambda x: id_mapping.get(x, x))
             if 'downstream_subzone_id' in df.columns:
-                df['downstream_subzone_id'] = df['downstream_subzone_id'].map(lambda x: id_mapping.get(x, x) if pd.notna(x) else x)
+                df['downstream_subzone_id'] = df['downstream_subzone_id'].astype(str).map(lambda x: id_mapping.get(x, x) if pd.notna(x) and x != 'nan' else '')
             df.to_csv(param_subbasin_csv, index=False)
 
         # 更新parameter_channels.csv
@@ -860,11 +920,11 @@ def step03_parameter_zones_and_subbasins(
         if channel_csv.exists():
             df = pd.read_csv(channel_csv)
             if 'segment_id' in df.columns:
-                df['segment_id'] = df['segment_id'].map(lambda x: id_mapping.get(x, x))
+                df['segment_id'] = df['segment_id'].astype(str).map(lambda x: id_mapping.get(x, x))
             if 'subzone_id' in df.columns:
-                df['subzone_id'] = df['subzone_id'].map(lambda x: id_mapping.get(x, x))
+                df['subzone_id'] = df['subzone_id'].astype(str).map(lambda x: id_mapping.get(x, x))
             if 'downstream_id' in df.columns:
-                df['downstream_id'] = df['downstream_id'].map(lambda x: id_mapping.get(x, x) if pd.notna(x) else x)
+                df['downstream_id'] = df['downstream_id'].astype(str).map(lambda x: id_mapping.get(x, x) if pd.notna(x) and x != 'nan' else '')
             if 'upstream_ids' in df.columns:
                 def update_upstream(val):
                     if pd.isna(val) or not val:
