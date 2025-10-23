@@ -2,8 +2,15 @@ Upper Truckee River 工作流结果文件清单
 ============================================================
 
 upper_truckee_complete/
+  README.md (7,819 bytes)
   observed_flow.csv (3,450 bytes)
   pour_points.geojson (45 bytes)
+  figures/
+    outlet_comparison.png (90,963 bytes)
+    rainfall_distribution.png (31,598 bytes)
+    scatter_plot.png (76,664 bytes)
+    subbasin_hydrographs.png (148,381 bytes)
+    zone_discharge.png (89,816 bytes)
   reports/
     file_inventory.txt (0 bytes)
     simulation_report.md (3,090 bytes)
@@ -12,9 +19,3 @@ upper_truckee_complete/
     W170.csv (3,249 bytes)
     W180.csv (3,249 bytes)
     W190.csv (3,251 bytes)
-  figures/
-    outlet_comparison.png (90,963 bytes)
-    rainfall_distribution.png (31,598 bytes)
-    scatter_plot.png (76,664 bytes)
-    subbasin_hydrographs.png (148,381 bytes)
-    zone_discharge.png (89,816 bytes)
