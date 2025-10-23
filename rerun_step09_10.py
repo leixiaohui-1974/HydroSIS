@@ -4,8 +4,10 @@
 
 使用已有的Step1-8结果，只重新运行产流和汇流模拟。
 用于验证HBV模型参数修复后的效果。
+支持通过YAML配置文件进行参数率定。
 """
 import sys
+import argparse
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -28,6 +30,7 @@ from hydrosis.config import (
     RunoffModelConfig,
 )
 from hydrosis.workflow import run_workflow
+from hydrosis.calibration import ParameterCalibration
 
 def load_parameter_zones_from_csv(parameter_dir: Path):
     """从CSV文件加载参数分区配置"""
@@ -80,7 +83,7 @@ def load_parameter_zones_from_csv(parameter_dir: Path):
 
     return parameter_zones, subbasins_df
 
-def main():
+def main(calibration_file: Path = None):
     print("=" * 80)
     print("重新运行Step09-10：水文水动力模拟")
     print("=" * 80)
@@ -105,6 +108,15 @@ def main():
     parameter_zones, subbasins_df = load_parameter_zones_from_csv(parameter_dir)
     print(f"  ✓ 加载{len(parameter_zones)}个参数分区")
 
+    # 加载参数率定配置（如果提供）
+    calibration = None
+    if calibration_file and calibration_file.exists():
+        print(f"\n  📋 加载参数率定配置: {calibration_file}")
+        calibration = ParameterCalibration(calibration_file)
+        print(calibration.get_summary())
+    else:
+        print(f"\n  ℹ 未使用参数率定配置，使用默认参数")
+
     # 加载子流域面雨量数据
     precip_file = results_dir / "intermediate" / "subbasin_areal_precipitation.csv"
     precip_df = pd.read_csv(precip_file, index_col=0)
@@ -112,55 +124,73 @@ def main():
 
     print("\n2. 配置HBV产流模型...")
 
-    # 配置产流模型 - 使用大写参数名（现在HBV模型已支持）
-    # 参数调整：提高径流系数到合理范围（0.1-0.8）
+    # 基准参数（如果没有calibration，使用这些默认值）
+    base_hbv_params = {
+        "TT": 0.0,
+        "CFMAX": 3.5,
+        "CFR": 0.05,
+        "CWH": 0.1,
+        "FC": 150.0,
+        "LP": 0.6,
+        "BETA": 1.0,
+        "K0": 0.30,
+        "K1": 0.10,
+        "K2": 0.02,
+        "PERC": 0.5,
+        "UZL": 5.0,
+        "MAXBAS": 3.0,
+        "initial_soil": 25.0,
+        "initial_upper": 2.0,
+        "initial_lower": 10.0,
+    }
+
+    # 如果有calibration配置，使用Zone 1的参数作为全局参数
+    # （因为RunoffModelConfig是全局的，不是per-zone的）
+    if calibration:
+        # 使用calibration的global defaults作为基准
+        hbv_params = calibration.get_runoff_parameters('hbv', zone_id=1, base_parameters=base_hbv_params)
+        print(f"  ✓ 使用参数率定配置")
+    else:
+        hbv_params = base_hbv_params
+        print(f"  ✓ 使用默认参数")
+
     runoff_models = [
         RunoffModelConfig(
             id="hbv",
             model_type="hbv",
-            parameters={
-                "TT": 0.0,          # 雪阈值温度
-                "CFMAX": 3.5,       # 度日因子
-                "CFR": 0.05,        # 再冻结系数
-                "CWH": 0.1,         # 持水能力
-                "FC": 150.0,        # 最大土壤含水量 ← 恢复到150
-                "LP": 0.6,          # 蒸散限制
-                "BETA": 1.0,        # 形状系数
-                "K0": 0.30,         # 快速响应系数
-                "K1": 0.10,         # 慢速响应系数
-                "K2": 0.02,         # 基流系数
-                "PERC": 0.5,        # 渗透率
-                "UZL": 5.0,         # 上层阈值
-                "MAXBAS": 3.0,      # 基流最大值
-                "initial_soil": 25.0,  # 初始土壤含水量（降低以避免Rc>1）
-                "initial_upper": 2.0,  # 初始上层储水（降低）
-                "initial_lower": 10.0,  # 初始下层储水（降低）
-            }
+            parameters=hbv_params
         ),
     ]
 
-    print("  ✓ HBV参数配置（最终优化-修复产流逻辑+降低初始储水）：")
-    print(f"     - FC: 150.0 mm, BETA: 1.0")
-    print(f"     - K0/K1/K2: 0.30/0.10/0.02")
-    print(f"     - PERC: 0.5 mm/day")
-    print(f"     - initial_soil: 25.0 mm (FC的17%，避免Rc>1)")
-    print(f"     - initial_upper/lower: 2.0/10.0 (降低初始储水)")
+    print(f"     - FC: {hbv_params['FC']:.1f} mm, BETA: {hbv_params['BETA']:.2f}")
+    print(f"     - K0/K1/K2: {hbv_params['K0']:.2f}/{hbv_params['K1']:.2f}/{hbv_params['K2']:.2f}")
+    print(f"     - PERC: {hbv_params['PERC']:.2f} mm/hr")
+    print(f"     - initial_soil: {hbv_params['initial_soil']:.1f} mm")
 
     print("\n3. 配置Muskingum汇流模型...")
+
+    base_musk_params = {
+        "K": 10.0,
+        "x": 0.2,
+        "time_step": 1.0,
+    }
+
+    if calibration:
+        musk_params = calibration.get_routing_parameters('muskingum', zone_id=1, base_parameters=base_musk_params)
+        print(f"  ✓ 使用参数率定配置")
+    else:
+        musk_params = base_musk_params
+        print(f"  ✓ 使用默认参数")
 
     routing_models = [
         RoutingModelConfig(
             id="muskingum",
             model_type="muskingum",
-            parameters={
-                "K": 10.0,          # 蓄量常数
-                "x": 0.2,           # 权重系数
-                "time_step": 1.0,   # 时间步长
-            }
+            parameters=musk_params
         ),
     ]
 
-    print("  ✓ Muskingum参数：K=10.0, x=0.2")
+    print(f"     - K: {musk_params['K']:.1f} hr, x: {musk_params['x']:.2f}")
 
     print("\n4. 构建子流域列表...")
 
@@ -382,4 +412,25 @@ def main():
     print("\n下一步：运行 create_zone_rainfall_runoff_plots.py 重新生成降雨径流过程图")
 
 if __name__ == "__main__":
-    main()
+    # 解析命令行参数
+    parser = argparse.ArgumentParser(
+        description="重新运行Step09-10水文水动力模拟，支持参数率定",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  # 使用默认参数运行
+  python rerun_step09_10.py
+
+  # 使用参数率定配置运行
+  python rerun_step09_10.py --calibration calibration/parameter_adjustments.yaml
+        """
+    )
+    parser.add_argument(
+        '--calibration', '-c',
+        type=Path,
+        default=None,
+        help='参数率定YAML配置文件路径'
+    )
+
+    args = parser.parse_args()
+    main(calibration_file=args.calibration)
