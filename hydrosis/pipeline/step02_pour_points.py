@@ -373,6 +373,3 @@ def run_step02_pour_points(config_path: Path | str) -> Dict[str, Path]:
         "accumulation_overview": accumulation_fig_path,
     }
     return outputs
-
-
-def _extract_cross_sections(

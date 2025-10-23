@@ -407,6 +407,13 @@ def partition_parameter_zones(
         new_zone_masks[new_zone_id] = mask
     zone_masks = new_zone_masks
 
+    # Renumber zone_polygons to use new zone IDs
+    new_zone_polygons: Dict[str, List[Sequence[Tuple[float, float]]]] = {}
+    for old_zone_id, polygons in zone_polygons.items():
+        new_zone_id = old_to_new_zone_id[old_zone_id]
+        new_zone_polygons[new_zone_id] = polygons
+    zone_polygons = new_zone_polygons
+
     new_zone_definitions: Dict[str, Dict[str, object]] = {}
     for old_zone_id, definition in zone_definitions.items():
         new_zone_id = old_to_new_zone_id[old_zone_id]
