@@ -1,0 +1,50 @@
+description: "Zone 1 HBV\u53C2\u6570\u7387\u5B9A\u7ED3\u679C\uFF08\u4F7F\u7528\u654F\
+  \u611F\u6027\u5206\u6790\u52A0\u901F\uFF09"
+date: '2025-10-23 13:38:12'
+calibration_info:
+  algorithm: Differential Evolution
+  observation_type: EnhancedRunoffGenerator
+  n_evaluations: 3369
+  computation_time: 0.7531247138977051
+  sensitivity_analysis:
+    method: Morris (Elementary Effects)
+    n_samples: 135
+    computation_time: 0.03036785125732422
+metrics:
+  nse: -1.4184537968594748
+  rmse: 77.10449116115005
+  mae: 57.68108602093534
+  pbias: -64.4903210895453
+  kge: -0.5008331086801256
+  log_nse: -3.342321043378548
+parameter_sensitivity:
+  FC: 0.0
+  BETA: 0.0
+  K0: 0.0
+  K1: 0.0
+  K2: 0.0
+  PERC: 0.0
+  initial_soil_ratio: 0.0
+  initial_upper: 1.0
+zones:
+  1:
+    runoff_model: HBV
+    parameters:
+      FC: 380.4280184452096
+      BETA: 2.202659781802984
+      K0: 0.3111476062276291
+      K1: 0.08577252623853664
+      K2: 0.024319952398109655
+      PERC: 2.4584615160261305
+    initial_conditions:
+      initial_soil: 257.6130802506491
+      initial_upper: 5.42123617646633
+      initial_lower: 30.0
+      initial_snow: 0.0
+    fixed_parameters:
+      LP: 0.7
+      MAXBAS: 3.0
+      TT: 0.0
+      CFMAX: 3.5
+      CFR: 0.05
+      CWH: 0.1

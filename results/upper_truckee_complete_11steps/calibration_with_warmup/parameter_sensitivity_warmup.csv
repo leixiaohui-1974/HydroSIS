@@ -1,0 +1,7 @@
+parameter,sensitivity_index,rank
+FC,0.0,1
+BETA,0.0,2
+K0,0.0,3
+K1,0.0,4
+K2,0.0,5
+PERC,0.0,6

@@ -1,0 +1,44 @@
+description: "Zone 1 HBV\u53C2\u6570\u7387\u5B9A\u7ED3\u679C\uFF08\u4F7F\u7528\u9884\
+  \u70ED\u671F\uFF09"
+date: '2025-10-23 13:41:57'
+calibration_info:
+  algorithm: Differential Evolution
+  warmup_hours: 48
+  calibration_hours: 72
+  n_evaluations: 247
+  computation_time: 0.06001734733581543
+metrics:
+  nse: -1321.093285452323
+  rmse: 1771.2403378195713
+  mae: 1735.3966353013461
+  pbias: 1613.1370230277407
+  kge: -16.5364769009911
+parameter_sensitivity:
+  FC: 0.0
+  BETA: 0.0
+  K0: 0.0
+  K1: 0.0
+  K2: 0.0
+  PERC: 0.0
+zones:
+  1:
+    runoff_model: HBV
+    parameters:
+      FC: 411.18456589773166
+      BETA: 2.213830857513364
+      K0: 0.291028982656254
+      K1: 0.05279282618722428
+      K2: 0.020828301209610857
+      PERC: 2.1821725676582537
+    initial_conditions:
+      initial_soil: 300.0
+      initial_upper: 20.0
+      initial_lower: 3000.0
+      initial_snow: 0.0
+    fixed_parameters:
+      LP: 0.7
+      MAXBAS: 3.0
+      TT: 0.0
+      CFMAX: 3.5
+      CFR: 0.05
+      CWH: 0.1
