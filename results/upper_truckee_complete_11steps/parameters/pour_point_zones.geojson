@@ -1,0 +1,209 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6694059.846049844,
+          6630798.401355872
+        ]
+      },
+      "properties": {
+        "id": "M1",
+        "zone_id": "M1",
+        "row": 221,
+        "col": 402,
+        "accumulation": 112286.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6705660.6384165855,
+          6612890.38207129
+        ]
+      },
+      "properties": {
+        "id": "M2",
+        "zone_id": "M2",
+        "row": 380,
+        "col": 299,
+        "accumulation": 69939.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6715346.736897554,
+          6588675.135868869
+        ]
+      },
+      "properties": {
+        "id": "M3",
+        "zone_id": "M3",
+        "row": 595,
+        "col": 213,
+        "accumulation": 13132.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6707237.445146046,
+          6602528.509277696
+        ]
+      },
+      "properties": {
+        "id": "M1_T1",
+        "zone_id": "M1_T1",
+        "row": 472,
+        "col": 285,
+        "accumulation": 13949.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6705097.493156064,
+          6599825.412027193
+        ]
+      },
+      "properties": {
+        "id": "M1_T2",
+        "zone_id": "M1_T2",
+        "row": 496,
+        "col": 304,
+        "accumulation": 13404.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6698452.379081911,
+          6627419.529792744
+        ]
+      },
+      "properties": {
+        "id": "M1_T3",
+        "zone_id": "M1_T3",
+        "row": 251,
+        "col": 363,
+        "accumulation": 12882.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6707237.445146046,
+          6602528.509277696
+        ]
+      },
+      "properties": {
+        "id": "M2_T1",
+        "zone_id": "M2_T1",
+        "row": 472,
+        "col": 285,
+        "accumulation": 13949.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6705097.493156064,
+          6599825.412027193
+        ]
+      },
+      "properties": {
+        "id": "M2_T2",
+        "zone_id": "M2_T2",
+        "row": 496,
+        "col": 304,
+        "accumulation": 13404.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6701943.879697144,
+          6598248.605297733
+        ]
+      },
+      "properties": {
+        "id": "M2_T3",
+        "zone_id": "M2_T3",
+        "row": 510,
+        "col": 332,
+        "accumulation": 12285.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6715571.995001763,
+          6587999.361556242
+        ]
+      },
+      "properties": {
+        "id": "M3_T1",
+        "zone_id": "M3_T1",
+        "row": 601,
+        "col": 211,
+        "accumulation": 2735.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6715515.680475711,
+          6587830.4179780865
+        ]
+      },
+      "properties": {
+        "id": "M3_T2",
+        "zone_id": "M3_T2",
+        "row": 602,
+        "col": 211,
+        "accumulation": 2703.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6715403.051423606,
+          6588055.676082294
+        ]
+      },
+      "properties": {
+        "id": "M3_T3",
+        "zone_id": "M3_T3",
+        "row": 600,
+        "col": 212,
+        "accumulation": 12820.0
+      }
+    }
+  ]
+}
