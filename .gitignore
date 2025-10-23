@@ -22,3 +22,4 @@ config/results/**
 
 # derived GIS exports (keep base DEM inputs)
 data/**/derived/**
+workflow_run*.log
