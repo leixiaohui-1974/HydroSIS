@@ -1,0 +1,6 @@
+﻿参数,数值
+id,valley_zone
+model_type,SCS-CN
+应用子流域,W190
+curve_number,72
+initial_abstraction_ratio,0.05
