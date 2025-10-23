@@ -19,63 +19,95 @@ class HBVRunoff(RunoffModel):
     """
 
     def __init__(self, parameters):
-        super().__init__(parameters)
-        self.degree_day_factor = float(self.parameters.get("degree_day_factor", 3.0))
-        self.snow_threshold = float(self.parameters.get("snow_threshold", 0.0))
-        self.field_capacity = float(self.parameters.get("field_capacity", 100.0))
-        self.beta = max(1e-6, float(self.parameters.get("beta", 1.0)))
-        self.k0 = float(self.parameters.get("k0", 0.15))
-        self.k1 = float(self.parameters.get("k1", 0.05))
-        self.k2 = float(self.parameters.get("k2", 0.01))
-        self.percolation = float(self.parameters.get("percolation", 2.0))
+        # Store parameters first (needed for attribute initialization)
+        self.parameters = dict(parameters)
+
+        # Support both uppercase (workflow convention) and lowercase parameter names
+        # Degree-day melt parameters
+        self.degree_day_factor = float(
+            self.parameters.get("degree_day_factor") or
+            self.parameters.get("CFMAX") or
+            self.parameters.get("cfmax") or 3.0
+        )
+        self.snow_threshold = float(
+            self.parameters.get("snow_threshold") or
+            self.parameters.get("TT") or
+            self.parameters.get("tt") or 0.0
+        )
+
+        # Soil moisture parameters
+        self.field_capacity = float(
+            self.parameters.get("field_capacity") or
+            self.parameters.get("FC") or
+            self.parameters.get("fc") or 100.0
+        )
+        self.beta = max(1e-6, float(
+            self.parameters.get("beta") or
+            self.parameters.get("BETA") or 1.0
+        ))
+
+        # Recession coefficients
+        self.k0 = float(
+            self.parameters.get("k0") or
+            self.parameters.get("K0") or 0.15
+        )
+        self.k1 = float(
+            self.parameters.get("k1") or
+            self.parameters.get("K1") or 0.05
+        )
+        self.k2 = float(
+            self.parameters.get("k2") or
+            self.parameters.get("K2") or 0.01
+        )
+
+        # Percolation rate
+        self.percolation = float(
+            self.parameters.get("percolation") or
+            self.parameters.get("PERC") or
+            self.parameters.get("perc") or 2.0
+        )
+
+        # Initial states
         self.snow = float(self.parameters.get("initial_snow", 0.0))
-        self.soil = float(self.parameters.get("initial_soil", 40.0))
+        # Set initial soil to 50% of field capacity if not specified
+        init_soil = self.parameters.get("initial_soil")
+        if init_soil is None or init_soil == 0:
+            self.soil = self.field_capacity * 0.5
+        else:
+            self.soil = float(init_soil)
         self.upper = float(self.parameters.get("initial_upper", 5.0))
         self.lower = float(self.parameters.get("initial_lower", 20.0))
+
+        # Now call parent init which will call validate_parameters()
+        # Don't call super().__init__() since we already set self.parameters
+        # and we'll call validate manually
+        self.validate_parameters()
 
     def validate_parameters(self) -> None:
         """Validate HBV model parameters.
 
         Validates:
-            - degree_day_factor: Must be >= 0
-            - field_capacity: Must be > 0
-            - beta: Must be > 0
-            - k0, k1, k2: Recession coefficients, must be in [0, 1]
-            - percolation: Must be >= 0
-            - initial_snow, initial_soil, initial_upper, initial_lower: Must be >= 0
+            - degree_day_factor/CFMAX: Must be >= 0
+            - field_capacity/FC: Must be > 0
+            - beta/BETA: Must be > 0
+            - k0/K0, k1/K1, k2/K2: Recession coefficients, must be in [0, 1]
+            - percolation/PERC: Must be >= 0
+            - initial states: Must be >= 0
+
+        Note: Supports both uppercase (workflow) and lowercase parameter names.
         """
-        degree_day = float(self.parameters.get("degree_day_factor", 3.0))
-        validate_positive("degree_day_factor", degree_day, strict=False)
-
-        fc = float(self.parameters.get("field_capacity", 100.0))
-        validate_positive("field_capacity", fc, strict=True)
-
-        beta = float(self.parameters.get("beta", 1.0))
-        validate_positive("beta", beta, strict=True)
-
-        k0 = float(self.parameters.get("k0", 0.15))
-        validate_probability("k0", k0)
-
-        k1 = float(self.parameters.get("k1", 0.05))
-        validate_probability("k1", k1)
-
-        k2 = float(self.parameters.get("k2", 0.01))
-        validate_probability("k2", k2)
-
-        perc = float(self.parameters.get("percolation", 2.0))
-        validate_positive("percolation", perc, strict=False)
-
-        init_snow = float(self.parameters.get("initial_snow", 0.0))
-        validate_positive("initial_snow", init_snow, strict=False)
-
-        init_soil = float(self.parameters.get("initial_soil", 40.0))
-        validate_positive("initial_soil", init_soil, strict=False)
-
-        init_upper = float(self.parameters.get("initial_upper", 5.0))
-        validate_positive("initial_upper", init_upper, strict=False)
-
-        init_lower = float(self.parameters.get("initial_lower", 20.0))
-        validate_positive("initial_lower", init_lower, strict=False)
+        # Validate using the actual values that were loaded (after name resolution)
+        validate_positive("degree_day_factor", self.degree_day_factor, strict=False)
+        validate_positive("field_capacity", self.field_capacity, strict=True)
+        validate_positive("beta", self.beta, strict=True)
+        validate_probability("k0", self.k0)
+        validate_probability("k1", self.k1)
+        validate_probability("k2", self.k2)
+        validate_positive("percolation", self.percolation, strict=False)
+        validate_positive("initial_snow", self.snow, strict=False)
+        validate_positive("initial_soil", self.soil, strict=False)
+        validate_positive("initial_upper", self.upper, strict=False)
+        validate_positive("initial_lower", self.lower, strict=False)
 
     def simulate(self, subbasin: "Subbasin", precipitation: List[float]) -> List[float]:
         flows: List[float] = []
