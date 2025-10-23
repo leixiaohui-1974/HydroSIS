@@ -113,6 +113,7 @@ def main():
     print("\n2. 配置HBV产流模型...")
 
     # 配置产流模型 - 使用大写参数名（现在HBV模型已支持）
+    # 参数调整：提高径流系数到合理范围（0.1-0.8）
     runoff_models = [
         RunoffModelConfig(
             id="hbv",
@@ -122,24 +123,28 @@ def main():
                 "CFMAX": 3.5,       # 度日因子
                 "CFR": 0.05,        # 再冻结系数
                 "CWH": 0.1,         # 持水能力
-                "FC": 250.0,        # 最大土壤含水量 ← 关键参数
-                "LP": 0.7,          # 蒸散限制
-                "BETA": 2.0,        # 形状系数 ← 关键参数
-                "K0": 0.05,         # 快速响应系数 ← 关键参数
-                "K1": 0.01,         # 慢速响应系数 ← 关键参数
-                "K2": 0.001,        # 基流系数 ← 关键参数
-                "PERC": 1.5,        # 渗透率 ← 关键参数
+                "FC": 150.0,        # 最大土壤含水量 ← 恢复到150
+                "LP": 0.6,          # 蒸散限制
+                "BETA": 1.0,        # 形状系数
+                "K0": 0.30,         # 快速响应系数
+                "K1": 0.10,         # 慢速响应系数
+                "K2": 0.02,         # 基流系数
+                "PERC": 0.5,        # 渗透率
                 "UZL": 5.0,         # 上层阈值
                 "MAXBAS": 3.0,      # 基流最大值
+                "initial_soil": 25.0,  # 初始土壤含水量（降低以避免Rc>1）
+                "initial_upper": 2.0,  # 初始上层储水（降低）
+                "initial_lower": 10.0,  # 初始下层储水（降低）
             }
         ),
     ]
 
-    print("  ✓ HBV参数配置：")
-    print(f"     - FC (field_capacity): 250.0 mm")
-    print(f"     - BETA: 2.0")
-    print(f"     - K0/K1/K2: 0.05/0.01/0.001")
-    print(f"     - PERC (percolation): 1.5 mm/day")
+    print("  ✓ HBV参数配置（最终优化-修复产流逻辑+降低初始储水）：")
+    print(f"     - FC: 150.0 mm, BETA: 1.0")
+    print(f"     - K0/K1/K2: 0.30/0.10/0.02")
+    print(f"     - PERC: 0.5 mm/day")
+    print(f"     - initial_soil: 25.0 mm (FC的17%，避免Rc>1)")
+    print(f"     - initial_upper/lower: 2.0/10.0 (降低初始储水)")
 
     print("\n3. 配置Muskingum汇流模型...")
 
@@ -258,12 +263,36 @@ def main():
     # 获取结果
     baseline = workflow_result.baseline
     aggregated = baseline.aggregated
+    local = baseline.local
 
-    # 保存流量时间序列
+    # 调试：检查local和aggregated是否不同
+    print("\n  [调试] 检查local vs aggregated:")
+    first_id = list(aggregated.keys())[0]
+    print(f"  第一个子流域 {first_id}:")
+    print(f"    local前5个值:      {local[first_id][:5]}")
+    print(f"    aggregated前5个值: {aggregated[first_id][:5]}")
+    local_arr = np.array(local[first_id])
+    aggr_arr = np.array(aggregated[first_id])
+    are_identical = np.allclose(local_arr, aggr_arr)
+    print(f"    是否相同? {are_identical}")
+    if not are_identical:
+        print(f"    ✓ 数据不同 - 这是预期的")
+    else:
+        print(f"    ⚠ 数据相同 - 这是问题所在!")
+
+    # 保存流量时间序列（汇流后的流量）
     result_df = pd.DataFrame(aggregated)
     result_csv = step10_dir / "10.1_discharge_timeseries.csv"
     result_df.to_csv(result_csv)
-    print(f"  ✓ 保存流量时间序列: {result_csv}")
+    print(f"\n  ✓ 保存流量时间序列: {result_csv}")
+
+    # 保存局部径流（Step09输出 - 产流但未汇流）
+    step09_dir = results_dir / "step_09_runoff"
+    step09_dir.mkdir(exist_ok=True)
+    local_df = pd.DataFrame(local)
+    local_csv = step09_dir / "9.1_runoff_timeseries.csv"
+    local_df.to_csv(local_csv)
+    print(f"  ✓ 保存局部径流序列: {local_csv}")
 
     # 计算统计
     stats = []

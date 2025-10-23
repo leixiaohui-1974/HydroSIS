@@ -58,13 +58,13 @@ def _run_model(
 ) -> ScenarioRun:
     """Execute a model run and package the results."""
 
-    local_flows, _ = model.run(forcing)
-    aggregated = model.accumulate_discharge(local_flows)
-    zone_discharge = model.parameter_zone_discharge(local_flows)
+    routed_flows, local_runoff = model.run(forcing)  # 修复：正确解包(routed, runoff)
+    aggregated = model.accumulate_discharge(routed_flows)  # 使用routed进行累积
+    zone_discharge = model.parameter_zone_discharge(routed_flows)  # 使用routed计算分区流量
     return ScenarioRun(
         scenario_id=scenario_id,
-        local={sid: list(series) for sid, series in local_flows.items()},
-        aggregated={sid: list(series) for sid, series in aggregated.items()},
+        local={sid: list(series) for sid, series in local_runoff.items()},  # local使用runoff
+        aggregated={sid: list(series) for sid, series in aggregated.items()},  # aggregated是累积的routed
         zone_discharge={
             zone: {sid: list(series) for sid, series in flows.items()}
             for zone, flows in zone_discharge.items()

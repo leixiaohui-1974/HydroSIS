@@ -290,13 +290,16 @@ def main():
     # 加载数据
     print("\n⚙ 加载数据...")
     precip_file = Path("results/upper_truckee_complete_11steps/step_08_areal_rainfall/8.2_subbasin_areal_precipitation.csv")
+    runoff_file = Path("results/upper_truckee_complete_11steps/step_09_runoff/9.1_runoff_timeseries.csv")
     discharge_file = Path("results/upper_truckee_complete_11steps/step_10_routing/10.1_discharge_timeseries.csv")
 
     precip_df = pd.read_csv(precip_file, index_col=0, parse_dates=True)
-    discharge_df = pd.read_csv(discharge_file, index_col=0)
+    runoff_df = pd.read_csv(runoff_file, index_col=0)  # 局部径流（未汇流）
+    discharge_df = pd.read_csv(discharge_file, index_col=0)  # 汇流后流量
 
-    # 统一列名为字符串
+    # 统一列名
     precip_df.columns = precip_df.columns.astype(str)
+    runoff_df.columns = runoff_df.columns.astype(int)
     discharge_df.columns = discharge_df.columns.astype(int)
 
     # 加载上下游关系
@@ -335,8 +338,12 @@ def main():
         # 区间降雨
         precip_incremental = aggregate_precipitation_for_zone(precip_df, zone_id, upstream_zones=None)
 
-        # 区间径流
-        discharge_incremental = aggregate_discharge_for_zone(discharge_df, zone_id, upstream_zones=None)
+        # 区间径流（使用局部产流，未经汇流）
+        discharge_incremental = aggregate_discharge_for_zone(runoff_df, zone_id, upstream_zones=None)
+
+        # 调试：检查径流值
+        print(f"    [调试] discharge_incremental前5个值: {discharge_incremental.iloc[:5].values}")
+        print(f"    [调试] discharge_incremental均值: {discharge_incremental.mean():.2f} m³/s")
 
         # 绘图
         output_file1 = output_dir / f"zone{zone_id}_incremental_rainfall_runoff.png"
@@ -364,8 +371,8 @@ def main():
         # 累积降雨（包含上游）
         precip_cumulative = aggregate_precipitation_for_zone(precip_df, zone_id, upstream_zones=upstream)
 
-        # 累积径流（包含上游）
-        discharge_cumulative = aggregate_discharge_for_zone(discharge_df, zone_id, upstream_zones=upstream)
+        # 累积径流（包含上游，使用局部产流总和）
+        discharge_cumulative = aggregate_discharge_for_zone(runoff_df, zone_id, upstream_zones=upstream)
 
         # 绘图
         output_file2 = output_dir / f"zone{zone_id}_cumulative_rainfall_runoff.png"

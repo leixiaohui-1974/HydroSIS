@@ -58,13 +58,22 @@ def _run_model(
 ) -> ScenarioRun:
     """Execute a model run and package the results."""
 
-    local = model.run(forcing)
-    aggregated = model.accumulate_discharge(local)
-    zone_discharge = model.parameter_zone_discharge(local)
+    routed, local_runoff = model.run(forcing)  # 修复：正确解包元组(routed, runoff)
+
+    # 调试：检查routed和local_runoff是否不同
+    first_id = list(routed.keys())[0]
+    print(f"  [workflow.py调试] 第一个子流域 {first_id}:")
+    print(f"    runoff前3个值: {local_runoff[first_id][:3]}")
+    print(f"    routed前3个值: {routed[first_id][:3]}")
+
+    aggregated = model.accumulate_discharge(routed)  # 使用routed进行累积
+    print(f"    aggregated前3个值: {aggregated[first_id][:3]}")
+
+    zone_discharge = model.parameter_zone_discharge(routed)  # 使用routed计算分区流量
     return ScenarioRun(
         scenario_id=scenario_id,
-        local={sid: list(series) for sid, series in local.items()},
-        aggregated={sid: list(series) for sid, series in aggregated.items()},
+        local={sid: list(series) for sid, series in local_runoff.items()},  # local使用runoff
+        aggregated={sid: list(series) for sid, series in aggregated.items()},  # aggregated是累积后的流量
         zone_discharge={
             zone: {sid: list(series) for sid, series in flows.items()}
             for zone, flows in zone_discharge.items()

@@ -122,20 +122,50 @@ class HBVRunoff(RunoffModel):
 
             effective_precip = rainfall + melt
             soil_deficit = max(0.0, self.field_capacity - self.soil)
-            recharge = effective_precip * ((self.soil / self.field_capacity) ** self.beta)
-            recharge = min(recharge, soil_deficit)
-            self.soil += effective_precip - recharge
 
+            # Calculate runoff generation using HBV soil moisture routine
+            # When soil is saturated (soil >= FC), all precip becomes runoff
+            # When soil is dry, more precip is absorbed by soil
+            if self.soil >= self.field_capacity:
+                # Soil saturated: all precipitation becomes recharge (runoff)
+                recharge = effective_precip
+                soil_absorption = 0.0
+            else:
+                # Soil not saturated: split between recharge and soil absorption
+                # Higher soil moisture ratio -> more recharge
+                recharge_fraction = (self.soil / self.field_capacity) ** self.beta
+                recharge_potential = effective_precip * recharge_fraction
+                soil_absorption_potential = effective_precip - recharge_potential
+
+                # Limit soil absorption to available capacity
+                soil_absorption = min(soil_absorption_potential, soil_deficit)
+                recharge = effective_precip - soil_absorption
+
+            self.soil += soil_absorption
+            # Cap soil at field capacity
+            self.soil = min(self.soil, self.field_capacity)
+
+            # Calculate flows using CURRENT storage (before update)
             quickflow = self.k0 * self.upper
-            # Limit percolation to available water in upper reservoir
-            actual_percolation = min(self.percolation, max(0.0, self.upper + recharge - quickflow))
-            self.upper += recharge - quickflow - actual_percolation
-            self.upper = max(0.0, self.upper)  # Ensure non-negative
-            self.lower += actual_percolation - self.k2 * self.lower
-            self.lower = max(0.0, self.lower)  # Ensure non-negative
-            baseflow = self.k1 * self.upper + self.k2 * self.lower
+            interflow = self.k1 * self.upper  # Flow from upper reservoir
+            groundwater_flow = self.k2 * self.lower  # Flow from lower reservoir
+            baseflow = interflow + groundwater_flow
 
-            flows.append((quickflow + baseflow) * subbasin.area_km2)
+            # Calculate percolation (limit to available water in upper reservoir)
+            total_upper_outflow = quickflow + interflow
+            actual_percolation = min(self.percolation, max(0.0, self.upper + recharge - total_upper_outflow))
+
+            # Update storage AFTER calculating flows
+            self.upper += recharge - quickflow - interflow - actual_percolation
+            self.upper = max(0.0, self.upper)  # Ensure non-negative
+
+            self.lower += actual_percolation - groundwater_flow
+            self.lower = max(0.0, self.lower)  # Ensure non-negative
+
+            # Convert from mm*km²/hr to m³/s
+            # 1 mm*km²/hr = 1000 m³/hr = 1000/3600 m³/s ≈ 0.278 m³/s
+            flow_m3s = (quickflow + baseflow) * subbasin.area_km2 / 3.6
+            flows.append(flow_m3s)
         return flows
 
 
