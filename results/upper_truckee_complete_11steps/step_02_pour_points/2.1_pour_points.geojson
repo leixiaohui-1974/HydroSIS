@@ -6,15 +6,18 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6694059.846049844,
-          6630798.401355872
+          -6709039.509979715,
+          6599600.153922984
         ]
       },
       "properties": {
-        "id": "M1",
-        "row": 221,
-        "col": 402,
-        "accumulation": 112286.0
+        "id": "10",
+        "type": "main_stream",
+        "row": 498,
+        "col": 269,
+        "accumulation": 30723.0,
+        "controlled_area_km2": 389.7305908203125,
+        "pfafstetter_code": 10
       }
     },
     {
@@ -22,15 +25,18 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6705660.6384165855,
-          6612890.38207129
+          -6706786.928937629,
+          6604668.461267677
         ]
       },
       "properties": {
-        "id": "M2",
-        "row": 380,
-        "col": 299,
-        "accumulation": 69939.0
+        "id": "20",
+        "type": "main_stream",
+        "row": 453,
+        "col": 289,
+        "accumulation": 61327.0,
+        "controlled_area_km2": 777.9515991210938,
+        "pfafstetter_code": 20
       }
     },
     {
@@ -38,15 +44,18 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6715346.736897554,
-          6588675.135868869
+          -6704309.089791334,
+          6624153.287281719
         ]
       },
       "properties": {
-        "id": "M3",
-        "row": 595,
-        "col": 213,
-        "accumulation": 13132.0
+        "id": "30",
+        "type": "main_stream",
+        "row": 280,
+        "col": 311,
+        "accumulation": 92232.0,
+        "controlled_area_km2": 1169.990966796875,
+        "pfafstetter_code": 30
       }
     },
     {
@@ -54,47 +63,19 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6707237.445146046,
-          6602528.509277696
+          -6705435.380312377,
+          6619084.979937026
         ]
       },
       "properties": {
-        "id": "M1_T1",
-        "row": 472,
-        "col": 285,
-        "accumulation": 13949.0
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -6705097.493156064,
-          6599825.412027193
-        ]
-      },
-      "properties": {
-        "id": "M1_T2",
-        "row": 496,
-        "col": 304,
-        "accumulation": 13404.0
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -6698452.379081911,
-          6627419.529792744
-        ]
-      },
-      "properties": {
-        "id": "M1_T3",
-        "row": 251,
-        "col": 363,
-        "accumulation": 12882.0
+        "id": "31",
+        "type": "tributary",
+        "row": 325,
+        "col": 301,
+        "accumulation": 11877.0,
+        "controlled_area_km2": 150.66334533691406,
+        "pfafstetter_code": 31,
+        "main_stream_id": "30"
       }
     },
     {
@@ -107,10 +88,14 @@
         ]
       },
       "properties": {
-        "id": "M2_T1",
+        "id": "21",
+        "type": "tributary",
         "row": 472,
         "col": 285,
-        "accumulation": 13949.0
+        "accumulation": 13949.0,
+        "controlled_area_km2": 176.94729614257812,
+        "pfafstetter_code": 21,
+        "main_stream_id": "20"
       }
     },
     {
@@ -118,79 +103,19 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6705097.493156064,
-          6599825.412027193
+          -6713319.413959677,
+          6591828.749327788
         ]
       },
       "properties": {
-        "id": "M2_T2",
-        "row": 496,
-        "col": 304,
-        "accumulation": 13404.0
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -6701943.879697144,
-          6598248.605297733
-        ]
-      },
-      "properties": {
-        "id": "M2_T3",
-        "row": 510,
-        "col": 332,
-        "accumulation": 12285.0
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -6715571.995001763,
-          6587999.361556242
-        ]
-      },
-      "properties": {
-        "id": "M3_T1",
-        "row": 601,
-        "col": 211,
-        "accumulation": 2735.0
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -6717599.31793964,
-          6585296.26430574
-        ]
-      },
-      "properties": {
-        "id": "M3_T2",
-        "row": 625,
-        "col": 193,
-        "accumulation": 1531.0
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -6713206.784907573,
-          6577862.746866857
-        ]
-      },
-      "properties": {
-        "id": "M3_T3",
-        "row": 691,
-        "col": 232,
-        "accumulation": 1135.0
+        "id": "11",
+        "type": "tributary",
+        "row": 567,
+        "col": 231,
+        "accumulation": 5768.0,
+        "controlled_area_km2": 73.16883087158203,
+        "pfafstetter_code": 11,
+        "main_stream_id": "10"
       }
     }
   ]
