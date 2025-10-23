@@ -69,15 +69,14 @@ print("-" * 80)
 
 # 2.1 增强模型生成
 print("\n2.1 增强模型生成...")
-enhanced_params = {
-    'soil_capacity': 420.0,
-    'soil_beta': 2.0,
-    'k_fast': 0.30,
-    'k_inter': 0.09,
-    'k_base': 0.022,
-    'initial_soil': 300.0,
-}
-enhanced_gen = EnhancedRunoffGenerator(enhanced_params)
+enhanced_gen = EnhancedRunoffGenerator(
+    soil_capacity=420.0,
+    soil_beta=2.0,
+    k_fast=0.30,
+    k_inter=0.09,
+    k_base=0.022,
+    initial_soil=300.0,
+)
 enhanced_runoff_m3s, _ = enhanced_gen.generate(precipitation_mmh, zone1_area_km2)
 print(f"  流量范围: {enhanced_runoff_m3s.min():.2f} - {enhanced_runoff_m3s.max():.2f} m³/s")
 
