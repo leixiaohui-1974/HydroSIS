@@ -1,0 +1,13 @@
+zone_id,downstream_id,area_cells,area_km2,runoff_model,routing_model,subzone_count,requested_accum_threshold,effective_accum_threshold,threshold_relaxed
+M3_T2,M3_T1,2703,34.288375,hbv,muskingum,4,,,False
+M2_T3,M2_T2,12285,155.838952,hbv,muskingum,16,,,False
+M3_T1,M3_T3,32,0.405930,hbv,muskingum,1,,,False
+M1_T2,M2_T1,13404,170.033806,hbv,muskingum,17,,,False
+M2_T2,M2_T1,1119,14.194854,hbv,muskingum,2,,,False
+M3_T3,M3,10085,127.931285,hbv,muskingum,13,,,False
+M3,M2,312,3.957815,hbv,muskingum,1,,,False
+M1_T1,M2,13949,176.947297,hbv,muskingum,18,,,False
+M2_T1,M2,545,6.913490,hbv,muskingum,1,,,False
+M2,M1,42858,543.666732,hbv,muskingum,55,,,False
+M1_T3,M1,12882,163.412078,hbv,muskingum,17,,,False
+M1,,29465,373.772464,hbv,muskingum,38,,,False
