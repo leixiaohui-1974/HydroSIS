@@ -45,6 +45,24 @@ from .uncertainty import (
     glue_analysis,
 )
 
+from .calibration_optimization import (
+    CalibrationResult,
+    sce_ua_optimization,
+    differential_evolution_optimization,
+    calibrate_model,
+)
+
+from .visualization import (
+    plot_hydrograph_comparison,
+    plot_scatter,
+    plot_uncertainty_envelope,
+    plot_parameter_distributions,
+    plot_convergence_history,
+    plot_tornado_sensitivity,
+    plot_multi_metric_comparison,
+    create_analysis_report_figures,
+)
+
 __all__ = [
     # Channel profile analysis
     "ChannelProfileConfig",
@@ -83,4 +101,18 @@ __all__ = [
     "latin_hypercube_sampling",
     "monte_carlo_analysis",
     "glue_analysis",
+    # Parameter calibration
+    "CalibrationResult",
+    "sce_ua_optimization",
+    "differential_evolution_optimization",
+    "calibrate_model",
+    # Visualization
+    "plot_hydrograph_comparison",
+    "plot_scatter",
+    "plot_uncertainty_envelope",
+    "plot_parameter_distributions",
+    "plot_convergence_history",
+    "plot_tornado_sensitivity",
+    "plot_multi_metric_comparison",
+    "create_analysis_report_figures",
 ]
