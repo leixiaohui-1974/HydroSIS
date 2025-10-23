@@ -66,18 +66,18 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6709039.509979715,
-          6584507.86094101
+          -6708476.3647191925,
+          6600275.92823561
         ]
       },
       "properties": {
-        "id": "2t",
+        "id": "1t",
         "type": "tributary",
-        "row": 632,
-        "col": 269,
-        "accumulation": 4392.0,
-        "controlled_area_km2": 55.71385192871094,
-        "main_stream_id": "2"
+        "row": 492,
+        "col": 274,
+        "accumulation": 11036.0,
+        "controlled_area_km2": 139.99501037597656,
+        "main_stream_id": "1"
       }
     },
     {
@@ -90,12 +90,31 @@
         ]
       },
       "properties": {
-        "id": "3t",
+        "id": "2t",
         "type": "tributary",
         "row": 472,
         "col": 285,
         "accumulation": 13949.0,
         "controlled_area_km2": 176.94729614257812,
+        "main_stream_id": "2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6698452.379081911,
+          6627419.529792744
+        ]
+      },
+      "properties": {
+        "id": "3t",
+        "type": "tributary",
+        "row": 251,
+        "col": 363,
+        "accumulation": 12882.0,
+        "controlled_area_km2": 163.41207885742188,
         "main_stream_id": "3"
       }
     }
