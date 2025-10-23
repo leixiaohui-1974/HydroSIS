@@ -1,0 +1,135 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6693881.61965027,
+          6605012.953186406
+        ]
+      },
+      "properties": {
+        "id": "station_01"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6690068.366154632,
+          6627372.0731268935
+        ]
+      },
+      "properties": {
+        "id": "station_02"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6694459.016836319,
+          6635044.222258849
+        ]
+      },
+      "properties": {
+        "id": "station_03"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6722977.867294011,
+          6606008.341557347
+        ]
+      },
+      "properties": {
+        "id": "station_04"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6699742.426834885,
+          6638218.5068137
+        ]
+      },
+      "properties": {
+        "id": "station_05"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6708773.065736563,
+          6586706.3055149
+        ]
+      },
+      "properties": {
+        "id": "station_06"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6691463.468340571,
+          6621688.767481083
+        ]
+      },
+      "properties": {
+        "id": "station_07"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6694596.512666886,
+          6597716.539294724
+        ]
+      },
+      "properties": {
+        "id": "station_08"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6707723.05639919,
+          6570839.344708401
+        ]
+      },
+      "properties": {
+        "id": "station_09"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6721798.602401476,
+          6626133.48578384
+        ]
+      },
+      "properties": {
+        "id": "station_10"
+      }
+    }
+  ]
+}
