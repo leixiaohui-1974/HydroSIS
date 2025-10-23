@@ -365,19 +365,38 @@ def step02_pour_point_generation(
 
     print(f"  ✓ 追溯主干流: {len(main_stream_cells)}个格网")
 
-    # 4. 在主干流上选择3个点，使它们控制的流域面积基本3等分
-    # 计算主干流上每个点控制的累积流量（即面积）
-    target_areas = [total_basin_area_km2 * (i + 1) / (main_stream_count + 1)
-                    for i in range(main_stream_count)]
-
+    # 4. 在主干流上选择3个点
+    # 修正：第一个点（10号）应该在流域出口（最大累积数点）
+    # 上游两个点（20号、30号）分别控制约1/3和2/3的流域面积
     main_stream_points = []
 
+    # 第一个干流点（10号）：直接设在流域出口
+    x, y = transform * (outlet_col, outlet_row)
+    main_stream_points.append({
+        'id': '10',
+        'row': int(outlet_row),
+        'col': int(outlet_col),
+        'x': float(x),
+        'y': float(y),
+        'accumulation': float(outlet_acc),
+        'controlled_area_km2': float(total_basin_area_km2),
+        'type': 'main_stream',
+        'pfafstetter_code': 10,
+    })
+
+    # 上游两个点（20号、30号）：分别控制约1/3和2/3的流域面积
+    # 这里的"控制面积"是指从该点向上的流域面积
+    target_areas = [
+        total_basin_area_km2 * 1.0 / 3.0,  # 20号点：约1/3流域
+        total_basin_area_km2 * 2.0 / 3.0,  # 30号点：约2/3流域
+    ]
+
     for idx, target_area in enumerate(target_areas):
-        # 在主干流上找到最接近目标面积的点
+        # 在主干流上找到最接近目标面积的点（排除出口点）
         best_cell = None
         best_diff = float('inf')
 
-        for r, c in main_stream_cells:
+        for r, c in main_stream_cells[1:]:  # 跳过第一个点（出口点）
             cell_area = flowacc[r, c] * cell_area_km2
             diff = abs(cell_area - target_area)
             if diff < best_diff:
@@ -389,8 +408,8 @@ def step02_pour_point_generation(
             x, y = transform * (c, r)
             controlled_area = flowacc[r, c] * cell_area_km2
 
-            # Pfafstetter编码：10, 20, 30（从下游到上游）
-            pfaf_code = (idx + 1) * 10
+            # Pfafstetter编码：20, 30（从下游到上游）
+            pfaf_code = (idx + 2) * 10
 
             main_stream_points.append({
                 'id': str(pfaf_code),
@@ -404,9 +423,10 @@ def step02_pour_point_generation(
                 'pfafstetter_code': pfaf_code,
             })
 
-    print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点（3等分流域面积）")
-    for p in main_stream_points:
-        print(f"    - {p['id']}: 控制面积={p['controlled_area_km2']:.2f} km²")
+    print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点")
+    print(f"    - 10号点（出口）: 控制面积={total_basin_area_km2:.2f} km²")
+    for p in main_stream_points[1:]:
+        print(f"    - {p['id']}号点: 控制面积={p['controlled_area_km2']:.2f} km² ({p['controlled_area_km2']/total_basin_area_km2*100:.1f}%)")
 
     # 5. 为每个干流分区找到1个最大支流汇入点
     main_stream_set = set(main_stream_cells)
@@ -735,6 +755,122 @@ def step03_parameter_zones_and_subbasins(
         zone_count = len(partition_outputs.parameter_zones)
         print(f"  ✓ 生成{subzone_count}个参数子区")
         print(f"  ✓ 生成{zone_count}个参数区")
+
+        # 重新编码子流域ID为Pfafstetter数字编码
+        # Zone 10 -> 100, 101, 102, ...
+        # Zone 11 -> 110, 111, 112, ...
+        # Zone 20 -> 200, 201, 202, ...
+        print("  ⚙ 应用Pfafstetter数字编码...")
+
+        # 按zone分组子流域
+        zone_subzones = {}
+        for subzone in partition_outputs.subzone_summaries:
+            zone_id = subzone.zone_id
+            if zone_id not in zone_subzones:
+                zone_subzones[zone_id] = []
+            zone_subzones[zone_id].append(subzone)
+
+        # 创建ID映射：old_id -> new_id
+        id_mapping = {}
+        for zone_id in sorted(zone_subzones.keys()):
+            subzones = zone_subzones[zone_id]
+            # 按原ID排序保持一致性
+            subzones.sort(key=lambda sz: sz.subzone_id)
+
+            # 生成新ID：zone_code * 10 + index
+            # 例如：zone 10 -> 100, 101, 102, ...
+            zone_code = int(zone_id) if zone_id.isdigit() else int(zone_id.split('_')[0])
+            for idx, subzone in enumerate(subzones):
+                new_id = str(zone_code * 10 + idx)
+                id_mapping[subzone.subzone_id] = new_id
+
+        # 更新subzone_summaries中的IDs
+        for subzone in partition_outputs.subzone_summaries:
+            subzone.subzone_id = id_mapping[subzone.subzone_id]
+            # 更新downstream引用
+            if subzone.downstream_subzone_id and subzone.downstream_subzone_id in id_mapping:
+                subzone.downstream_subzone_id = id_mapping[subzone.downstream_subzone_id]
+
+        print(f"  ✓ 重新编码{len(id_mapping)}个子流域为Pfafstetter数字编码")
+
+        # 更新parameter目录下的GeoJSON和CSV文件中的IDs
+        print("  ⚙ 更新输出文件中的IDs...")
+
+        # 更新parameter_subbasins.geojson
+        param_subbasin_geojson = parameter_dir / "parameter_subbasins.geojson"
+        if param_subbasin_geojson.exists():
+            with open(param_subbasin_geojson, 'r', encoding='utf-8') as f:
+                geojson_data = json.load(f)
+            for feature in geojson_data['features']:
+                old_id = feature['properties'].get('subzone_id') or feature['properties'].get('id')
+                if old_id and old_id in id_mapping:
+                    new_id = id_mapping[old_id]
+                    if 'subzone_id' in feature['properties']:
+                        feature['properties']['subzone_id'] = new_id
+                    if 'id' in feature['properties']:
+                        feature['properties']['id'] = new_id
+                    # 更新downstream引用
+                    if 'downstream_subzone_id' in feature['properties']:
+                        ds_id = feature['properties']['downstream_subzone_id']
+                        if ds_id and ds_id in id_mapping:
+                            feature['properties']['downstream_subzone_id'] = id_mapping[ds_id]
+            with open(param_subbasin_geojson, 'w', encoding='utf-8') as f:
+                json.dump(geojson_data, f, indent=2)
+
+        # 更新parameter_channels.geojson
+        channel_geojson = parameter_dir / "parameter_channels.geojson"
+        if channel_geojson.exists():
+            with open(channel_geojson, 'r', encoding='utf-8') as f:
+                geojson_data = json.load(f)
+            for feature in geojson_data['features']:
+                props = feature['properties']
+                # 更新segment_id (河道ID)
+                if 'segment_id' in props and props['segment_id'] in id_mapping:
+                    props['segment_id'] = id_mapping[props['segment_id']]
+                if 'subzone_id' in props and props['subzone_id'] in id_mapping:
+                    props['subzone_id'] = id_mapping[props['subzone_id']]
+                # 更新downstream_id
+                if 'downstream_id' in props and props['downstream_id'] and props['downstream_id'] in id_mapping:
+                    props['downstream_id'] = id_mapping[props['downstream_id']]
+                # 更新upstream_ids（可能是分号分隔的列表）
+                if 'upstream_ids' in props and props['upstream_ids']:
+                    upstream_list = str(props['upstream_ids']).split(';')
+                    new_upstream = [id_mapping.get(uid.strip(), uid.strip()) for uid in upstream_list if uid.strip()]
+                    props['upstream_ids'] = ';'.join(new_upstream) if new_upstream else None
+            with open(channel_geojson, 'w', encoding='utf-8') as f:
+                json.dump(geojson_data, f, indent=2)
+
+        # 更新parameter_subbasins.csv
+        param_subbasin_csv = parameter_dir / "parameter_subbasins.csv"
+        if param_subbasin_csv.exists():
+            df = pd.read_csv(param_subbasin_csv)
+            if 'subzone_id' in df.columns:
+                df['subzone_id'] = df['subzone_id'].map(lambda x: id_mapping.get(x, x))
+            if 'downstream_subzone_id' in df.columns:
+                df['downstream_subzone_id'] = df['downstream_subzone_id'].map(lambda x: id_mapping.get(x, x) if pd.notna(x) else x)
+            df.to_csv(param_subbasin_csv, index=False)
+
+        # 更新parameter_channels.csv
+        channel_csv = parameter_dir / "parameter_channels.csv"
+        if channel_csv.exists():
+            df = pd.read_csv(channel_csv)
+            if 'segment_id' in df.columns:
+                df['segment_id'] = df['segment_id'].map(lambda x: id_mapping.get(x, x))
+            if 'subzone_id' in df.columns:
+                df['subzone_id'] = df['subzone_id'].map(lambda x: id_mapping.get(x, x))
+            if 'downstream_id' in df.columns:
+                df['downstream_id'] = df['downstream_id'].map(lambda x: id_mapping.get(x, x) if pd.notna(x) else x)
+            if 'upstream_ids' in df.columns:
+                def update_upstream(val):
+                    if pd.isna(val) or not val:
+                        return val
+                    ids = str(val).split(';')
+                    return ';'.join([id_mapping.get(i.strip(), i.strip()) for i in ids if i.strip()])
+                df['upstream_ids'] = df['upstream_ids'].map(update_upstream)
+            df.to_csv(channel_csv, index=False)
+
+        print(f"  ✓ 更新GeoJSON和CSV文件中的ID引用")
+
     else:
         print("  ⚠ 未生成参数分区输出")
 

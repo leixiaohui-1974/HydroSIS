@@ -6,17 +6,17 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6709039.509979715,
-          6599600.153922984
+          -6692483.039320384,
+          6653662.098933043
         ]
       },
       "properties": {
         "id": "10",
         "type": "main_stream",
-        "row": 498,
-        "col": 269,
-        "accumulation": 30723.0,
-        "controlled_area_km2": 389.7305908203125,
+        "row": 18,
+        "col": 416,
+        "accumulation": 122946.0,
+        "controlled_area_km2": 1559.6073091005776,
         "pfafstetter_code": 10
       }
     },
@@ -25,17 +25,17 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6706786.928937629,
-          6604668.461267677
+          -6708588.993771297,
+          6600388.557287714
         ]
       },
       "properties": {
         "id": "20",
         "type": "main_stream",
-        "row": 453,
-        "col": 289,
-        "accumulation": 61327.0,
-        "controlled_area_km2": 777.9515991210938,
+        "row": 491,
+        "col": 273,
+        "accumulation": 42065.0,
+        "controlled_area_km2": 533.6072998046875,
         "pfafstetter_code": 20
       }
     },
@@ -44,38 +44,18 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6704309.089791334,
-          6624153.287281719
+          -6705322.751260273,
+          6619084.979937026
         ]
       },
       "properties": {
         "id": "30",
         "type": "main_stream",
-        "row": 280,
-        "col": 311,
-        "accumulation": 92232.0,
-        "controlled_area_km2": 1169.990966796875,
-        "pfafstetter_code": 30
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -6705435.380312377,
-          6619084.979937026
-        ]
-      },
-      "properties": {
-        "id": "31",
-        "type": "tributary",
         "row": 325,
-        "col": 301,
-        "accumulation": 11877.0,
-        "controlled_area_km2": 150.66334533691406,
-        "pfafstetter_code": 31,
-        "main_stream_id": "30"
+        "col": 302,
+        "accumulation": 85748.0,
+        "controlled_area_km2": 1087.7393798828125,
+        "pfafstetter_code": 30
       }
     },
     {
@@ -88,12 +68,32 @@
         ]
       },
       "properties": {
-        "id": "21",
+        "id": "31",
         "type": "tributary",
         "row": 472,
         "col": 285,
         "accumulation": 13949.0,
         "controlled_area_km2": 176.94729614257812,
+        "pfafstetter_code": 31,
+        "main_stream_id": "30"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6709039.509979715,
+          6584507.86094101
+        ]
+      },
+      "properties": {
+        "id": "21",
+        "type": "tributary",
+        "row": 632,
+        "col": 269,
+        "accumulation": 4392.0,
+        "controlled_area_km2": 55.71385192871094,
         "pfafstetter_code": 21,
         "main_stream_id": "20"
       }
@@ -103,17 +103,17 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6713319.413959677,
-          6591828.749327788
+          -6707237.445146046,
+          6602528.509277696
         ]
       },
       "properties": {
         "id": "11",
         "type": "tributary",
-        "row": 567,
-        "col": 231,
-        "accumulation": 5768.0,
-        "controlled_area_km2": 73.16883087158203,
+        "row": 472,
+        "col": 285,
+        "accumulation": 13949.0,
+        "controlled_area_km2": 176.94729614257812,
         "pfafstetter_code": 11,
         "main_stream_id": "10"
       }
