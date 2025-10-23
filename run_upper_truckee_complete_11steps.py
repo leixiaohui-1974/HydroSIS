@@ -550,12 +550,36 @@ def step03_parameter_zones_and_subbasins(
         "outputs": [],
     }
 
-    # 手动划分子流域（使用richdem计算的flowdir.tif和flowaccum.tif）
-    print("  ⚙ 使用richdem计算结果手动划分流域...")
+    # 配置
+    delineation_cfg = DelineationConfig(
+        dem_path=dem_path,
+        pour_points_path=pour_points_path,
+        flow_direction_path=flow_dir_path,
+        flow_accumulation_path=flow_acc_path,
+        accumulation_threshold=15000.0,
+        intermediate_directory=intermediate_dir,
+        parameter_directory=parameter_dir,
+    )
 
-    # 读取pour points
+    partition_cfg = ParameterPartitionConfig(
+        pour_points_path=pour_points_path,
+        target_subzone_area_km2=25.0,
+        min_subzone_area_km2=5.0,
+        max_subzones_per_zone=6,
+        area_balance_tolerance=0.35,
+        subzone_accumulation_threshold=1000.0,
+    )
+
+    model_structure = ModelStructureConfig(
+        default_runoff_model="hbv",
+        default_routing_model="muskingum",
+    )
+
+    outputs_cfg = OutputArtifactsConfig()
+
+    # 使用delineation stage来处理
+    print("  ⚙ 运行流域划分和参数分区...")
     pour_points = dutils.read_pour_points_geojson(pour_points_path)
-    print(f"  ✓ 读取{len(pour_points)}个汇水点")
 
     # 读取DEM和流向数据
     with rasterio.open(dem_path) as src:
