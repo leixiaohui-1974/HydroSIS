@@ -774,12 +774,12 @@ model:
       beta: 1.0
       k0: 0.12
       k1: 0.08
-      k2: 0.012
+      k2: 0.02
       percolation: 1.0
       initial_snow: 0.0
-      initial_soil: 0.0
-      initial_upper: 0.0
-      initial_lower: 0.0
+      initial_soil: 0.0     # 从零开始，让模型自然建立状态
+      initial_upper: 0.0    # 从零开始
+      initial_lower: 0.0    # 从零开始（径流系数=0.36，合理）
   routing_models:
   - id: Muskingum
     model_type: muskingum

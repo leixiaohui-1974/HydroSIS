@@ -1182,11 +1182,11 @@ def main() -> None:
             )
     else:
         synthetic_forcing = generate_storm_forcing(
-            total_hours=120,
-            storm_hours=24,
-            lead_hours=48,
-            tail_hours=48,
-            time_step_minutes=60,
+            total_hours=1440,      # 扩展到60天（1440小时）
+            storm_hours=48,        # 2天暴雨期（更真实的暴雨持续时间）
+            lead_hours=336,        # 14天前置期（让土壤达到稳定状态）
+            tail_hours=1056,       # 44天退水期（充分观察基流衰退）
+            time_step_minutes=60,  # 保持1小时时间步长
         )
         base_series = synthetic_forcing[PRECIP_COLUMN]
 
