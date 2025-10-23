@@ -7,7 +7,6 @@ Step,File,Path,Type
 02_汇水点生成,2.1_pour_points.geojson,step_02_pour_points/2.1_pour_points.geojson,GEOJSON
 02_汇水点生成,2.2_pour_points_table.csv,step_02_pour_points/2.2_pour_points_table.csv,CSV
 02_汇水点生成,2.3_pour_points_map.png,step_02_pour_points/2.3_pour_points_map.png,PNG
-03_参数分区和子流域划分,3.1_subbasins.geojson,step_03_zones_subbasins/3.1_subbasins.geojson,GEOJSON
 03_参数分区和子流域划分,3.2_parameter_subbasins.geojson,step_03_zones_subbasins/3.2_parameter_subbasins.geojson,GEOJSON
 03_参数分区和子流域划分,3.3_channel_network.geojson,step_03_zones_subbasins/3.3_channel_network.geojson,GEOJSON
 03_参数分区和子流域划分,3.4_subzone_statistics.csv,step_03_zones_subbasins/3.4_subzone_statistics.csv,CSV

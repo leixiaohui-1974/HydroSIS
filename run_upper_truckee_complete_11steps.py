@@ -126,6 +126,10 @@ def step01_dem_processing(
         dem_data = src.read(1)
         transform = src.transform
         crs = src.crs
+        # 正确处理nodata值
+        nodata = src.nodata
+        if nodata is not None:
+            dem_data = np.where(dem_data == nodata, np.nan, dem_data)
         dem_data = np.where(np.isfinite(dem_data), dem_data, np.nan)
 
     # 读取流向
@@ -140,8 +144,13 @@ def step01_dem_processing(
     # 1.1 DEM高程图
     fig, ax = plt.subplots(figsize=(10, 8))
     valid_dem = dem_data[np.isfinite(dem_data)]
-    im = ax.imshow(dem_data, cmap='terrain', aspect='auto')
-    plt.colorbar(im, ax=ax, label='Elevation (m)')
+    if len(valid_dem) > 0:
+        vmin, vmax = np.percentile(valid_dem, [2, 98])
+        im = ax.imshow(dem_data, cmap='terrain', aspect='auto', vmin=vmin, vmax=vmax)
+        plt.colorbar(im, ax=ax, label='Elevation (m)')
+    else:
+        im = ax.imshow(dem_data, cmap='terrain', aspect='auto')
+        plt.colorbar(im, ax=ax, label='Elevation (m)')
     ax.set_title('DEM Elevation Map')
     ax.set_xlabel('Column')
     ax.set_ylabel('Row')
@@ -778,18 +787,27 @@ def step03_parameter_zones_and_subbasins(
     # ========================================================================
     print("  ⚙ 生成可视化图片...")
 
-    # 3.5 子流域分区可视化
-    if subbasin_geojson.exists():
-        geojson_data = json.loads(subbasin_geojson.read_text(encoding='utf-8'))
+    # 3.5 子流域分区可视化（显示183个细化子流域）
+    # 修复：使用param_subbasin_geojson而不是subbasin_geojson
+    if param_subbasin_geojson.exists():
+        geojson_data = json.loads(param_subbasin_geojson.read_text(encoding='utf-8'))
         fig, ax = plt.subplots(figsize=(14, 12))
 
         # 绘制DEM作为背景
         with rasterio.open(dem_path) as src:
             dem_array = src.read(1)
+            # 正确处理nodata值
+            nodata = src.nodata
+            if nodata is not None:
+                dem_array = np.where(dem_array == nodata, np.nan, dem_array)
             dem_array = np.where(np.isfinite(dem_array), dem_array, np.nan)
-            extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
-            im = ax.imshow(dem_array, cmap='terrain', extent=extent, alpha=0.5)
-            plt.colorbar(im, ax=ax, label='Elevation (m)', shrink=0.8)
+            # 过滤异常值
+            valid_data = dem_array[np.isfinite(dem_array)]
+            if len(valid_data) > 0:
+                vmin, vmax = np.percentile(valid_data, [2, 98])
+                extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
+                im = ax.imshow(dem_array, cmap='terrain', extent=extent, alpha=0.5, vmin=vmin, vmax=vmax)
+                plt.colorbar(im, ax=ax, label='Elevation (m)', shrink=0.8)
 
         # 绘制子流域边界
         from shapely.geometry import shape as shapely_shape
@@ -844,42 +862,61 @@ def step03_parameter_zones_and_subbasins(
         results["outputs"].append(str(subbasin_map))
         print(f"  ✓ 生成子流域分区图 ({n_features}个子流域): {subbasin_map.name}")
 
-    # 3.6 参数分区可视化
-    if param_subbasin_geojson.exists():
-        geojson_data = json.loads(param_subbasin_geojson.read_text(encoding='utf-8'))
+    # 3.6 参数分区可视化（显示12个参数分区）
+    # 修复：使用parameter_zones.geojson而不是param_subbasin_geojson
+    param_zones_geojson = parameter_dir / "parameter_zones.geojson"
+    if param_zones_geojson.exists():
+        geojson_data = json.loads(param_zones_geojson.read_text(encoding='utf-8'))
         fig, ax = plt.subplots(figsize=(12, 10))
 
         # 绘制DEM作为背景
         with rasterio.open(dem_path) as src:
             dem_array = src.read(1)
+            # 正确处理nodata值
+            nodata = src.nodata
+            if nodata is not None:
+                dem_array = np.where(dem_array == nodata, np.nan, dem_array)
             dem_array = np.where(np.isfinite(dem_array), dem_array, np.nan)
-            extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
-            im = ax.imshow(dem_array, cmap='terrain', extent=extent, alpha=0.5)
+            # 过滤异常值
+            valid_data = dem_array[np.isfinite(dem_array)]
+            if len(valid_data) > 0:
+                vmin, vmax = np.percentile(valid_data, [2, 98])
+                extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
+                im = ax.imshow(dem_array, cmap='terrain', extent=extent, alpha=0.5, vmin=vmin, vmax=vmax)
 
-        # 绘制参数分区
+        # 绘制参数分区（从parameter_zones.geojson）
         from shapely.geometry import shape as shapely_shape
         colors = plt.colormaps.get_cmap('Set3')
+        n_zones = len(geojson_data['features'])
+
         for i, feature in enumerate(geojson_data['features']):
             geom = shapely_shape(feature['geometry'])
             zone_id = feature['properties'].get('zone_id', f'Zone_{i}')
             area = feature['properties'].get('area_km2', 0)
+            color = colors(i / max(1, n_zones - 1))
 
             if geom.geom_type == 'Polygon':
                 x, y = geom.exterior.xy
-                ax.plot(x, y, linewidth=1.5, color=colors(i), label=f'{zone_id} ({area:.1f} km²)')
-                ax.fill(x, y, alpha=0.3, color=colors(i))
+                ax.plot(x, y, linewidth=2, color=color, label=f'{zone_id} ({area:.1f} km²)')
+                ax.fill(x, y, alpha=0.4, color=color)
+            elif geom.geom_type == 'MultiPolygon':
+                for j, poly in enumerate(geom.geoms):
+                    x, y = poly.exterior.xy
+                    label = f'{zone_id} ({area:.1f} km²)' if j == 0 else None
+                    ax.plot(x, y, linewidth=2, color=color, label=label)
+                    ax.fill(x, y, alpha=0.4, color=color)
 
-        ax.set_title('Upper Truckee River - Parameter Zones', fontsize=14, fontweight='bold')
+        ax.set_title(f'Upper Truckee River - Parameter Zones ({n_zones} zones)', fontsize=14, fontweight='bold')
         ax.set_xlabel('Longitude')
         ax.set_ylabel('Latitude')
-        ax.legend(loc='best', fontsize=9)
+        ax.legend(loc='best', fontsize=9, ncol=2)
         ax.grid(True, alpha=0.3)
 
         param_zone_map = step_dir / "3.6_parameter_zones_map.png"
         plt.savefig(param_zone_map, dpi=200, bbox_inches='tight')
         plt.close()
         results["outputs"].append(str(param_zone_map))
-        print(f"  ✓ 生成参数分区图: {param_zone_map.name}")
+        print(f"  ✓ 生成参数分区图 ({n_zones}个分区): {param_zone_map.name}")
 
     # 3.7 河道网络可视化
     if channel_geojson.exists():
