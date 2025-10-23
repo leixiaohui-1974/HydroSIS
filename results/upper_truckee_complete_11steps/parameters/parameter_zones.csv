@@ -1,6 +1,7 @@
 zone_id,downstream_id,area_cells,area_km2,runoff_model,routing_model,subzone_count,requested_accum_threshold,effective_accum_threshold,threshold_relaxed
-1,2,29853,378.694362,hbv,muskingum,38,,,False
-2,3,12212,154.912925,hbv,muskingum,16,,,False
-3,4,17729,224.897744,hbv,muskingum,23,,,False
-4,5,25954,329.234364,hbv,muskingum,33,,,False
-5,,37198,471.867915,hbv,muskingum,47,,,False
+1,2,11036,139.995008,hbv,muskingum,14,,,False
+2,4,31029,393.612279,hbv,muskingum,40,,,False
+3,4,13949,176.947297,hbv,muskingum,18,,,False
+4,6,29734,377.184811,hbv,muskingum,38,,,False
+5,6,12882,163.412078,hbv,muskingum,17,,,False
+6,,24316,308.455837,hbv,muskingum,31,,,False
