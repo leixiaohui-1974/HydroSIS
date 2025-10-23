@@ -69,7 +69,22 @@ step01_dem_processing:
 step02_pour_points:
   enabled: true
 
-  # 汇水点生成策略
+  # 外部数据选项（优先级高于自动生成）
+  external_data:
+    # 是否使用外部汇水点文件（true=使用外部文件，false=自动生成）
+    enabled: false
+    # 外部汇水点文件路径（支持CSV或GeoJSON格式）
+    file_path: "data/upper_truckee_external_data/pour_points.csv"
+    # CSV列名映射（仅当文件为CSV格式时有效）
+    column_mapping:
+      id: "id"
+      x: "x"
+      y: "y"
+      type: "type"           # 可选：main_stream或tributary
+      zone_id: "zone_id"     # 可选：参数区编号
+      depth: "depth"         # 可选：深度编码
+
+  # 汇水点生成策略（仅当external_data.enabled=false时有效）
   strategy:
     # 主流汇水点数量
     main_stream_count: 3
@@ -223,7 +238,19 @@ step04_cross_sections:
 step05_rain_gauges:
   enabled: true
 
-  # 雨量站生成配置
+  # 外部数据选项（优先级高于自动生成）
+  external_data:
+    # 是否使用外部雨量站文件（true=使用外部文件，false=自动生成）
+    enabled: false
+    # 外部雨量站文件路径（支持CSV或GeoJSON格式）
+    file_path: "data/upper_truckee_external_data/rain_gauges.csv"
+    # CSV列名映射（仅当文件为CSV格式时有效）
+    column_mapping:
+      id: "id"
+      x: "x"
+      y: "y"
+
+  # 雨量站生成配置（仅当external_data.enabled=false时有效）
   generation:
     # 雨量站总数量（建议不少于50个）
     num_stations: 50

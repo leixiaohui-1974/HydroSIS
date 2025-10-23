@@ -331,7 +331,6 @@ def step02_pour_point_generation(
     print("\n" + "="*80)
     print(f"第2步：汇水点生成（{main_stream_count}个干流 + {main_stream_count}个支流，深度编码）")
     print("="*80)
-    print(f"  配置：面积分割比例={area_ratios}, 支流累积比例阈值={min_acc_ratio}")
 
     step_dir = output_dir / "step_02_pour_points"
     step_dir.mkdir(parents=True, exist_ok=True)
@@ -341,250 +340,318 @@ def step02_pour_point_generation(
         "outputs": [],
     }
 
-    # 读取流量累计数据
-    with rasterio.open(flow_acc_path) as src:
-        flowacc = src.read(1)
-        flowacc = np.where(np.isfinite(flowacc), flowacc, 0.0)
-        transform = src.transform
-        rows, cols = flowacc.shape
-        cell_area_km2 = abs(src.res[0] * src.res[1]) / 1_000_000.0
+    # 检查是否使用外部数据
+    external_data_config = step_config.get('external_data', {})
+    use_external_data = external_data_config.get('enabled', False)
 
-    # 读取流向数据
-    with rasterio.open(flow_dir_path) as src:
-        flowdir = src.read(1)
+    if use_external_data:
+        from hydrosis.utils.external_data_loader import load_pour_points
 
-    print("  ⚙ 分析流域结构...")
+        external_file = external_data_config.get('file_path', '')
+        if not external_file:
+            raise ValueError("配置了external_data.enabled=true但未提供file_path")
 
-    # 1. 找到出口点（流量累计最大的点）
-    outlet_row, outlet_col = np.unravel_index(np.argmax(flowacc), flowacc.shape)
-    outlet_acc = float(flowacc[outlet_row, outlet_col])
-    total_basin_area_km2 = outlet_acc * cell_area_km2
-    print(f"  ✓ 识别出口点: ({outlet_row}, {outlet_col}), 累计={outlet_acc:.0f}, 流域面积={total_basin_area_km2:.2f} km²")
+        external_path = Path(external_file)
+        if not external_path.is_absolute():
+            # 如果是相对路径，则相对于配置文件所在目录或项目根目录
+            external_path = Path.cwd() / external_path
 
-    # 2. D8流向编码（Richdem使用1-8）
-    D8_OFFSETS = {
-        1: (0, 1),   # East
-        2: (-1, 1),  # NE
-        3: (-1, 0),  # North
-        4: (-1, -1), # NW
-        5: (0, -1),  # West
-        6: (1, -1),  # SW
-        7: (1, 0),   # South
-        8: (1, 1),   # SE
-    }
+        print(f"  📂 使用外部汇水点数据: {external_path}")
 
-    # 反向追溯：找到所有流向当前点的上游点
-    def find_all_upstream(r, c):
-        """找到所有流向(r,c)的上游点"""
-        upstream_cells = []
-        # 检查周围8个格网
-        for code, (dr, dc) in D8_OFFSETS.items():
-            # 邻居格网位置
-            nr, nc = r + dr, c + dc
-            if 0 <= nr < rows and 0 <= nc < cols:
-                # 获取邻居的流向代码
-                neighbor_flowdir = int(flowdir[nr, nc])
-                # 计算邻居流向的目标位置
-                if neighbor_flowdir in D8_OFFSETS:
-                    target_dr, target_dc = D8_OFFSETS[neighbor_flowdir]
-                    target_r, target_c = nr + target_dr, nc + target_dc
-                    # 如果邻居流向当前格网，则它是上游
-                    if target_r == r and target_c == c:
-                        upstream_cells.append((nr, nc, flowacc[nr, nc]))
-        return upstream_cells
+        # 加载外部数据
+        pour_points_data = load_pour_points(external_path)
+        print(f"  ✓ 成功加载 {len(pour_points_data)} 个汇水点")
 
-    # 3. 追溯主干流（沿流量累计最大的路径）
-    main_stream_cells = [(outlet_row, outlet_col)]
-    current = (outlet_row, outlet_col)
-    visited = {(outlet_row, outlet_col)}
+        # 需要读取DEM信息以获取transform用于输出GeoJSON
+        with rasterio.open(flow_acc_path) as src:
+            transform = src.transform
 
-    while True:
-        upstream = find_all_upstream(current[0], current[1])
-        if not upstream:
-            break
+        # 将外部数据转换为标准格式并保存
+        all_pour_points = []
+        for pt_data in pour_points_data:
+            point_dict = {
+                'id': pt_data['id'],
+                'type': pt_data.get('type', 'unknown'),
+                'row': pt_data.get('row'),
+                'col': pt_data.get('col'),
+                'x': pt_data['x'],
+                'y': pt_data['y'],
+                'accumulation': pt_data.get('accumulation'),
+                'controlled_area_km2': pt_data.get('controlled_area_km2'),
+            }
+            # 添加可选字段
+            if 'zone_id' in pt_data:
+                point_dict['zone_id'] = pt_data['zone_id']
+            if 'depth' in pt_data:
+                point_dict['depth'] = pt_data['depth']
+            if 'main_stream_id' in pt_data:
+                point_dict['main_stream_id'] = pt_data['main_stream_id']
 
-        # 选择流量累计最大的上游点（主干流）
-        upstream.sort(key=lambda x: x[2], reverse=True)
-        next_cell = (upstream[0][0], upstream[0][1])
+            all_pour_points.append(point_dict)
 
-        if next_cell in visited:
-            break
+        print(f"  ⚙ 保存外部数据到标准输出格式...")
+        # 将外部数据命名为all_points，与自动生成部分保持一致
+        all_points = all_pour_points
 
-        main_stream_cells.append(next_cell)
-        visited.add(next_cell)
-        current = next_cell
+        # 为可视化加载必要的数据
+        with rasterio.open(flow_acc_path) as src:
+            flowacc = src.read(1)
+            flowacc = np.where(np.isfinite(flowacc), flowacc, 0.0)
 
-        if len(main_stream_cells) > max_stream_iterations:  # 防止无限循环
-            break
+        # 外部数据模式下没有主干流追溯信息
+        main_stream_cells = []
+        main_stream_points = [p for p in all_points if p.get('type') == 'main_stream']
+        tributary_points = [p for p in all_points if p.get('type') == 'tributary']
 
-    print(f"  ✓ 追溯主干流: {len(main_stream_cells)}个格网")
+    else:
+        # ===== 自动生成汇水点 =====
+        print(f"  配置：面积分割比例={area_ratios}, 支流累积比例阈值={min_acc_ratio}")
+        print(f"  ⚙ 自动生成汇水点...")
 
-    # 4. 在主干流上选择3个点
-    # 新编码规则：Zone 1 = 最上游（最小accumulation），Zone n = 最下游/出口（最大accumulation）
-    main_stream_points = []
+        # 读取流量累计数据
+        with rasterio.open(flow_acc_path) as src:
+            flowacc = src.read(1)
+            flowacc = np.where(np.isfinite(flowacc), flowacc, 0.0)
+            transform = src.transform
+            rows, cols = flowacc.shape
+            cell_area_km2 = abs(src.res[0] * src.res[1]) / 1_000_000.0
 
-    # 第一个干流点：流域出口（最大累积数点）
-    x, y = transform * (outlet_col, outlet_row)
-    main_stream_points.append({
-        'id': 'temp_outlet',  # 临时ID，后续会基于深度重新编号
-        'row': int(outlet_row),
-        'col': int(outlet_col),
-        'x': float(x),
-        'y': float(y),
-        'accumulation': float(outlet_acc),
-        'controlled_area_km2': float(total_basin_area_km2),
-        'type': 'main_stream',
-    })
+        # 读取流向数据
+        with rasterio.open(flow_dir_path) as src:
+            flowdir = src.read(1)
 
-    # 上游点：根据配置的面积分割比例选择点
-    # 这里的"控制面积"是指从该点向上的流域面积
-    target_areas = [
-        total_basin_area_km2 * ratio for ratio in area_ratios
-    ]
+        print("  ⚙ 分析流域结构...")
 
-    for idx, target_area in enumerate(target_areas):
-        # 在主干流上找到最接近目标面积的点（排除出口点）
-        best_cell = None
-        best_diff = float('inf')
+        # 1. 找到出口点（流量累计最大的点）
+        outlet_row, outlet_col = np.unravel_index(np.argmax(flowacc), flowacc.shape)
+        outlet_acc = float(flowacc[outlet_row, outlet_col])
+        total_basin_area_km2 = outlet_acc * cell_area_km2
+        print(f"  ✓ 识别出口点: ({outlet_row}, {outlet_col}), 累计={outlet_acc:.0f}, 流域面积={total_basin_area_km2:.2f} km²")
 
-        for r, c in main_stream_cells[1:]:  # 跳过第一个点（出口点）
-            cell_area = flowacc[r, c] * cell_area_km2
-            diff = abs(cell_area - target_area)
-            if diff < best_diff:
-                best_diff = diff
-                best_cell = (r, c)
+        # 2. D8流向编码（Richdem使用1-8）
+        D8_OFFSETS = {
+            1: (0, 1),   # East
+            2: (-1, 1),  # NE
+            3: (-1, 0),  # North
+            4: (-1, -1), # NW
+            5: (0, -1),  # West
+            6: (1, -1),  # SW
+            7: (1, 0),   # South
+            8: (1, 1),   # SE
+        }
 
-        if best_cell:
-            r, c = best_cell
-            x, y = transform * (c, r)
-            controlled_area = flowacc[r, c] * cell_area_km2
+        # 反向追溯：找到所有流向当前点的上游点
+        def find_all_upstream(r, c):
+            """找到所有流向(r,c)的上游点"""
+            upstream_cells = []
+            # 检查周围8个格网
+            for code, (dr, dc) in D8_OFFSETS.items():
+                # 邻居格网位置
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < rows and 0 <= nc < cols:
+                    # 获取邻居的流向代码
+                    neighbor_flowdir = int(flowdir[nr, nc])
+                    # 计算邻居流向的目标位置
+                    if neighbor_flowdir in D8_OFFSETS:
+                        target_dr, target_dc = D8_OFFSETS[neighbor_flowdir]
+                        target_r, target_c = nr + target_dr, nc + target_dc
+                        # 如果邻居流向当前格网，则它是上游
+                        if target_r == r and target_c == c:
+                            upstream_cells.append((nr, nc, flowacc[nr, nc]))
+            return upstream_cells
 
-            main_stream_points.append({
-                'id': f'temp_{idx}',  # 临时ID
-                'row': int(r),
-                'col': int(c),
-                'x': float(x),
-                'y': float(y),
-                'accumulation': float(flowacc[r, c]),
-                'controlled_area_km2': float(controlled_area),
-                'type': 'main_stream',
-            })
+        # 3. 追溯主干流（沿流量累计最大的路径）
+        main_stream_cells = [(outlet_row, outlet_col)]
+        current = (outlet_row, outlet_col)
+        visited = {(outlet_row, outlet_col)}
 
-    # 按照accumulation从大到小排序（下游到上游）
-    main_stream_points.sort(key=lambda p: p['accumulation'], reverse=True)
-
-    # 然后反转顺序（变成从上游到下游），并基于深度重新编号
-    # Zone 1 = 最上游（最小accumulation，最大depth）
-    # Zone n = 最下游/出口（最大accumulation，depth=0）
-    main_stream_points.reverse()
-
-    for idx, point in enumerate(main_stream_points, start=1):
-        point['id'] = str(idx)
-        point['zone_id'] = idx
-        point['depth'] = len(main_stream_points) - idx  # 最上游depth最大
-
-    print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点（基于深度编号：Zone 1=最上游，Zone {len(main_stream_points)}=最下游）")
-    for p in main_stream_points:
-        pct = p['controlled_area_km2'] / total_basin_area_km2 * 100
-        print(f"    - Zone {p['id']}: 累积={p['accumulation']:.0f}, 控制面积={p['controlled_area_km2']:.2f} km² ({pct:.1f}%), depth={p['depth']}")
-
-    # 5. 为每个干流分区找到1个最大支流汇入点
-    main_stream_set = set(main_stream_cells)
-
-    # 定义函数：追溯一个点的所有上游格网
-    def delineate_watershed(pour_r, pour_c):
-        """追溯汇水点的所有上游格网"""
-        watershed = set()
-        queue = [(pour_r, pour_c)]
-        visited_ws = {(pour_r, pour_c)}
-
-        while queue:
-            r, c = queue.pop(0)
-            watershed.add((r, c))
-
-            # 找到所有流向当前点的上游点
-            upstream = find_all_upstream(r, c)
-            for ur, uc, _ in upstream:
-                if (ur, uc) not in visited_ws:
-                    visited_ws.add((ur, uc))
-                    queue.append((ur, uc))
-
-            if len(watershed) > max_watershed_iterations:  # 防止无限循环
+        while True:
+            upstream = find_all_upstream(current[0], current[1])
+            if not upstream:
                 break
-
-        return watershed
-
-    tributary_points = []
-
-    if enable_tributary:
-        # 正向处理（从上游到下游）
-        # main_stream_points已按从上游到下游排序：[0]=最上游, [-1]=最下游/出口
-        # 每个干流点的分区 = 本点的流域 - 前一个（更上游）干流点的流域
-        for main_idx in range(len(main_stream_points)):
-            main_point = main_stream_points[main_idx]
-            main_id = main_point['id']
-            main_r, main_c = main_point['row'], main_point['col']
-
-            print(f"  ⚙ 为干流点{main_id}寻找最大支流...")
-
-            # 追溯该干流点的流域范围
-            watershed = delineate_watershed(main_r, main_c)
-
-            # 如果不是最上游的点，需要排除前一个（更上游）干流点的流域
-            # 这样得到的是这个干流点所控制的增量流域
-            if main_idx > 0:  # 修复：从 < len-1 改为 > 0
-                upstream_point = main_stream_points[main_idx - 1]  # 修复：从 +1 改为 -1
-                upstream_watershed = delineate_watershed(upstream_point['row'], upstream_point['col'])
-                watershed = watershed - upstream_watershed
-                print(f"    - 排除上游Zone {upstream_point['id']}的流域")
-
-            print(f"    - Zone {main_id}增量流域范围: {len(watershed)}个格网")
-
-            # 在流域内寻找候选支流点（不在主干流上的高流量点）
-            threshold = main_point['accumulation'] * min_acc_ratio  # 使用配置的累积比例阈值
-            candidate_tribs = []
-
-            for wr, wc in watershed:
-                acc = flowacc[wr, wc]
-                # 必须满足：在流域内、不在主干流上、流量足够大
-                if (wr, wc) not in main_stream_set and acc > threshold:
-                    candidate_tribs.append((wr, wc, acc))
-
-            # 按流量排序，选择最大的（限制数量）
-            if candidate_tribs:
-                candidate_tribs.sort(key=lambda x: x[2], reverse=True)
-                # 选择最大的N个支流（根据配置）
-                selected_tribs = candidate_tribs[:max_tribs_per_segment]
-
-                for trib_idx, (tr, tc, tacc) in enumerate(selected_tribs):
-                    x, y = transform * (tc, tr)
-                    trib_area = tacc * cell_area_km2
-
-                    # 支流ID：使用主流ID加"t"后缀（如果多个支流，加数字后缀）
-                    if len(selected_tribs) == 1:
-                        trib_id = f"{main_id}t"
-                    else:
-                        trib_id = f"{main_id}t{trib_idx + 1}"
-
-                    tributary_points.append({
-                        'id': trib_id,
-                        'row': int(tr),
-                        'col': int(tc),
-                        'x': float(x),
-                        'y': float(y),
-                        'accumulation': float(tacc),
-                        'controlled_area_km2': float(trib_area),
-                        'type': 'tributary',
-                        'main_stream_id': main_id,
-                    })
-
-                    print(f"    - 选择支流{trib_id}: 累积={tacc:.0f}, 控制面积={trib_area:.2f} km²")
-            else:
-                print(f"    - 未找到合适的支流")
-
-    # 6. 合并所有汇水点
-    all_points = main_stream_points + tributary_points
-    print(f"  ✓ 生成总共{len(all_points)}个汇水点（{len(main_stream_points)}干流 + {len(tributary_points)}支流）")
+    
+            # 选择流量累计最大的上游点（主干流）
+            upstream.sort(key=lambda x: x[2], reverse=True)
+            next_cell = (upstream[0][0], upstream[0][1])
+    
+            if next_cell in visited:
+                break
+    
+            main_stream_cells.append(next_cell)
+            visited.add(next_cell)
+            current = next_cell
+    
+            if len(main_stream_cells) > max_stream_iterations:  # 防止无限循环
+                break
+    
+        print(f"  ✓ 追溯主干流: {len(main_stream_cells)}个格网")
+    
+        # 4. 在主干流上选择3个点
+        # 新编码规则：Zone 1 = 最上游（最小accumulation），Zone n = 最下游/出口（最大accumulation）
+        main_stream_points = []
+    
+        # 第一个干流点：流域出口（最大累积数点）
+        x, y = transform * (outlet_col, outlet_row)
+        main_stream_points.append({
+            'id': 'temp_outlet',  # 临时ID，后续会基于深度重新编号
+            'row': int(outlet_row),
+            'col': int(outlet_col),
+            'x': float(x),
+            'y': float(y),
+            'accumulation': float(outlet_acc),
+            'controlled_area_km2': float(total_basin_area_km2),
+            'type': 'main_stream',
+        })
+    
+        # 上游点：根据配置的面积分割比例选择点
+        # 这里的"控制面积"是指从该点向上的流域面积
+        target_areas = [
+            total_basin_area_km2 * ratio for ratio in area_ratios
+        ]
+    
+        for idx, target_area in enumerate(target_areas):
+            # 在主干流上找到最接近目标面积的点（排除出口点）
+            best_cell = None
+            best_diff = float('inf')
+    
+            for r, c in main_stream_cells[1:]:  # 跳过第一个点（出口点）
+                cell_area = flowacc[r, c] * cell_area_km2
+                diff = abs(cell_area - target_area)
+                if diff < best_diff:
+                    best_diff = diff
+                    best_cell = (r, c)
+    
+            if best_cell:
+                r, c = best_cell
+                x, y = transform * (c, r)
+                controlled_area = flowacc[r, c] * cell_area_km2
+    
+                main_stream_points.append({
+                    'id': f'temp_{idx}',  # 临时ID
+                    'row': int(r),
+                    'col': int(c),
+                    'x': float(x),
+                    'y': float(y),
+                    'accumulation': float(flowacc[r, c]),
+                    'controlled_area_km2': float(controlled_area),
+                    'type': 'main_stream',
+                })
+    
+        # 按照accumulation从大到小排序（下游到上游）
+        main_stream_points.sort(key=lambda p: p['accumulation'], reverse=True)
+    
+        # 然后反转顺序（变成从上游到下游），并基于深度重新编号
+        # Zone 1 = 最上游（最小accumulation，最大depth）
+        # Zone n = 最下游/出口（最大accumulation，depth=0）
+        main_stream_points.reverse()
+    
+        for idx, point in enumerate(main_stream_points, start=1):
+            point['id'] = str(idx)
+            point['zone_id'] = idx
+            point['depth'] = len(main_stream_points) - idx  # 最上游depth最大
+    
+        print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点（基于深度编号：Zone 1=最上游，Zone {len(main_stream_points)}=最下游）")
+        for p in main_stream_points:
+            pct = p['controlled_area_km2'] / total_basin_area_km2 * 100
+            print(f"    - Zone {p['id']}: 累积={p['accumulation']:.0f}, 控制面积={p['controlled_area_km2']:.2f} km² ({pct:.1f}%), depth={p['depth']}")
+    
+        # 5. 为每个干流分区找到1个最大支流汇入点
+        main_stream_set = set(main_stream_cells)
+    
+        # 定义函数：追溯一个点的所有上游格网
+        def delineate_watershed(pour_r, pour_c):
+            """追溯汇水点的所有上游格网"""
+            watershed = set()
+            queue = [(pour_r, pour_c)]
+            visited_ws = {(pour_r, pour_c)}
+    
+            while queue:
+                r, c = queue.pop(0)
+                watershed.add((r, c))
+    
+                # 找到所有流向当前点的上游点
+                upstream = find_all_upstream(r, c)
+                for ur, uc, _ in upstream:
+                    if (ur, uc) not in visited_ws:
+                        visited_ws.add((ur, uc))
+                        queue.append((ur, uc))
+    
+                if len(watershed) > max_watershed_iterations:  # 防止无限循环
+                    break
+    
+            return watershed
+    
+        tributary_points = []
+    
+        if enable_tributary:
+            # 正向处理（从上游到下游）
+            # main_stream_points已按从上游到下游排序：[0]=最上游, [-1]=最下游/出口
+            # 每个干流点的分区 = 本点的流域 - 前一个（更上游）干流点的流域
+            for main_idx in range(len(main_stream_points)):
+                main_point = main_stream_points[main_idx]
+                main_id = main_point['id']
+                main_r, main_c = main_point['row'], main_point['col']
+    
+                print(f"  ⚙ 为干流点{main_id}寻找最大支流...")
+    
+                # 追溯该干流点的流域范围
+                watershed = delineate_watershed(main_r, main_c)
+    
+                # 如果不是最上游的点，需要排除前一个（更上游）干流点的流域
+                # 这样得到的是这个干流点所控制的增量流域
+                if main_idx > 0:  # 修复：从 < len-1 改为 > 0
+                    upstream_point = main_stream_points[main_idx - 1]  # 修复：从 +1 改为 -1
+                    upstream_watershed = delineate_watershed(upstream_point['row'], upstream_point['col'])
+                    watershed = watershed - upstream_watershed
+                    print(f"    - 排除上游Zone {upstream_point['id']}的流域")
+    
+                print(f"    - Zone {main_id}增量流域范围: {len(watershed)}个格网")
+    
+                # 在流域内寻找候选支流点（不在主干流上的高流量点）
+                threshold = main_point['accumulation'] * min_acc_ratio  # 使用配置的累积比例阈值
+                candidate_tribs = []
+    
+                for wr, wc in watershed:
+                    acc = flowacc[wr, wc]
+                    # 必须满足：在流域内、不在主干流上、流量足够大
+                    if (wr, wc) not in main_stream_set and acc > threshold:
+                        candidate_tribs.append((wr, wc, acc))
+    
+                # 按流量排序，选择最大的（限制数量）
+                if candidate_tribs:
+                    candidate_tribs.sort(key=lambda x: x[2], reverse=True)
+                    # 选择最大的N个支流（根据配置）
+                    selected_tribs = candidate_tribs[:max_tribs_per_segment]
+    
+                    for trib_idx, (tr, tc, tacc) in enumerate(selected_tribs):
+                        x, y = transform * (tc, tr)
+                        trib_area = tacc * cell_area_km2
+    
+                        # 支流ID：使用主流ID加"t"后缀（如果多个支流，加数字后缀）
+                        if len(selected_tribs) == 1:
+                            trib_id = f"{main_id}t"
+                        else:
+                            trib_id = f"{main_id}t{trib_idx + 1}"
+    
+                        tributary_points.append({
+                            'id': trib_id,
+                            'row': int(tr),
+                            'col': int(tc),
+                            'x': float(x),
+                            'y': float(y),
+                            'accumulation': float(tacc),
+                            'controlled_area_km2': float(trib_area),
+                            'type': 'tributary',
+                            'main_stream_id': main_id,
+                        })
+    
+                        print(f"    - 选择支流{trib_id}: 累积={tacc:.0f}, 控制面积={trib_area:.2f} km²")
+                else:
+                    print(f"    - 未找到合适的支流")
+    
+        # 6. 合并所有汇水点
+        all_points = main_stream_points + tributary_points
+        print(f"  ✓ 生成总共{len(all_points)}个汇水点（{len(main_stream_points)}干流 + {len(tributary_points)}支流）")
 
     # 7. 保存为GeoJSON
     features = []
@@ -1613,8 +1680,67 @@ def step06_to_08_precipitation_processing(
 
     print(f"  ✓ 生成基础降雨序列：{total_hours}小时，总雨量{base_precip.sum():.1f}mm")
 
-    # 使用分层采样生成雨量站
-    if sampling_method == 'stratified' and zone_geometries:
+    # 检查是否使用外部雨量站数据
+    external_data_config = step5_config.get('external_data', {})
+    use_external_data = external_data_config.get('enabled', False)
+
+    if use_external_data:
+        from hydrosis.utils.external_data_loader import load_rain_gauges
+
+        external_file = external_data_config.get('file_path', '')
+        if not external_file:
+            raise ValueError("配置了external_data.enabled=true但未提供file_path")
+
+        external_path = Path(external_file)
+        if not external_path.is_absolute():
+            external_path = Path.cwd() / external_path
+
+        print(f"  📂 使用外部雨量站数据: {external_path}")
+
+        # 加载外部雨量站位置
+        station_positions = load_rain_gauges(external_path)
+        print(f"  ✓ 成功加载 {len(station_positions)} 个雨量站")
+
+        # 计算泰森多边形
+        from hydrosis.precipitation.thiessen import thiessen_polygons_for_stations
+        from shapely.ops import unary_union
+        basins_union = unary_union(list(parameter_geometries.values()))
+        thiessen_polygons = thiessen_polygons_for_stations(station_positions, basins_union)
+
+        # 生成雨量站时间序列
+        from hydrosis.precipitation.rain_gauge_generator import _generate_station_series
+        station_series = _generate_station_series(
+            base_series,
+            station_positions,
+            rng=np.random.default_rng(rng_seed),
+            heterogeneity=heterogeneity,
+            min_events=min_burst,
+            max_events=max_burst,
+        )
+
+        # 计算权重并插值
+        from hydrosis.precipitation.thiessen import (
+            compute_subbasin_station_weights,
+            interpolate_station_series,
+        )
+        station_weights = compute_subbasin_station_weights(parameter_geometries, thiessen_polygons)
+        subbasin_series = interpolate_station_series(station_series, station_weights)
+        subbasin_series.index.name = station_series.index.name
+
+        # 封装为RainGaugeInputs对象
+        from hydrosis.precipitation.rain_gauge_generator import RainGaugeInputs
+        rain_inputs = RainGaugeInputs(
+            station_series=station_series,
+            subbasin_series=subbasin_series,
+            station_positions=dict(station_positions),
+            thiessen_polygons=thiessen_polygons,
+            station_weights=station_weights,
+        )
+
+        print(f"  ✓ 生成外部雨量站的时间序列和泰森多边形")
+
+    # 使用分层采样生成雨量站（仅当未使用外部数据时）
+    elif sampling_method == 'stratified' and zone_geometries:
         print(f"  ⚙ 使用分层采样生成{station_count}个雨量站...")
         from hydrosis.precipitation.stratified_sampling import stratified_station_sampling
         from hydrosis.precipitation.thiessen import thiessen_polygons_for_stations
