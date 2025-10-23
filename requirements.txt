@@ -9,7 +9,7 @@ pyproj>=3.2.0
 Shapely>=1.7.0
 Fiona>=1.8.0
 rasterio>=1.2.0
-richdem>=0.3.0
+# richdem>=0.3.0  # Now using local copy in hydrosis/richdem
 
 # Web framework
 fastapi>=0.70.0
