@@ -463,8 +463,8 @@ def step02_pour_point_generation(
 
     tributary_points = []
 
-    # 正向处理（从下游到上游），main_stream_points已按accumulation从大到小排序
-    # 每个干流点的分区 = 本点的上游 - 上游干流点的上游
+    # main_stream_points在reverse后是从上游到下游排序 (Zone 1=上游, Zone 3=下游)
+    # 每个干流点的分区 = 本点的上游 - 更上游干流点的上游
     for main_idx in range(len(main_stream_points)):
         main_point = main_stream_points[main_idx]
         main_id = main_point['id']
@@ -475,23 +475,33 @@ def step02_pour_point_generation(
         # 追溯该干流点的流域范围
         watershed = delineate_watershed(main_r, main_c)
 
-        # 如果不是最上游的点，需要排除上游干流点的流域
-        if main_idx < len(main_stream_points) - 1:
-            upstream_point = main_stream_points[main_idx + 1]
+        # 需要排除更上游的干流点的流域（索引0到main_idx-1的点）
+        for upstream_idx in range(main_idx):
+            upstream_point = main_stream_points[upstream_idx]
             upstream_watershed = delineate_watershed(upstream_point['row'], upstream_point['col'])
             watershed = watershed - upstream_watershed
 
         print(f"    - 本分区流域范围: {len(watershed)}个格网")
 
         # 在流域内寻找候选支流点（不在主干流上的高流量点）
-        threshold = main_point['accumulation'] * 0.05  # 至少是干流点流量的5%
+        # 使用自适应阈值，如果找不到就降低阈值，确保总能找到支流
+        thresholds = [0.05, 0.03, 0.01, 0.005, 0.001, 0.0]  # 从5%逐步降低到0%
         candidate_tribs = []
+        used_threshold = None
 
-        for wr, wc in watershed:
-            acc = flowacc[wr, wc]
-            # 必须满足：在流域内、不在主干流上、流量足够大
-            if (wr, wc) not in main_stream_set and acc > threshold:
-                candidate_tribs.append((wr, wc, acc))
+        for threshold_ratio in thresholds:
+            threshold = main_point['accumulation'] * threshold_ratio
+            candidate_tribs = []
+
+            for wr, wc in watershed:
+                acc = flowacc[wr, wc]
+                # 必须满足：在流域内、不在主干流上、流量足够大
+                if (wr, wc) not in main_stream_set and acc > threshold:
+                    candidate_tribs.append((wr, wc, acc))
+
+            if candidate_tribs:
+                used_threshold = threshold_ratio
+                break
 
         # 按流量排序，选择最大的
         if candidate_tribs:
@@ -516,13 +526,66 @@ def step02_pour_point_generation(
                 'main_stream_id': main_id,
             })
 
-            print(f"    - 选择支流{trib_id}: 控制面积={trib_area:.2f} km²")
+            threshold_pct = used_threshold * 100 if used_threshold else 0
+            print(f"    - 选择支流{trib_id}: 控制面积={trib_area:.2f} km² (阈值={threshold_pct:.1f}%)")
         else:
-            print(f"    - 未找到合适的支流")
+            print(f"    - ⚠️ 警告: 未找到合适的支流（流域范围过小）")
 
     # 6. 合并所有汇水点
     all_points = main_stream_points + tributary_points
     print(f"  ✓ 生成总共{len(all_points)}个汇水点（{len(main_stream_points)}干流 + {len(tributary_points)}支流）")
+
+    # 验证汇水点数量并生成结果报告
+    expected_total = 6  # 3主流 + 3支流
+    report_lines = []
+    report_lines.append("="*80)
+    report_lines.append("第2步结果报告：汇水点生成")
+    report_lines.append("="*80)
+    report_lines.append(f"主流汇水点数量: {len(main_stream_points)} (期望: 3)")
+    report_lines.append(f"支流汇水点数量: {len(tributary_points)} (期望: 3)")
+    report_lines.append(f"总汇水点数量: {len(all_points)} (期望: {expected_total})")
+    report_lines.append("")
+
+    if len(all_points) != expected_total:
+        print(f"  ⚠️ 警告: 汇水点数量不符合预期!")
+        print(f"     期望: {expected_total}个 (3主流 + 3支流)")
+        print(f"     实际: {len(all_points)}个 ({len(main_stream_points)}主流 + {len(tributary_points)}支流)")
+
+        report_lines.append("⚠️ 状态: 汇水点数量不足")
+        report_lines.append("")
+
+        if len(tributary_points) < 3:
+            missing = 3 - len(tributary_points)
+            print(f"     缺少 {missing} 个支流点，可能导致参数分区数量不足!")
+            report_lines.append(f"原因分析: 缺少{missing}个支流汇水点")
+            report_lines.append("可能原因:")
+            report_lines.append("  1. 流域分区过小，无法满足流量阈值要求")
+            report_lines.append("  2. 主干流占据了大部分流域面积")
+            report_lines.append("  3. 支流流域面积过小（< 5% 主流）")
+            report_lines.append("")
+            report_lines.append(f"影响: 最终参数分区数量可能为{len(all_points)}个而非6个")
+    else:
+        print(f"  ✅ 汇水点数量正确: {len(all_points)}个")
+        report_lines.append("✅ 状态: 汇水点生成成功")
+        report_lines.append("")
+
+    report_lines.append("汇水点详细信息:")
+    for point in all_points:
+        ptype = "主流" if point['type'] == 'main_stream' else "支流"
+        area_pct = point['controlled_area_km2'] / total_basin_area_km2 * 100
+        report_lines.append(
+            f"  - ID={point['id']}, 类型={ptype}, "
+            f"控制面积={point['controlled_area_km2']:.2f} km² ({area_pct:.1f}%), "
+            f"累积流量={point['accumulation']:.0f}"
+        )
+    report_lines.append("="*80)
+
+    # 保存报告
+    report_path = step_dir / "2.4_generation_report.txt"
+    with open(report_path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(report_lines))
+    results["outputs"].append(str(report_path))
+    print(f"  ✓ 生成结果报告: {report_path.name}")
 
     # 7. 保存为GeoJSON
     features = []
@@ -1196,6 +1259,70 @@ def step03_parameter_zones_and_subbasins(
     results["parameter_dir"] = parameter_dir
     results["subbasins"] = subbasins
     results["subbasin_geometries"] = subbasin_geometries
+
+    # 生成第3步结果报告
+    zone_count = len(partition_outputs.parameter_zones) if partition_outputs else 0
+    subzone_count = len(partition_outputs.subzone_summaries) if partition_outputs else 0
+
+    report_lines = []
+    report_lines.append("="*80)
+    report_lines.append("第3步结果报告：参数分区和子流域划分")
+    report_lines.append("="*80)
+    report_lines.append(f"参数分区数量: {zone_count} (期望: 6)")
+    report_lines.append(f"子流域数量: {subzone_count} (期望: 约157)")
+    report_lines.append("")
+
+    expected_zones = 6
+    if zone_count != expected_zones:
+        print(f"  ⚠️ 警告: 参数分区数量不符合预期!")
+        print(f"     期望: {expected_zones}个")
+        print(f"     实际: {zone_count}个")
+        report_lines.append(f"⚠️ 状态: 参数分区数量不符合预期 ({zone_count} vs {expected_zones})")
+        report_lines.append("")
+        report_lines.append("可能原因:")
+        report_lines.append("  1. 汇水点(pour points)数量不足")
+        report_lines.append("  2. 部分zone在rebalance过程中被合并")
+        report_lines.append("  3. 部分zone面积过小被过滤")
+        report_lines.append("")
+        report_lines.append("建议: 检查第2步的汇水点生成结果")
+    else:
+        print(f"  ✅ 参数分区数量正确: {zone_count}个")
+        report_lines.append("✅ 状态: 参数分区生成成功")
+        report_lines.append("")
+
+    # 添加分区详细信息
+    if partition_outputs:
+        report_lines.append("参数分区详细信息:")
+        for zone in partition_outputs.zone_summaries:
+            report_lines.append(
+                f"  - Zone {zone.id}: 面积={zone.area_km2:.2f} km², "
+                f"产流模型={zone.runoff_method}, 汇流模型={zone.routing_method}, "
+                f"下游={zone.downstream_id or '出口'}"
+            )
+        report_lines.append("")
+
+        # 统计每个zone的子流域数量
+        zone_subbasin_counts = {}
+        for subzone in partition_outputs.subzone_summaries:
+            zone_id = subzone.zone_id
+            zone_subbasin_counts[zone_id] = zone_subbasin_counts.get(zone_id, 0) + 1
+
+        report_lines.append("各分区子流域分布:")
+        for zone_id, count in sorted(zone_subbasin_counts.items()):
+            report_lines.append(f"  - Zone {zone_id}: {count}个子流域")
+
+    report_lines.append("="*80)
+
+    # 保存报告
+    report_path = step_dir / "3.7_partition_report.txt"
+    with open(report_path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(report_lines))
+    results["outputs"].append(str(report_path))
+    print(f"  ✓ 生成结果报告: {report_path.name}")
+
+    # 存储zone_count供后续验证使用
+    results["zone_count"] = zone_count
+    results["zone_count_valid"] = (zone_count == expected_zones)
 
     print(f"第3步完成：生成{len(results['outputs'])}个输出文件")
     return results
