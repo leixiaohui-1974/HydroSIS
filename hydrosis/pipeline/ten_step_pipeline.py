@@ -308,7 +308,7 @@ def run_step01_dem_preprocessing(config_path: Path | str) -> Dict[str, Path]:
     try:
         import numpy as np
         import rasterio
-        import richdem as rd
+        from hydrosis import richdem as rd
 
         import matplotlib
 

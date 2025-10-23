@@ -22,7 +22,7 @@ except Exception:  # pragma: no cover - keep working without rasterio
     rasterio = None  # type: ignore
 
 try:  # pragma: no cover - optional dependency, imported lazily
-    import richdem as rd
+    from hydrosis import richdem as rd
 except Exception:  # pragma: no cover - keep working without richdem
     rd = None  # type: ignore
 

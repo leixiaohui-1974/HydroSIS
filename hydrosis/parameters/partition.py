@@ -742,114 +742,10 @@ def partition_parameter_zones(
                 start += max_area_cells
 
         return final_defs
+
+    # NOTE: Subzone generation moved to AFTER zone renumbering (see line ~950)
+    # This ensures subzone IDs use the final zone numbers
     zone_subzone_definitions: Dict[str, List[Dict[str, object]]] = {}
-    for zone_id, node in zones.items():
-        mask = zone_masks.get(zone_id)
-        if mask is None or int(mask.sum()) == 0:
-            continue
-        zone_subzone_definitions[zone_id] = _generate_subzones_for_zone(zone_id, mask)
-
-    # Remap zone_subzone_definitions to use new zone IDs
-    new_zone_subzone_definitions: Dict[str, List[Dict[str, object]]] = {}
-    for old_zone_id, sub_defs in zone_subzone_definitions.items():
-        new_zone_id = old_to_new_zone_id.get(old_zone_id)
-        if new_zone_id:
-            new_zone_subzone_definitions[new_zone_id] = sub_defs
-    zone_subzone_definitions = new_zone_subzone_definitions
-
-    for zone_id, node in zones.items():
-        mask = zone_masks.get(zone_id)
-        if mask is None or int(mask.sum()) == 0:
-            continue
-
-        zone_row = zone_stats_lookup[zone_id]
-        requested_threshold = zone_row.get("requested_accum_threshold")
-        sub_definitions = zone_subzone_definitions.get(zone_id) or []
-        if not sub_definitions:
-            continue
-
-        zone_row["subzone_count"] = len(sub_definitions)
-        zone_row["effective_accum_threshold"] = requested_threshold
-        zone_row["threshold_relaxed"] = False
-
-        # zone_id is now already sequential (1, 2, 3, ...), use it directly
-        zone_index = int(zone_id)
-
-        for idx, definition in enumerate(sub_definitions, start=1):
-            # New encoding scheme: zone_id * 100 + subzone_index
-            sub_id = str(zone_index * 100 + idx)
-            sub_mask = definition["mask"]
-            area_cells = int(sub_mask.sum())
-            if area_cells == 0:
-                continue
-            area_km2 = area_cells * cell_area_km2
-            pour_row = int(definition["pour_row"])
-            pour_col = int(definition["pour_col"])
-            seed_acc = float(definition.get("seed_accumulation", 0.0))
-            mean_elev = float(np.nanmean(dem_data[sub_mask])) if sub_mask.any() else None
-            max_acc = float(np.nanmax(accumulation[sub_mask])) if sub_mask.any() else None
-
-            subzone_masks[sub_id] = sub_mask
-            subzone_to_zone[sub_id] = zone_id
-            zone_area_accumulator[zone_id] += area_km2
-            zone_cell_accumulator[zone_id] += area_cells
-
-            polygons = dutils.masks_to_polygons({sub_id: sub_mask}, transform).get(sub_id) or []
-            if polygons:
-                subzone_features.append(
-                    {
-                        "type": "Feature",
-                        "geometry": {
-                            "type": "MultiPolygon",
-                            "coordinates": [[ring] for ring in polygons],
-                        },
-                        "properties": {
-                            "zone_id": zone_id,
-                            "subzone_id": sub_id,
-                            "area_km2": area_km2,
-                            "mean_elevation": mean_elev,
-                            "max_accumulation": max_acc,
-                            "pour_row": pour_row,
-                            "pour_col": pour_col,
-                            "seed_accumulation": seed_acc,
-                            "seed_threshold": requested_threshold,
-                        },
-                    }
-                )
-
-            subzone_rows.append(
-                {
-                    "zone_id": zone_id,
-                    "subzone_id": sub_id,
-                    "area_cells": area_cells,
-                    "area_km2": area_km2,
-                    "mean_elevation": mean_elev if mean_elev is not None else 0.0,
-                    "max_accumulation": max_acc if max_acc is not None else 0.0,
-                    "pour_row": pour_row,
-                    "pour_col": pour_col,
-                    "seed_accumulation": seed_acc,
-                    "seed_threshold": requested_threshold if requested_threshold is not None else "",
-                    "downstream_subzone_id": "",
-                }
-            )
-            current_index = len(subzone_ids)
-            subzone_ids.append(sub_id)
-            subzone_index_grid[sub_mask] = current_index
-
-    subzone_id_to_index = {sid: idx for idx, sid in enumerate(subzone_ids)}
-    for row in subzone_rows:
-        sub_id = row["subzone_id"]
-        idx = subzone_id_to_index[sub_id]
-        downstream_sub = _find_downstream_subzone(
-            flowdir,
-            subzone_index_grid,
-            subzone_ids,
-            idx,
-            int(row["pour_row"]),
-            int(row["pour_col"]),
-        )
-        if downstream_sub:
-            row["downstream_subzone_id"] = downstream_sub
 
     # Aggregate subzone geometry back into zone-level summaries
     for zone_id in zones.keys():
@@ -944,6 +840,112 @@ def partition_parameter_zones(
     zone_downstream_map = {zone_id: node.downstream_id for zone_id, node in zones.items()}
     zone_depth = _compute_depth_map(zone_downstream_map)
     sorted_zone_ids = sorted(zones.keys(), key=lambda zid: zone_depth.get(zid, 0), reverse=True)
+
+    # NOW generate subzones using the NEW zone IDs
+    # This ensures subzone encoding uses the correct zone numbers (1 = upstream, n = downstream)
+    for new_zone_id in zones.keys():
+        mask = zone_masks.get(new_zone_id)
+        if mask is None or int(mask.sum()) == 0:
+            continue
+        zone_subzone_definitions[new_zone_id] = _generate_subzones_for_zone(new_zone_id, mask)
+
+    # Process subzones for each zone using the NEW zone IDs
+    for zone_id, node in zones.items():
+        mask = zone_masks.get(zone_id)
+        if mask is None or int(mask.sum()) == 0:
+            continue
+
+        zone_row = zone_stats_lookup[zone_id]
+        requested_threshold = zone_row.get("requested_accum_threshold")
+        sub_definitions = zone_subzone_definitions.get(zone_id) or []
+        if not sub_definitions:
+            continue
+
+        zone_row["subzone_count"] = len(sub_definitions)
+        zone_row["effective_accum_threshold"] = requested_threshold
+        zone_row["threshold_relaxed"] = False
+
+        # zone_id is now already sequential (1, 2, 3, ...), use it directly
+        zone_index = int(zone_id)
+
+        for idx, definition in enumerate(sub_definitions, start=1):
+            # Encoding scheme: zone_id * 100 + subzone_index
+            # Example: Zone 1 -> subzones 101, 102, 103...
+            #          Zone 2 -> subzones 201, 202, 203...
+            sub_id = str(zone_index * 100 + idx)
+            sub_mask = definition["mask"]
+            area_cells = int(sub_mask.sum())
+            if area_cells == 0:
+                continue
+            area_km2 = area_cells * cell_area_km2
+            pour_row = int(definition["pour_row"])
+            pour_col = int(definition["pour_col"])
+            seed_acc = float(definition.get("seed_accumulation", 0.0))
+            mean_elev = float(np.nanmean(dem_data[sub_mask])) if sub_mask.any() else None
+            max_acc = float(np.nanmax(accumulation[sub_mask])) if sub_mask.any() else None
+
+            subzone_masks[sub_id] = sub_mask
+            subzone_to_zone[sub_id] = zone_id
+            zone_area_accumulator[zone_id] += area_km2
+            zone_cell_accumulator[zone_id] += area_cells
+
+            polygons = dutils.masks_to_polygons({sub_id: sub_mask}, transform).get(sub_id) or []
+            if polygons:
+                subzone_features.append(
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "MultiPolygon",
+                            "coordinates": [[ring] for ring in polygons],
+                        },
+                        "properties": {
+                            "zone_id": zone_id,
+                            "subzone_id": sub_id,
+                            "area_km2": area_km2,
+                            "mean_elevation": mean_elev,
+                            "max_accumulation": max_acc,
+                            "pour_row": pour_row,
+                            "pour_col": pour_col,
+                            "seed_accumulation": seed_acc,
+                            "seed_threshold": requested_threshold,
+                        },
+                    }
+                )
+
+            subzone_rows.append(
+                {
+                    "zone_id": zone_id,
+                    "subzone_id": sub_id,
+                    "area_cells": area_cells,
+                    "area_km2": area_km2,
+                    "mean_elevation": mean_elev if mean_elev is not None else 0.0,
+                    "max_accumulation": max_acc if max_acc is not None else 0.0,
+                    "pour_row": pour_row,
+                    "pour_col": pour_col,
+                    "seed_accumulation": seed_acc,
+                    "seed_threshold": requested_threshold if requested_threshold is not None else "",
+                    "downstream_subzone_id": "",
+                }
+            )
+            current_index = len(subzone_ids)
+            subzone_ids.append(sub_id)
+            subzone_index_grid[sub_mask] = current_index
+
+    # Compute downstream relationships for subzones
+    subzone_id_to_index = {sid: idx for idx, sid in enumerate(subzone_ids)}
+    for row in subzone_rows:
+        sub_id = row["subzone_id"]
+        idx = subzone_id_to_index[sub_id]
+        downstream_sub = _find_downstream_subzone(
+            flowdir,
+            subzone_index_grid,
+            subzone_ids,
+            idx,
+            int(row["pour_row"]),
+            int(row["pour_col"]),
+        )
+        if downstream_sub:
+            row["downstream_subzone_id"] = downstream_sub
 
     zone_features: List[Dict[str, object]] = []
     feature_lookup: Dict[str, Dict[str, object]] = {}

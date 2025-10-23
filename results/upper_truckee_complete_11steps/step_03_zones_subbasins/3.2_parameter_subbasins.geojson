@@ -617,8 +617,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "214",
+        "zone_id": "2",
+        "subzone_id": "41",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8456.4873046875,
         "max_accumulation": 588.0,
@@ -1436,8 +1436,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "224",
+        "zone_id": "2",
+        "subzone_id": "50",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8291.310546875,
         "max_accumulation": 323.0,
@@ -2175,8 +2175,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "229",
+        "zone_id": "2",
+        "subzone_id": "55",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8333.4775390625,
         "max_accumulation": 202.0,
@@ -2594,8 +2594,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "207",
+        "zone_id": "2",
+        "subzone_id": "35",
         "area_km2": 10.00870436517134,
         "mean_elevation": 9113.6435546875,
         "max_accumulation": 1226.0,
@@ -3501,8 +3501,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "208",
+        "zone_id": "2",
+        "subzone_id": "36",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8605.181640625,
         "max_accumulation": 1135.0,
@@ -3976,8 +3976,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "209",
+        "zone_id": "2",
+        "subzone_id": "37",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8827.3525390625,
         "max_accumulation": 785.0,
@@ -4515,8 +4515,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "210",
+        "zone_id": "2",
+        "subzone_id": "38",
         "area_km2": 10.00870436517134,
         "mean_elevation": 9195.328125,
         "max_accumulation": 749.0,
@@ -5462,8 +5462,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "212",
+        "zone_id": "2",
+        "subzone_id": "39",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8430.7099609375,
         "max_accumulation": 743.0,
@@ -6041,8 +6041,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "215",
+        "zone_id": "2",
+        "subzone_id": "42",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8801.873046875,
         "max_accumulation": 554.0,
@@ -6780,8 +6780,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "217",
+        "zone_id": "2",
+        "subzone_id": "44",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8688.7744140625,
         "max_accumulation": 498.0,
@@ -8007,8 +8007,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "218",
+        "zone_id": "2",
+        "subzone_id": "45",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8933.4501953125,
         "max_accumulation": 417.0,
@@ -8666,8 +8666,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "219",
+        "zone_id": "2",
+        "subzone_id": "46",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8654.33203125,
         "max_accumulation": 416.0,
@@ -10181,8 +10181,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "237",
+        "zone_id": "2",
+        "subzone_id": "26",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8452.162109375,
         "max_accumulation": 8469.0,
@@ -10656,8 +10656,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "205",
+        "zone_id": "2",
+        "subzone_id": "33",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8592.5546875,
         "max_accumulation": 1716.0,
@@ -11523,8 +11523,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "221",
+        "zone_id": "2",
+        "subzone_id": "48",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8422.68359375,
         "max_accumulation": 388.0,
@@ -12174,8 +12174,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "223",
+        "zone_id": "2",
+        "subzone_id": "49",
         "area_km2": 10.00870436517134,
         "mean_elevation": 9122.033203125,
         "max_accumulation": 358.0,
@@ -12841,8 +12841,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "213",
+        "zone_id": "1",
+        "subzone_id": "21",
         "area_km2": 10.00870436517134,
         "mean_elevation": 9252.8564453125,
         "max_accumulation": 449.0,
@@ -13524,8 +13524,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "215",
+        "zone_id": "1",
+        "subzone_id": "23",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8594.5732421875,
         "max_accumulation": 192.0,
@@ -14375,8 +14375,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "236",
+        "zone_id": "2",
+        "subzone_id": "25",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8355.498046875,
         "max_accumulation": 9361.0,
@@ -15450,8 +15450,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "201",
+        "zone_id": "2",
+        "subzone_id": "29",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8083.31201171875,
         "max_accumulation": 2735.0,
@@ -16277,8 +16277,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "203",
+        "zone_id": "2",
+        "subzone_id": "31",
         "area_km2": 10.00870436517134,
         "mean_elevation": 9036.4013671875,
         "max_accumulation": 1910.0,
@@ -17016,8 +17016,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "206",
+        "zone_id": "2",
+        "subzone_id": "34",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8142.140625,
         "max_accumulation": 1376.0,
@@ -17827,8 +17827,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "230",
+        "zone_id": "2",
+        "subzone_id": "56",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8602.33984375,
         "max_accumulation": 195.0,
@@ -18366,8 +18366,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "317",
+        "zone_id": "3",
+        "subzone_id": "45",
         "area_km2": 10.00870436517134,
         "mean_elevation": 9171.90234375,
         "max_accumulation": 363.0,
@@ -19193,8 +19193,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "219",
+        "zone_id": "1",
+        "subzone_id": "14",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8631.79296875,
         "max_accumulation": 2300.0,
@@ -19700,8 +19700,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "222",
+        "zone_id": "1",
+        "subzone_id": "17",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8537.958984375,
         "max_accumulation": 1056.0,
@@ -20423,8 +20423,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "313",
+        "zone_id": "4",
+        "subzone_id": "60",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8272.2041015625,
         "max_accumulation": 786.0,
@@ -21898,8 +21898,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "235",
+        "zone_id": "2",
+        "subzone_id": "24",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7792.833984375,
         "max_accumulation": 15169.0,
@@ -22717,8 +22717,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "239",
+        "zone_id": "2",
+        "subzone_id": "28",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8551.255859375,
         "max_accumulation": 3771.0,
@@ -23168,8 +23168,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "213",
+        "zone_id": "2",
+        "subzone_id": "40",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8507.6240234375,
         "max_accumulation": 651.0,
@@ -23875,8 +23875,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "227",
+        "zone_id": "2",
+        "subzone_id": "53",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8163.76123046875,
         "max_accumulation": 253.0,
@@ -24838,8 +24838,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "228",
+        "zone_id": "2",
+        "subzone_id": "54",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7870.76953125,
         "max_accumulation": 252.0,
@@ -25809,8 +25809,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "231",
+        "zone_id": "2",
+        "subzone_id": "57",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8383.0732421875,
         "max_accumulation": 189.0,
@@ -26988,8 +26988,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "232",
+        "zone_id": "2",
+        "subzone_id": "58",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7918.3212890625,
         "max_accumulation": 166.0,
@@ -27607,8 +27607,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "325",
+        "zone_id": "3",
+        "subzone_id": "36",
         "area_km2": 10.00870436517134,
         "mean_elevation": 9078.2333984375,
         "max_accumulation": 1643.0,
@@ -28834,8 +28834,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "318",
+        "zone_id": "3",
+        "subzone_id": "46",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8536.1142578125,
         "max_accumulation": 346.0,
@@ -29469,8 +29469,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "218",
+        "zone_id": "1",
+        "subzone_id": "13",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8041.5048828125,
         "max_accumulation": 4441.0,
@@ -30176,8 +30176,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "307",
+        "zone_id": "4",
+        "subzone_id": "55",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7959.841796875,
         "max_accumulation": 1501.0,
@@ -30667,8 +30667,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "310",
+        "zone_id": "4",
+        "subzone_id": "58",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8316.248046875,
         "max_accumulation": 974.0,
@@ -32070,8 +32070,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "329",
+        "zone_id": "4",
+        "subzone_id": "75",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8141.57666015625,
         "max_accumulation": 253.0,
@@ -33209,8 +33209,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "233",
+        "zone_id": "2",
+        "subzone_id": "23",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7913.97509765625,
         "max_accumulation": 16555.0,
@@ -34660,8 +34660,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "238",
+        "zone_id": "2",
+        "subzone_id": "27",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7980.255859375,
         "max_accumulation": 5642.0,
@@ -35151,8 +35151,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "204",
+        "zone_id": "2",
+        "subzone_id": "32",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7773.685546875,
         "max_accumulation": 1768.0,
@@ -35706,8 +35706,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "220",
+        "zone_id": "2",
+        "subzone_id": "47",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7886.00244140625,
         "max_accumulation": 391.0,
@@ -36461,8 +36461,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "324",
+        "zone_id": "3",
+        "subzone_id": "35",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8073.9697265625,
         "max_accumulation": 1804.0,
@@ -37104,8 +37104,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "326",
+        "zone_id": "3",
+        "subzone_id": "37",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8411.5205078125,
         "max_accumulation": 1289.0,
@@ -37907,8 +37907,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "327",
+        "zone_id": "3",
+        "subzone_id": "38",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8179.02392578125,
         "max_accumulation": 901.0,
@@ -38838,8 +38838,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "313",
+        "zone_id": "3",
+        "subzone_id": "41",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8553.7021484375,
         "max_accumulation": 606.0,
@@ -39777,8 +39777,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "314",
+        "zone_id": "3",
+        "subzone_id": "42",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8546.5751953125,
         "max_accumulation": 577.0,
@@ -40660,8 +40660,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "217",
+        "zone_id": "1",
+        "subzone_id": "12",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8192.513671875,
         "max_accumulation": 4514.0,
@@ -41455,8 +41455,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "221",
+        "zone_id": "1",
+        "subzone_id": "16",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8203.4091796875,
         "max_accumulation": 1229.0,
@@ -42002,8 +42002,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "211",
+        "zone_id": "1",
+        "subzone_id": "19",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8488.82421875,
         "max_accumulation": 616.0,
@@ -42965,8 +42965,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "212",
+        "zone_id": "1",
+        "subzone_id": "20",
         "area_km2": 9.881851331392236,
         "mean_elevation": 7899.86572265625,
         "max_accumulation": 528.0,
@@ -43720,8 +43720,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "214",
+        "zone_id": "1",
+        "subzone_id": "22",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7616.17578125,
         "max_accumulation": 206.0,
@@ -44251,8 +44251,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "305",
+        "zone_id": "4",
+        "subzone_id": "53",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8476.7119140625,
         "max_accumulation": 3242.0,
@@ -44806,8 +44806,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "319",
+        "zone_id": "4",
+        "subzone_id": "66",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8374.923828125,
         "max_accumulation": 467.0,
@@ -45601,8 +45601,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "321",
+        "zone_id": "4",
+        "subzone_id": "68",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7956.43017578125,
         "max_accumulation": 438.0,
@@ -46540,8 +46540,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "323",
+        "zone_id": "4",
+        "subzone_id": "69",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8038.47900390625,
         "max_accumulation": 402.0,
@@ -47007,8 +47007,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "222",
+        "zone_id": "2",
+        "subzone_id": "22",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7457.0,
         "max_accumulation": 26016.0,
@@ -47730,8 +47730,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "216",
+        "zone_id": "2",
+        "subzone_id": "43",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8079.82275390625,
         "max_accumulation": 545.0,
@@ -48301,8 +48301,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "226",
+        "zone_id": "2",
+        "subzone_id": "52",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7641.03662109375,
         "max_accumulation": 271.0,
@@ -49304,8 +49304,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "322",
+        "zone_id": "3",
+        "subzone_id": "33",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8333.14453125,
         "max_accumulation": 6764.0,
@@ -49819,8 +49819,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "311",
+        "zone_id": "3",
+        "subzone_id": "39",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8722.4169921875,
         "max_accumulation": 805.0,
@@ -50174,8 +50174,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "315",
+        "zone_id": "3",
+        "subzone_id": "43",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8373.6005859375,
         "max_accumulation": 566.0,
@@ -51529,8 +51529,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "216",
+        "zone_id": "1",
+        "subzone_id": "11",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8071.98095703125,
         "max_accumulation": 7614.0,
@@ -52244,8 +52244,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "220",
+        "zone_id": "1",
+        "subzone_id": "15",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7557.3603515625,
         "max_accumulation": 1319.0,
@@ -53151,8 +53151,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "223",
+        "zone_id": "1",
+        "subzone_id": "18",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7885.08544921875,
         "max_accumulation": 636.0,
@@ -53914,8 +53914,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "304",
+        "zone_id": "4",
+        "subzone_id": "52",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7827.119140625,
         "max_accumulation": 5861.0,
@@ -54461,8 +54461,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "308",
+        "zone_id": "4",
+        "subzone_id": "56",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8419.6845703125,
         "max_accumulation": 1037.0,
@@ -55016,8 +55016,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "211",
+        "zone_id": "2",
+        "subzone_id": "21",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7244.326171875,
         "max_accumulation": 26602.0,
@@ -55867,8 +55867,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "202",
+        "zone_id": "2",
+        "subzone_id": "30",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7599.10595703125,
         "max_accumulation": 2228.0,
@@ -56374,8 +56374,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "225",
+        "zone_id": "2",
+        "subzone_id": "51",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7433.99755859375,
         "max_accumulation": 321.0,
@@ -56801,8 +56801,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "234",
+        "zone_id": "2",
+        "subzone_id": "59",
         "area_km2": 3.2728082715008946,
         "mean_elevation": 7119.34423828125,
         "max_accumulation": 75.0,
@@ -57644,8 +57644,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "321",
+        "zone_id": "3",
+        "subzone_id": "32",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8288.9130859375,
         "max_accumulation": 7617.0,
@@ -58303,8 +58303,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "323",
+        "zone_id": "3",
+        "subzone_id": "34",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8093.078125,
         "max_accumulation": 1810.0,
@@ -58866,8 +58866,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "312",
+        "zone_id": "3",
+        "subzone_id": "40",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8359.5576171875,
         "max_accumulation": 692.0,
@@ -59949,8 +59949,8 @@
         ]
       },
       "properties": {
-        "zone_id": "21",
-        "subzone_id": "210",
+        "zone_id": "1",
+        "subzone_id": "10",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7563.40478515625,
         "max_accumulation": 11036.0,
@@ -60360,8 +60360,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "303",
+        "zone_id": "4",
+        "subzone_id": "51",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8062.62841796875,
         "max_accumulation": 6842.0,
@@ -61267,8 +61267,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "306",
+        "zone_id": "4",
+        "subzone_id": "54",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7704.5361328125,
         "max_accumulation": 2802.0,
@@ -62118,8 +62118,8 @@
         ]
       },
       "properties": {
-        "zone_id": "20",
-        "subzone_id": "200",
+        "zone_id": "2",
+        "subzone_id": "20",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7039.744140625,
         "max_accumulation": 42065.0,
@@ -62873,8 +62873,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "320",
+        "zone_id": "3",
+        "subzone_id": "31",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8029.443359375,
         "max_accumulation": 12027.0,
@@ -63372,8 +63372,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "316",
+        "zone_id": "3",
+        "subzone_id": "44",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8093.70263671875,
         "max_accumulation": 490.0,
@@ -64695,8 +64695,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "319",
+        "zone_id": "3",
+        "subzone_id": "47",
         "area_km2": 6.799322610559998,
         "mean_elevation": 7372.3505859375,
         "max_accumulation": 182.0,
@@ -65634,8 +65634,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "334",
+        "zone_id": "4",
+        "subzone_id": "45",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7062.7958984375,
         "max_accumulation": 42332.0,
@@ -66245,8 +66245,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "302",
+        "zone_id": "4",
+        "subzone_id": "50",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7829.53759765625,
         "max_accumulation": 7552.0,
@@ -67560,8 +67560,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "318",
+        "zone_id": "4",
+        "subzone_id": "65",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7797.48095703125,
         "max_accumulation": 502.0,
@@ -68307,8 +68307,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "326",
+        "zone_id": "4",
+        "subzone_id": "72",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7798.78955078125,
         "max_accumulation": 321.0,
@@ -69022,8 +69022,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "327",
+        "zone_id": "4",
+        "subzone_id": "73",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7673.51318359375,
         "max_accumulation": 317.0,
@@ -69937,8 +69937,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "330",
+        "zone_id": "4",
+        "subzone_id": "76",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7685.47705078125,
         "max_accumulation": 250.0,
@@ -70892,8 +70892,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "331",
+        "zone_id": "4",
+        "subzone_id": "77",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7011.6279296875,
         "max_accumulation": 245.0,
@@ -72127,8 +72127,8 @@
         ]
       },
       "properties": {
-        "zone_id": "31",
-        "subzone_id": "310",
+        "zone_id": "3",
+        "subzone_id": "30",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7336.99072265625,
         "max_accumulation": 13949.0,
@@ -73514,8 +73514,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "333",
+        "zone_id": "4",
+        "subzone_id": "44",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6990.0673828125,
         "max_accumulation": 60992.0,
@@ -74173,8 +74173,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "301",
+        "zone_id": "4",
+        "subzone_id": "49",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7718.994140625,
         "max_accumulation": 9174.0,
@@ -75080,8 +75080,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "309",
+        "zone_id": "4",
+        "subzone_id": "57",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7588.67724609375,
         "max_accumulation": 1021.0,
@@ -75835,8 +75835,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "312",
+        "zone_id": "4",
+        "subzone_id": "59",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6781.94921875,
         "max_accumulation": 936.0,
@@ -76622,8 +76622,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "315",
+        "zone_id": "4",
+        "subzone_id": "62",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6859.58447265625,
         "max_accumulation": 661.0,
@@ -77817,8 +77817,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "332",
+        "zone_id": "4",
+        "subzone_id": "43",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6878.61767578125,
         "max_accumulation": 65800.0,
@@ -78572,8 +78572,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "337",
+        "zone_id": "4",
+        "subzone_id": "48",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7685.828125,
         "max_accumulation": 10123.0,
@@ -79087,8 +79087,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "325",
+        "zone_id": "4",
+        "subzone_id": "71",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8088.9208984375,
         "max_accumulation": 335.0,
@@ -79626,8 +79626,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "328",
+        "zone_id": "4",
+        "subzone_id": "74",
         "area_km2": 6.8627491274495505,
         "mean_elevation": 6886.51953125,
         "max_accumulation": 258.0,
@@ -80589,8 +80589,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "115",
+        "zone_id": "6",
+        "subzone_id": "82",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7330.13671875,
         "max_accumulation": 459.0,
@@ -82144,8 +82144,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "322",
+        "zone_id": "4",
+        "subzone_id": "42",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7286.60400390625,
         "max_accumulation": 67498.0,
@@ -82891,8 +82891,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "336",
+        "zone_id": "4",
+        "subzone_id": "47",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7290.5146484375,
         "max_accumulation": 11312.0,
@@ -83502,8 +83502,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "320",
+        "zone_id": "4",
+        "subzone_id": "67",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6844.22119140625,
         "max_accumulation": 464.0,
@@ -83961,8 +83961,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "112",
+        "zone_id": "6",
+        "subzone_id": "79",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7159.1396484375,
         "max_accumulation": 1186.0,
@@ -84924,8 +84924,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "311",
+        "zone_id": "4",
+        "subzone_id": "41",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7216.919921875,
         "max_accumulation": 68419.0,
@@ -85959,8 +85959,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "335",
+        "zone_id": "4",
+        "subzone_id": "46",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6520.03466796875,
         "max_accumulation": 11877.0,
@@ -86826,8 +86826,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "314",
+        "zone_id": "4",
+        "subzone_id": "61",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6590.166015625,
         "max_accumulation": 697.0,
@@ -87277,8 +87277,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "316",
+        "zone_id": "4",
+        "subzone_id": "63",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7893.51953125,
         "max_accumulation": 607.0,
@@ -88336,8 +88336,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "317",
+        "zone_id": "4",
+        "subzone_id": "64",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6939.1767578125,
         "max_accumulation": 523.0,
@@ -89123,8 +89123,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "324",
+        "zone_id": "4",
+        "subzone_id": "70",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6827.3193359375,
         "max_accumulation": 368.0,
@@ -89566,8 +89566,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "126",
+        "zone_id": "5",
+        "subzone_id": "58",
         "area_km2": 10.00870436517134,
         "mean_elevation": 8042.73876953125,
         "max_accumulation": 923.0,
@@ -90145,8 +90145,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "113",
+        "zone_id": "5",
+        "subzone_id": "61",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6881.34912109375,
         "max_accumulation": 635.0,
@@ -90796,8 +90796,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "116",
+        "zone_id": "5",
+        "subzone_id": "64",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7382.6171875,
         "max_accumulation": 288.0,
@@ -91319,8 +91319,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "106",
+        "zone_id": "6",
+        "subzone_id": "74",
         "area_km2": 10.00870436517134,
         "mean_elevation": 7026.947265625,
         "max_accumulation": 1943.0,
@@ -91746,8 +91746,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "116",
+        "zone_id": "6",
+        "subzone_id": "83",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6959.6474609375,
         "max_accumulation": 456.0,
@@ -93157,8 +93157,8 @@
         ]
       },
       "properties": {
-        "zone_id": "30",
-        "subzone_id": "300",
+        "zone_id": "4",
+        "subzone_id": "40",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6796.0302734375,
         "max_accumulation": 85748.0,
@@ -93608,8 +93608,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "123",
+        "zone_id": "5",
+        "subzone_id": "55",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6875.57177734375,
         "max_accumulation": 2110.0,
@@ -94163,8 +94163,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "124",
+        "zone_id": "5",
+        "subzone_id": "56",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6728.498046875,
         "max_accumulation": 1792.0,
@@ -94758,8 +94758,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "117",
+        "zone_id": "5",
+        "subzone_id": "65",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6712.95703125,
         "max_accumulation": 134.0,
@@ -96225,8 +96225,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "103",
+        "zone_id": "6",
+        "subzone_id": "71",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6551.546875,
         "max_accumulation": 85750.0,
@@ -96916,8 +96916,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "104",
+        "zone_id": "6",
+        "subzone_id": "72",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6671.0673828125,
         "max_accumulation": 3749.0,
@@ -97911,8 +97911,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "122",
+        "zone_id": "5",
+        "subzone_id": "54",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6497.0888671875,
         "max_accumulation": 5853.0,
@@ -98434,8 +98434,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "115",
+        "zone_id": "5",
+        "subzone_id": "63",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6557.10986328125,
         "max_accumulation": 524.0,
@@ -99765,8 +99765,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "102",
+        "zone_id": "6",
+        "subzone_id": "70",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6482.1337890625,
         "max_accumulation": 90762.0,
@@ -100240,8 +100240,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "119",
+        "zone_id": "6",
+        "subzone_id": "86",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6454.97509765625,
         "max_accumulation": 371.0,
@@ -100747,8 +100747,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "121",
+        "zone_id": "6",
+        "subzone_id": "88",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6362.525390625,
         "max_accumulation": 293.0,
@@ -101694,8 +101694,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "121",
+        "zone_id": "5",
+        "subzone_id": "53",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6516.03662109375,
         "max_accumulation": 6890.0,
@@ -102369,8 +102369,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "125",
+        "zone_id": "5",
+        "subzone_id": "57",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6631.66162109375,
         "max_accumulation": 966.0,
@@ -102980,8 +102980,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "112",
+        "zone_id": "5",
+        "subzone_id": "60",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6600.18994140625,
         "max_accumulation": 763.0,
@@ -103639,8 +103639,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "101",
+        "zone_id": "6",
+        "subzone_id": "69",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6314.0419921875,
         "max_accumulation": 93638.0,
@@ -104194,8 +104194,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "114",
+        "zone_id": "6",
+        "subzone_id": "81",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6618.236328125,
         "max_accumulation": 572.0,
@@ -104805,8 +104805,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "120",
+        "zone_id": "5",
+        "subzone_id": "52",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6406.41455078125,
         "max_accumulation": 9955.0,
@@ -105552,8 +105552,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "114",
+        "zone_id": "5",
+        "subzone_id": "62",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6406.5703125,
         "max_accumulation": 525.0,
@@ -106355,8 +106355,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "130",
+        "zone_id": "6",
+        "subzone_id": "68",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6308.40234375,
         "max_accumulation": 94394.0,
@@ -106934,8 +106934,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "109",
+        "zone_id": "6",
+        "subzone_id": "77",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6563.42626953125,
         "max_accumulation": 1647.0,
@@ -107529,8 +107529,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "119",
+        "zone_id": "5",
+        "subzone_id": "51",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6529.63134765625,
         "max_accumulation": 10854.0,
@@ -108468,8 +108468,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "111",
+        "zone_id": "5",
+        "subzone_id": "59",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6562.05810546875,
         "max_accumulation": 819.0,
@@ -108919,8 +108919,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "118",
+        "zone_id": "5",
+        "subzone_id": "66",
         "area_km2": 3.2728082715008946,
         "mean_elevation": 6395.7333984375,
         "max_accumulation": 55.0,
@@ -109610,8 +109610,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "129",
+        "zone_id": "6",
+        "subzone_id": "67",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6394.29638671875,
         "max_accumulation": 96971.0,
@@ -110621,8 +110621,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "124",
+        "zone_id": "6",
+        "subzone_id": "90",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6379.84814453125,
         "max_accumulation": 148.0,
@@ -111440,8 +111440,8 @@
         ]
       },
       "properties": {
-        "zone_id": "11",
-        "subzone_id": "110",
+        "zone_id": "5",
+        "subzone_id": "50",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6422.931640625,
         "max_accumulation": 12882.0,
@@ -112011,8 +112011,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "128",
+        "zone_id": "6",
+        "subzone_id": "66",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6345.42626953125,
         "max_accumulation": 110878.0,
@@ -112782,8 +112782,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "127",
+        "zone_id": "6",
+        "subzone_id": "65",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6336.26806640625,
         "max_accumulation": 112301.0,
@@ -113505,8 +113505,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "117",
+        "zone_id": "6",
+        "subzone_id": "84",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6492.01318359375,
         "max_accumulation": 393.0,
@@ -113948,8 +113948,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "126",
+        "zone_id": "6",
+        "subzone_id": "64",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6346.19921875,
         "max_accumulation": 112764.0,
@@ -114855,8 +114855,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "107",
+        "zone_id": "6",
+        "subzone_id": "75",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6489.04833984375,
         "max_accumulation": 1764.0,
@@ -115618,8 +115618,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "125",
+        "zone_id": "6",
+        "subzone_id": "63",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6344.47021484375,
         "max_accumulation": 113732.0,
@@ -117037,8 +117037,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "105",
+        "zone_id": "6",
+        "subzone_id": "73",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6307.1943359375,
         "max_accumulation": 2215.0,
@@ -118720,8 +118720,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "118",
+        "zone_id": "6",
+        "subzone_id": "85",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6338.74951171875,
         "max_accumulation": 387.0,
@@ -119939,8 +119939,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "123",
+        "zone_id": "6",
+        "subzone_id": "89",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6317.1748046875,
         "max_accumulation": 253.0,
@@ -121646,8 +121646,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "122",
+        "zone_id": "6",
+        "subzone_id": "62",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6319.31640625,
         "max_accumulation": 117813.0,
@@ -122225,8 +122225,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "110",
+        "zone_id": "6",
+        "subzone_id": "78",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6315.76123046875,
         "max_accumulation": 1414.0,
@@ -123372,8 +123372,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "111",
+        "zone_id": "6",
+        "subzone_id": "61",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6263.40576171875,
         "max_accumulation": 118159.0,
@@ -124367,8 +124367,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "108",
+        "zone_id": "6",
+        "subzone_id": "76",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6255.927734375,
         "max_accumulation": 1719.0,
@@ -125266,8 +125266,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "113",
+        "zone_id": "6",
+        "subzone_id": "80",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6239.58935546875,
         "max_accumulation": 619.0,
@@ -126637,8 +126637,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "120",
+        "zone_id": "6",
+        "subzone_id": "87",
         "area_km2": 8.194705982130147,
         "mean_elevation": 6232.220703125,
         "max_accumulation": 300.0,
@@ -128936,8 +128936,8 @@
         ]
       },
       "properties": {
-        "zone_id": "10",
-        "subzone_id": "100",
+        "zone_id": "6",
+        "subzone_id": "60",
         "area_km2": 10.00870436517134,
         "mean_elevation": 6257.22412109375,
         "max_accumulation": 122946.0,

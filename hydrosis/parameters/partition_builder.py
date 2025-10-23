@@ -331,21 +331,119 @@ def partition_parameter_zones(
                 start += max_area_cells
 
         return final_defs
+    # NOTE: Subzone generation moved to AFTER zone renumbering (see line ~538)
+    # This ensures subzone IDs use the final zone numbers
     zone_subzone_definitions: Dict[str, List[Dict[str, object]]] = {}
-    for zone_id, node in zones.items():
-        mask = zone_masks.get(zone_id)
+
+    # Aggregate subzone geometry back into zone-level summaries
+    for zone_id in zones.keys():
+        zone_polygons[zone_id] = []
+        zone_polygon = dutils.masks_to_polygons({zone_id: zone_masks[zone_id]}, transform).get(zone_id) or []
+        for ring in zone_polygon:
+            zone_polygons[zone_id].append(ring)
+
+    for zone_id in zones.keys():
+        if zone_polygons[zone_id]:
+            continue
+        fallback_mask = zone_definitions[zone_id]["mask"]
+        if fallback_mask is None:
+            continue
+        area_cells = int(fallback_mask.sum())
+        zone_cell_accumulator[zone_id] = max(zone_cell_accumulator[zone_id], area_cells)
+        if zone_area_accumulator[zone_id] <= 0.0:
+            zone_area_accumulator[zone_id] = area_cells * cell_area_km2
+        fallback_polygons = dutils.masks_to_polygons({zone_id: fallback_mask}, transform).get(zone_id) or []
+        for ring in fallback_polygons:
+            zone_polygons[zone_id].append(ring)
+
+    # Update zone summaries using aggregated subzone areas
+    for zone_id, definition in zone_definitions.items():
+        area_cells = max(zone_cell_accumulator[zone_id], definition.get("area_cells", 0))
+        area_km2 = max(zone_area_accumulator[zone_id], definition.get("area_km2", 0.0))
+        definition["area_cells"] = area_cells
+        definition["area_km2"] = area_km2
+        if zone_id in zone_stats_lookup:
+            zone_stats_lookup[zone_id]["area_cells"] = area_cells
+            zone_stats_lookup[zone_id]["area_km2"] = area_km2
+
+    # Compute depth and create old_id -> new_id mapping
+    # Depth: outlet (no downstream) = 0, direct upstream = 1, etc.
+    # We assign zone IDs from upstream to downstream:
+    #   - Smallest depth (downstream, outlet) gets highest number
+    #   - Largest depth (upstream) gets lowest number (1, 2, 3...)
+    zone_downstream_map = {zone_id: node.downstream_id for zone_id, node in zones.items()}
+    zone_depth = _compute_depth_map(zone_downstream_map)
+    # Sort by depth descending (upstream first), so upstream zones get lower IDs
+    sorted_zone_ids = sorted(zones.keys(), key=lambda zid: zone_depth.get(zid, 0), reverse=True)
+
+    # Create mapping from old zone_id to new sequential zone_id
+    # Zone numbering: 1 (most upstream) -> n (most downstream)
+    old_to_new_zone_id: Dict[str, str] = {}
+    new_to_old_zone_id: Dict[str, str] = {}
+    for idx, old_zone_id in enumerate(sorted_zone_ids, start=1):
+        new_zone_id = str(idx)
+        old_to_new_zone_id[old_zone_id] = new_zone_id
+        new_to_old_zone_id[new_zone_id] = old_zone_id
+
+    # Remap all zone references to use new sequential IDs
+    new_zones: Dict[str, ZoneNode] = {}
+    for old_zone_id, node in zones.items():
+        new_zone_id = old_to_new_zone_id[old_zone_id]
+        old_downstream = node.downstream_id
+        new_downstream = old_to_new_zone_id.get(old_downstream) if old_downstream else None
+        new_zones[new_zone_id] = ZoneNode(
+            id=new_zone_id,
+            pour_point=node.pour_point,
+            downstream_id=new_downstream,
+            runoff_method=node.runoff_method,
+            routing_method=node.routing_method,
+        )
+    zones = new_zones
+
+    # Remap zone_masks, zone_definitions, zone_stats_lookup
+    new_zone_masks: Dict[str, np.ndarray] = {}
+    for old_zone_id, mask in zone_masks.items():
+        new_zone_id = old_to_new_zone_id[old_zone_id]
+        new_zone_masks[new_zone_id] = mask
+    zone_masks = new_zone_masks
+
+    new_zone_definitions: Dict[str, Dict[str, object]] = {}
+    for old_zone_id, definition in zone_definitions.items():
+        new_zone_id = old_to_new_zone_id[old_zone_id]
+        new_definition = dict(definition)
+        old_downstream = definition.get("downstream_id")
+        new_definition["downstream_id"] = old_to_new_zone_id.get(old_downstream) if old_downstream else None
+        new_zone_definitions[new_zone_id] = new_definition
+    zone_definitions = new_zone_definitions
+
+    new_zone_stats_lookup: Dict[str, Dict[str, object]] = {}
+    new_zone_stats_rows: List[Dict[str, object]] = []
+    for row in zone_stats_rows:
+        old_zone_id = row["zone_id"]
+        new_zone_id = old_to_new_zone_id[old_zone_id]
+        new_row = dict(row)
+        new_row["zone_id"] = new_zone_id
+        old_downstream = row.get("downstream_id", "")
+        new_row["downstream_id"] = old_to_new_zone_id.get(old_downstream) if old_downstream else ""
+        new_zone_stats_lookup[new_zone_id] = new_row
+        new_zone_stats_rows.append(new_row)
+    zone_stats_lookup = new_zone_stats_lookup
+    zone_stats_rows = new_zone_stats_rows
+
+    # Update zone_downstream_map and zone_depth with new IDs
+    zone_downstream_map = {zone_id: node.downstream_id for zone_id, node in zones.items()}
+    zone_depth = _compute_depth_map(zone_downstream_map)
+    sorted_zone_ids = sorted(zones.keys(), key=lambda zid: zone_depth.get(zid, 0), reverse=True)
+
+    # NOW generate subzones using the NEW zone IDs
+    # This ensures subzone encoding uses the correct zone numbers (1 = upstream, n = downstream)
+    for new_zone_id in zones.keys():
+        mask = zone_masks.get(new_zone_id)
         if mask is None or int(mask.sum()) == 0:
             continue
-        zone_subzone_definitions[zone_id] = _generate_subzones_for_zone(zone_id, mask)
+        zone_subzone_definitions[new_zone_id] = _generate_subzones_for_zone(new_zone_id, mask)
 
-    # Remap zone_subzone_definitions to use new zone IDs
-    new_zone_subzone_definitions: Dict[str, List[Dict[str, object]]] = {}
-    for old_zone_id, sub_defs in zone_subzone_definitions.items():
-        new_zone_id = old_to_new_zone_id.get(old_zone_id)
-        if new_zone_id:
-            new_zone_subzone_definitions[new_zone_id] = sub_defs
-    zone_subzone_definitions = new_zone_subzone_definitions
-
+    # Process subzones for each zone using the NEW zone IDs
     for zone_id, node in zones.items():
         mask = zone_masks.get(zone_id)
         if mask is None or int(mask.sum()) == 0:
@@ -365,7 +463,9 @@ def partition_parameter_zones(
         zone_index = int(zone_id)
 
         for idx, definition in enumerate(sub_definitions, start=1):
-            # New encoding scheme: zone_id * 100 + subzone_index
+            # Encoding scheme: zone_id * 100 + subzone_index
+            # Example: Zone 1 -> subzones 101, 102, 103...
+            #          Zone 2 -> subzones 201, 202, 203...
             sub_id = str(zone_index * 100 + idx)
             sub_mask = definition["mask"]
             area_cells = int(sub_mask.sum())
@@ -425,6 +525,7 @@ def partition_parameter_zones(
             subzone_ids.append(sub_id)
             subzone_index_grid[sub_mask] = current_index
 
+    # Compute downstream relationships for subzones
     subzone_id_to_index = {sid: idx for idx, sid in enumerate(subzone_ids)}
     for row in subzone_rows:
         sub_id = row["subzone_id"]
@@ -439,100 +540,6 @@ def partition_parameter_zones(
         )
         if downstream_sub:
             row["downstream_subzone_id"] = downstream_sub
-
-    # Aggregate subzone geometry back into zone-level summaries
-    for zone_id in zones.keys():
-        zone_polygons[zone_id] = []
-        zone_polygon = dutils.masks_to_polygons({zone_id: zone_masks[zone_id]}, transform).get(zone_id) or []
-        for ring in zone_polygon:
-            zone_polygons[zone_id].append(ring)
-
-    for zone_id in zones.keys():
-        if zone_polygons[zone_id]:
-            continue
-        fallback_mask = zone_definitions[zone_id]["mask"]
-        if fallback_mask is None:
-            continue
-        area_cells = int(fallback_mask.sum())
-        zone_cell_accumulator[zone_id] = max(zone_cell_accumulator[zone_id], area_cells)
-        if zone_area_accumulator[zone_id] <= 0.0:
-            zone_area_accumulator[zone_id] = area_cells * cell_area_km2
-        fallback_polygons = dutils.masks_to_polygons({zone_id: fallback_mask}, transform).get(zone_id) or []
-        for ring in fallback_polygons:
-            zone_polygons[zone_id].append(ring)
-
-    # Update zone summaries using aggregated subzone areas
-    for zone_id, definition in zone_definitions.items():
-        area_cells = max(zone_cell_accumulator[zone_id], definition.get("area_cells", 0))
-        area_km2 = max(zone_area_accumulator[zone_id], definition.get("area_km2", 0.0))
-        definition["area_cells"] = area_cells
-        definition["area_km2"] = area_km2
-        if zone_id in zone_stats_lookup:
-            zone_stats_lookup[zone_id]["area_cells"] = area_cells
-            zone_stats_lookup[zone_id]["area_km2"] = area_km2
-
-    # Compute depth and create old_id -> new_id mapping
-    zone_downstream_map = {zone_id: node.downstream_id for zone_id, node in zones.items()}
-    zone_depth = _compute_depth_map(zone_downstream_map)
-    sorted_zone_ids = sorted(zones.keys(), key=lambda zid: zone_depth.get(zid, 0), reverse=True)
-
-    # Create mapping from old zone_id to new sequential zone_id
-    old_to_new_zone_id: Dict[str, str] = {}
-    new_to_old_zone_id: Dict[str, str] = {}
-    for idx, old_zone_id in enumerate(sorted_zone_ids, start=1):
-        new_zone_id = str(idx)
-        old_to_new_zone_id[old_zone_id] = new_zone_id
-        new_to_old_zone_id[new_zone_id] = old_zone_id
-
-    # Remap all zone references to use new sequential IDs
-    new_zones: Dict[str, ZoneNode] = {}
-    for old_zone_id, node in zones.items():
-        new_zone_id = old_to_new_zone_id[old_zone_id]
-        old_downstream = node.downstream_id
-        new_downstream = old_to_new_zone_id.get(old_downstream) if old_downstream else None
-        new_zones[new_zone_id] = ZoneNode(
-            id=new_zone_id,
-            pour_point=node.pour_point,
-            downstream_id=new_downstream,
-            runoff_method=node.runoff_method,
-            routing_method=node.routing_method,
-        )
-    zones = new_zones
-
-    # Remap zone_masks, zone_definitions, zone_stats_lookup
-    new_zone_masks: Dict[str, np.ndarray] = {}
-    for old_zone_id, mask in zone_masks.items():
-        new_zone_id = old_to_new_zone_id[old_zone_id]
-        new_zone_masks[new_zone_id] = mask
-    zone_masks = new_zone_masks
-
-    new_zone_definitions: Dict[str, Dict[str, object]] = {}
-    for old_zone_id, definition in zone_definitions.items():
-        new_zone_id = old_to_new_zone_id[old_zone_id]
-        new_definition = dict(definition)
-        old_downstream = definition.get("downstream_id")
-        new_definition["downstream_id"] = old_to_new_zone_id.get(old_downstream) if old_downstream else None
-        new_zone_definitions[new_zone_id] = new_definition
-    zone_definitions = new_zone_definitions
-
-    new_zone_stats_lookup: Dict[str, Dict[str, object]] = {}
-    new_zone_stats_rows: List[Dict[str, object]] = []
-    for row in zone_stats_rows:
-        old_zone_id = row["zone_id"]
-        new_zone_id = old_to_new_zone_id[old_zone_id]
-        new_row = dict(row)
-        new_row["zone_id"] = new_zone_id
-        old_downstream = row.get("downstream_id", "")
-        new_row["downstream_id"] = old_to_new_zone_id.get(old_downstream) if old_downstream else ""
-        new_zone_stats_lookup[new_zone_id] = new_row
-        new_zone_stats_rows.append(new_row)
-    zone_stats_lookup = new_zone_stats_lookup
-    zone_stats_rows = new_zone_stats_rows
-
-    # Update zone_downstream_map and zone_depth with new IDs
-    zone_downstream_map = {zone_id: node.downstream_id for zone_id, node in zones.items()}
-    zone_depth = _compute_depth_map(zone_downstream_map)
-    sorted_zone_ids = sorted(zones.keys(), key=lambda zid: zone_depth.get(zid, 0), reverse=True)
 
     zone_features: List[Dict[str, object]] = []
     feature_lookup: Dict[str, Dict[str, object]] = {}
