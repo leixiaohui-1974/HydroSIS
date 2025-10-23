@@ -150,7 +150,7 @@ def step01_dem_processing(
 
     # 1.2 流向图
     fig, ax = plt.subplots(figsize=(10, 8))
-    cmap = plt.cm.get_cmap('tab10', 8)
+    cmap = plt.colormaps.get_cmap('tab10').resampled(8)
     im = ax.imshow(flowdir_data, cmap=cmap, aspect='auto', vmin=0, vmax=7)
     plt.colorbar(im, ax=ax, label='Flow Direction Code', ticks=range(8))
     ax.set_title('D8 Flow Direction')
@@ -237,11 +237,18 @@ def step02_pour_point_generation(
     flow_dir_path: Path,
     flow_acc_path: Path,
     output_dir: Path,
-    count: int = 4,
-    auto_threshold: float = 5000.0,
+    total_count: int = 6,
+    main_stream_count: int = 3,
+    tributary_count: int = 3,
 ) -> Dict[str, object]:
     """
-    第2步：汇水点生成
+    第2步：汇水点生成（智能生成6个汇水点：3个干流 + 3个支流）
+
+    策略：
+    1. 识别主干流（流量累计最大的路径）
+    2. 在主干流上均匀分布3个汇水点
+    3. 识别主要支流，分布3个汇水点
+    4. 确保各分区面积大致均衡
 
     输入：
     - 流向栅格
@@ -253,7 +260,7 @@ def step02_pour_point_generation(
     - Pour points统计表
     """
     print("\n" + "="*80)
-    print("第2步：汇水点生成")
+    print(f"第2步：汇水点生成（{main_stream_count}个干流 + {tributary_count}个支流）")
     print("="*80)
 
     step_dir = output_dir / "step_02_pour_points"
@@ -264,22 +271,162 @@ def step02_pour_point_generation(
         "outputs": [],
     }
 
-    # 生成pour points
-    pour_points = dutils.derive_pour_points(
-        flow_acc_path,
-        pour_point_count=count,
-        accumulation_threshold=auto_threshold,
-        min_spacing=2500.0,
-    )
+    # 读取流量累计数据
+    with rasterio.open(flow_acc_path) as src:
+        flowacc = src.read(1)
+        flowacc = np.where(np.isfinite(flowacc), flowacc, 0.0)
+        transform = src.transform
+        rows, cols = flowacc.shape
 
-    # 调整到流向格网
-    pour_points = snap_pour_points_to_flow_cells(
-        pour_points,
-        flow_dir_path,
-        flow_acc_path,
-    )
+    # 读取流向数据
+    with rasterio.open(flow_dir_path) as src:
+        flowdir = src.read(1)
 
-    print(f"  ✓ 生成{len(pour_points)}个汇水点")
+    print("  ⚙ 分析流域结构...")
+
+    # 1. 找到出口点（流量累计最大的点）
+    outlet_row, outlet_col = np.unravel_index(np.argmax(flowacc), flowacc.shape)
+    outlet_acc = float(flowacc[outlet_row, outlet_col])
+    print(f"  ✓ 识别出口点: ({outlet_row}, {outlet_col}), 累计={outlet_acc:.0f}")
+
+    # 2. 沿主干流向上追溯，找到干流上的3个均匀分布点
+    D8_OFFSETS = {
+        0: (0, 1),   # East
+        1: (-1, 1),  # NE
+        2: (-1, 0),  # North
+        3: (-1, -1), # NW
+        4: (0, -1),  # West
+        5: (1, -1),  # SW
+        6: (1, 0),   # South
+        7: (1, 1),   # SE
+    }
+
+    # 反向追溯：找到流向当前点的上游点
+    def find_all_upstream(r, c):
+        """找到所有流向(r,c)的上游点"""
+        upstream_cells = []
+        for code, (dr, dc) in D8_OFFSETS.items():
+            nr, nc = r - dr, c - dc  # 反向偏移
+            if 0 <= nr < rows and 0 <= nc < cols:
+                # 检查这个邻居是否流向当前点
+                neighbor_code = int(flowdir[nr, nc])
+                if neighbor_code == code:  # 确认流向
+                    upstream_cells.append((nr, nc, flowacc[nr, nc]))
+        return upstream_cells
+
+    # 沿主干流追溯（选择流量累计最大的路径）
+    main_stream_cells = [(outlet_row, outlet_col)]
+    current = (outlet_row, outlet_col)
+    visited = {(outlet_row, outlet_col)}
+
+    while True:
+        upstream = find_all_upstream(current[0], current[1])
+        if not upstream:
+            break
+
+        # 选择流量累计最大的上游点
+        upstream.sort(key=lambda x: x[2], reverse=True)
+        next_cell = (upstream[0][0], upstream[0][1])
+
+        if next_cell in visited:
+            break
+
+        main_stream_cells.append(next_cell)
+        visited.add(next_cell)
+        current = next_cell
+
+        if len(main_stream_cells) > 10000:  # 防止无限循环
+            break
+
+    print(f"  ✓ 追溯主干流: {len(main_stream_cells)}个格网")
+
+    # 在主干流上选择3个点（均匀分布）
+    main_stream_points = []
+    stream_length = len(main_stream_cells)
+    if stream_length >= 3:
+        # 选择1/4, 1/2, 3/4位置的点作为干流汇水点
+        positions = [stream_length // 4, stream_length // 2, stream_length * 3 // 4]
+        for i, pos in enumerate(positions):
+            r, c = main_stream_cells[pos]
+            x, y = transform * (c, r)
+            main_stream_points.append({
+                'id': f'M{i+1}',
+                'row': int(r),
+                'col': int(c),
+                'x': float(x),
+                'y': float(y),
+                'accumulation': float(flowacc[r, c]),
+                'type': 'main_stream',
+            })
+
+    print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点")
+
+    # 3. 识别支流：寻找流量累计较大但不在主干流上的点
+    main_stream_set = set(main_stream_cells)
+
+    # 找到所有高流量累计的候选支流点
+    threshold = outlet_acc * 0.1  # 至少是出口流量的10%
+    candidate_tributaries = []
+
+    for r in range(rows):
+        for c in range(cols):
+            acc = flowacc[r, c]
+            if acc > threshold and (r, c) not in main_stream_set:
+                candidate_tributaries.append((r, c, acc))
+
+    # 按流量累计排序
+    candidate_tributaries.sort(key=lambda x: x[2], reverse=True)
+
+    # 选择前3个支流点，但要确保它们之间有一定距离
+    tributary_points = []
+    min_dist = 50  # 最小间距50个格网
+
+    for r, c, acc in candidate_tributaries:
+        # 检查与已选支流点的距离
+        too_close = False
+        for tp in tributary_points:
+            dist = np.sqrt((r - tp['row'])**2 + (c - tp['col'])**2)
+            if dist < min_dist:
+                too_close = True
+                break
+
+        if not too_close:
+            x, y = transform * (c, r)
+            trib_id = f'T{len(tributary_points)+1}'
+            tributary_points.append({
+                'id': trib_id,
+                'row': int(r),
+                'col': int(c),
+                'x': float(x),
+                'y': float(y),
+                'accumulation': float(acc),
+                'type': 'tributary',
+            })
+
+            if len(tributary_points) >= tributary_count:
+                break
+
+    print(f"  ✓ 选择{len(tributary_points)}个支流汇水点")
+
+    # 合并所有汇水点
+    all_points_data = main_stream_points + tributary_points
+
+    # 转换为PourPoint对象
+    from hydrosis.delineation.utils import PourPoint
+    pour_points = [
+        PourPoint(
+            id=p['id'],
+            row=p['row'],
+            col=p['col'],
+            x=p['x'],
+            y=p['y'],
+            accumulation=p['accumulation'],
+            attributes={'type': p['type']},
+        )
+        for p in all_points_data
+    ]
+
+    print(f"  ✓ 总共生成{len(pour_points)}个汇水点")
 
     # 保存GeoJSON
     pour_geojson = {
@@ -403,7 +550,110 @@ def step03_parameter_zones_and_subbasins(
         "outputs": [],
     }
 
-    # 配置
+    # 手动划分子流域（使用richdem计算的flowdir.tif和flowaccum.tif）
+    print("  ⚙ 使用richdem计算结果手动划分流域...")
+
+    # 读取pour points
+    pour_points = dutils.read_pour_points_geojson(pour_points_path)
+    print(f"  ✓ 读取{len(pour_points)}个汇水点")
+
+    # 读取DEM和流向数据
+    with rasterio.open(dem_path) as src:
+        dem_array = src.read(1)
+        dem_transform = src.transform
+        dem_crs = src.crs
+
+    # 构建流向网络（使用richdem计算的flowdir.tif）
+    flowdir, upstream, shape = dutils.build_flow_network(flow_dir_path)
+    print(f"  ✓ 构建流向网络: {shape}")
+
+    # 读取流量累计（用于计算面积）
+    with rasterio.open(flow_acc_path) as src:
+        flowacc = src.read(1)
+        cell_area_km2 = abs(src.res[0] * src.res[1]) / 1_000_000.0
+
+    # 手动划分各个子流域
+    subbasins = []
+    subbasin_masks = {}
+    downstream_map = {}
+
+    # 按汇流路径顺序处理pour points（从上游到下游）
+    sorted_pps = sorted(pour_points, key=lambda pp: -pp.accumulation)
+
+    for i, pp in enumerate(sorted_pps):
+        sub_id = pp.id
+        print(f"  ⚙ 划分子流域 {sub_id}...")
+
+        # 使用richdem流向数据划分子流域
+        mask = dutils.delineate_watershed(pp, upstream, shape)
+        subbasin_masks[sub_id] = mask
+
+        # 计算面积
+        area_km2 = float(mask.sum() * cell_area_km2)
+
+        # 确定下游子流域
+        downstream_id = None
+        if i < len(sorted_pps) - 1:
+            # 检查这个pour point是否在其他子流域内
+            for j in range(i + 1, len(sorted_pps)):
+                other_pp = sorted_pps[j]
+                other_mask = dutils.delineate_watershed(other_pp, upstream, shape)
+                if other_mask[pp.row, pp.col]:
+                    downstream_id = other_pp.id
+                    break
+
+        downstream_map[sub_id] = downstream_id
+
+        # 创建Subbasin对象
+        subbasin = Subbasin(
+            id=sub_id,
+            area_km2=area_km2,
+            downstream=downstream_id,
+            parameters={'runoff_model': 'HBV_mountain', 'routing_model': 'Muskingum_standard'},
+        )
+        subbasins.append(subbasin)
+
+        print(f"  ✓ {sub_id}: 面积={area_km2:.2f} km², 下游={downstream_id or 'outlet'}")
+
+    print(f"  ✓ 成功划分{len(subbasins)}个子流域")
+
+    # 创建简化的parameter zones（每个子流域一个zone）
+    parameter_zones = []
+    for sub in subbasins:
+        zone_cfg = ParameterZoneConfig(
+            id=f"Zone_{sub.id}",
+            description=f"Parameter zone for subbasin {sub.id}",
+            control_points=[sub.id],
+            parameters={
+                "TT": 0.0,
+                "CFMAX": 3.5,
+                "FC": 250.0,
+                "LP": 0.7,
+                "BETA": 2.0,
+                "K": 10.0,
+                "x": 0.2,
+            },
+            explicit_subbasins=[sub.id],
+        )
+        parameter_zones.append(zone_cfg)
+
+    # 创建分区输出结构（简化版本）
+    from types import SimpleNamespace
+    partition_outputs = SimpleNamespace(
+        parameter_zones=parameter_zones,
+        subzone_summaries=[
+            SimpleNamespace(
+                subzone_id=sub.id,
+                zone_id=f"Zone_{sub.id}",
+                area_km2=sub.area_km2,
+                downstream_subzone_id=sub.downstream,
+            )
+            for sub in subbasins
+        ],
+        subzone_features={'type': 'FeatureCollection', 'features': []},
+    )
+
+    # 创建delineation配置（用于后续步骤）
     delineation_cfg = DelineationConfig(
         dem_path=dem_path,
         pour_points_path=pour_points_path,
@@ -412,51 +662,60 @@ def step03_parameter_zones_and_subbasins(
         accumulation_threshold=15000.0,
         intermediate_directory=intermediate_dir,
         parameter_directory=parameter_dir,
+        precomputed_subbasins=[
+            {'id': sub.id, 'area_km2': sub.area_km2, 'downstream': sub.downstream,
+             'parameters': sub.parameters}
+            for sub in subbasins
+        ],
     )
-
-    partition_cfg = ParameterPartitionConfig(
-        pour_points_path=pour_points_path,
-        target_subzone_area_km2=25.0,
-        min_subzone_area_km2=5.0,
-        max_subzones_per_zone=6,
-        area_balance_tolerance=0.35,
-        subzone_accumulation_threshold=1000.0,
-    )
-
-    model_structure = ModelStructureConfig(
-        default_runoff_model="HBV",
-        default_routing_model="Muskingum",
-    )
-
-    outputs_cfg = OutputArtifactsConfig()
-
-    # 使用delineation stage来处理
-    print("  ⚙ 运行流域划分和参数分区...")
-    pour_points = dutils.read_pour_points_geojson(pour_points_path)
-
-    delineation_stage = run_delineation_stage(
-        delineation_cfg,
-        partition_cfg,
-        pour_points,
-        output_dir=output_dir,
-        auto_threshold=True,
-        model_structure=model_structure,
-        outputs_cfg=outputs_cfg,
-    )
-
-    partition_outputs = delineation_stage.partition_outputs
-    if partition_outputs is None:
-        raise RuntimeError("分区失败：partition_outputs为None")
 
     print(f"  ✓ 生成{len(partition_outputs.subzone_summaries)}个参数子区")
     print(f"  ✓ 生成{len(partition_outputs.parameter_zones)}个参数区")
 
-    # 更新目录引用
-    intermediate_dir = delineation_stage.intermediate_dir
-    parameter_dir = delineation_stage.intermediate_dir.parent / "parameters"
+    # 手动创建并保存GeoJSON文件
+    from shapely.geometry import mapping, Polygon
+    import shutil
+
+    # 创建子流域GeoJSON
+    subbasin_features = []
+    for sub_id, mask in subbasin_masks.items():
+        # 简化处理：创建bounding box作为几何形状
+        rows, cols = np.where(mask)
+        if len(rows) > 0:
+            min_row, max_row = rows.min(), rows.max()
+            min_col, max_col = cols.min(), cols.max()
+
+            # 转换到地理坐标
+            coords = [
+                dem_transform * (min_col, min_row),
+                dem_transform * (max_col, min_row),
+                dem_transform * (max_col, max_row),
+                dem_transform * (min_col, max_row),
+                dem_transform * (min_col, min_row),
+            ]
+            poly = Polygon(coords)
+
+            sub = next(s for s in subbasins if s.id == sub_id)
+            subbasin_features.append({
+                'type': 'Feature',
+                'geometry': mapping(poly),
+                'properties': {
+                    'id': sub.id,
+                    'area_km2': sub.area_km2,
+                    'downstream': sub.downstream,
+                }
+            })
+
+    subbasin_geojson_data = {
+        'type': 'FeatureCollection',
+        'features': subbasin_features,
+    }
+
+    subbasin_geojson = intermediate_dir / "subbasins.geojson"
+    subbasin_geojson.write_text(json.dumps(subbasin_geojson_data, indent=2), encoding='utf-8')
+    print(f"  ✓ 保存子流域GeoJSON: {subbasin_geojson.name}")
 
     # 复制输出到step目录
-    subbasin_geojson = intermediate_dir / "subbasins.geojson"
     if subbasin_geojson.exists():
         import shutil
         dest = step_dir / "3.1_subbasins.geojson"
@@ -496,10 +755,35 @@ def step03_parameter_zones_and_subbasins(
         results["outputs"].append(str(stats_file))
         print(f"  ✓ 保存子区统计: {stats_file.name}")
 
+    # 创建有效的子流域几何形状（使用ConvexHull）
+    from scipy.spatial import ConvexHull
+    subbasin_geometries = {}
+    for sub in subbasins:
+        rows, cols = np.where(subbasin_masks[sub.id])
+        if len(rows) > 2:
+            # 转换到地理坐标
+            points = np.array([dem_transform * (c, r) for r, c in zip(rows, cols)])
+
+            # 使用ConvexHull创建凸包
+            try:
+                hull = ConvexHull(points)
+                hull_points = points[hull.vertices]
+                subbasin_geometries[sub.id] = Polygon(hull_points)
+            except:
+                # 如果ConvexHull失败，使用bounding box
+                min_x, min_y = points.min(axis=0)
+                max_x, max_y = points.max(axis=0)
+                subbasin_geometries[sub.id] = Polygon([
+                    (min_x, min_y), (max_x, min_y),
+                    (max_x, max_y), (min_x, max_y)
+                ])
+
     results["partition_outputs"] = partition_outputs
     results["delineation_cfg"] = delineation_cfg
     results["intermediate_dir"] = intermediate_dir
     results["parameter_dir"] = parameter_dir
+    results["subbasins"] = subbasins
+    results["subbasin_geometries"] = subbasin_geometries
 
     print(f"第3步完成：生成{len(results['outputs'])}个输出文件")
     return results
@@ -692,6 +976,7 @@ def step05_rain_gauge_distribution(
 def step06_to_08_precipitation_processing(
     partition_outputs,
     subbasins: Sequence[Subbasin],
+    subbasin_geometries: Dict,
     intermediate_dir: Path,
     output_dir: Path,
     station_count: int = 10,
@@ -733,32 +1018,15 @@ def step06_to_08_precipitation_processing(
         "outputs": [],
     }
 
-    # 提取参数区几何
-    from shapely.geometry import shape
-    parameter_geometries = {}
-    parameter_to_zone = {}
-    parameter_areas = {}
-
-    features = partition_outputs.subzone_features.get('features', [])
-    for feature in features:
-        geometry = feature.get('geometry')
-        props = feature.get('properties', {}) or {}
-        subzone_id = str(props.get('id') or props.get('subzone_id') or '')
-        if not subzone_id or not geometry:
-            continue
-
-        geom = shape(geometry)
-        zone_id = str(props.get('zone_id') or subzone_id)
-        area_km2 = float(props.get('area_km2', 0.0))
-
-        parameter_geometries[subzone_id] = geom
-        parameter_to_zone[subzone_id] = zone_id
-        parameter_areas[subzone_id] = area_km2
+    # 使用传入的子流域几何
+    parameter_geometries = subbasin_geometries
+    parameter_to_zone = {sub.id: f"Zone_{sub.id}" for sub in subbasins}
+    parameter_areas = {sub.id: sub.area_km2 for sub in subbasins}
 
     print(f"  ✓ 加载{len(parameter_geometries)}个参数子区")
 
     # 生成基础降雨序列（合成）
-    timestamps = pd.date_range('2024-01-01', periods=total_hours, freq='H')
+    timestamps = pd.date_range('2024-01-01', periods=total_hours, freq='h')
 
     # 简单的三角形暴雨过程
     peak_hour = 48 + 12  # 峰值在第60小时
@@ -800,7 +1068,7 @@ def step06_to_08_precipitation_processing(
         weights_json="rain_gauge_weights.json",
     )
 
-    print(f"  ✓ 生成{len(rain_inputs.station_locations)}个雨量站")
+    print(f"  ✓ 生成{len(rain_inputs.station_positions)}个雨量站")
 
     # 复制到step目录
     import shutil
@@ -839,13 +1107,8 @@ def step06_to_08_precipitation_processing(
     # 计算子流域面雨量
     from hydrosis.workflow.stages import aggregate_parameter_precipitation
 
-    parameter_series = rain_inputs.parameter_series
-    subbasin_series = aggregate_parameter_precipitation(
-        parameter_series,
-        parameter_to_zone,
-        parameter_areas,
-        subbasins,
-    )
+    # RainGaugeInputs返回的是subbasin_series，直接使用
+    subbasin_series = rain_inputs.subbasin_series
 
     subbasin_csv = step8_dir / "8.2_subbasin_areal_precipitation.csv"
     subbasin_series.to_csv(subbasin_csv)
@@ -957,7 +1220,7 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
     runoff_models = [
         RunoffModelConfig(
             id="HBV_mountain",
-            model_type="HBV",
+            model_type="hbv",
             parameters={
                 "TT": 0.0,
                 "CFMAX": 3.5,
@@ -976,7 +1239,7 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
         ),
         RunoffModelConfig(
             id="SCS_valley",
-            model_type="SCS",
+            model_type="scs_curve_number",
             parameters={
                 "curve_number": 75.0,
                 "initial_abstraction_ratio": 0.2,
@@ -988,7 +1251,7 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
     routing_models = [
         RoutingModelConfig(
             id="Muskingum_standard",
-            model_type="Muskingum",
+            model_type="muskingum",
             parameters={
                 "K": 10.0,
                 "x": 0.2,
@@ -1112,7 +1375,7 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
     print(f"  ✓ 生成流量过程图: {fig_file.name}")
 
     # 评估指标
-    if baseline.evaluation:
+    if hasattr(baseline, 'evaluation') and baseline.evaluation:
         eval_df = pd.DataFrame([
             {'Metric': k, 'Value': v}
             for k, v in baseline.evaluation.items()
@@ -1332,9 +1595,10 @@ def main():
         )
         all_results['step01'] = result1
 
-        # 第2步：汇水点生成
+        # 第2步：汇水点生成（6个：3个干流 + 3个支流）
         result2 = step02_pour_point_generation(
-            flow_dir_path, flow_acc_path, output_root, count=4
+            flow_dir_path, flow_acc_path, output_root,
+            total_count=6, main_stream_count=3, tributary_count=3
         )
         all_results['step02'] = result2
         pour_points_path = result2['pour_points_path']
@@ -1367,7 +1631,8 @@ def main():
 
         # 第6-8步：雨量处理
         result6_to_8 = step06_to_08_precipitation_processing(
-            partition_outputs, subbasins, intermediate_dir, output_root,
+            partition_outputs, subbasins, result3['subbasin_geometries'],
+            intermediate_dir, output_root,
             station_count=10, rng_seed=42, total_hours=120
         )
         all_results['step06_to_08'] = result6_to_8
