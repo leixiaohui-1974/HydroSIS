@@ -92,20 +92,27 @@ def generate_realistic_observations(rainfall: np.ndarray) -> dict:
     4. ✅ 用单一线性水库汇流
     5. ✅ 添加更多随机波动和观测误差
     """
-    print("\n  使用简单模型生成观测数据:")
-    print("    模型结构: 初损后损法 + 单一线性水库")
+    print("\n  使用简化模型v2生成观测数据:")
+    print("    模型结构: 初损后损 + 阈值效应 + 饱和超渗 + 非线性退水")
     print("    ❌ 无HBV的beta幂函数产流")
-    print("    ❌ 无HBV的多层水库（upper/lower）")
+    print("    ❌ 无HBV的多层线性水库（upper/lower）")
+    print("    ✅ 有降雨阈值（2.5mm/h）+ 饱和超渗 + 非线性退水")
+    print("    ✅ 有随机时间延迟（峰值不确定性）")
 
-    # 简单模型参数（完全不同于HBV）
+    # 简单模型参数（v2增强非线性版本）
     generator = SimpleRunoffGenerator(
         initial_loss=18.0,           # 初期损失 (HBV无此概念)
         constant_loss=0.4,            # 固定损失率 (HBV用percolation)
         runoff_coefficient=0.42,      # 固定系数 (HBV是状态依赖)
-        reservoir_k=0.18,             # 单一水库 (HBV有k0,k1,k2三个)
+        reservoir_k=0.18,             # 水库系数
         initial_storage=8.0,          # 初始储量
         random_noise_level=0.15,      # 15%随机波动
         random_seed=42,
+        # 新增非线性参数
+        rainfall_threshold=2.5,       # 降雨阈值 (HBV无此机制)
+        saturation_capacity=30.0,     # 土壤饱和容量
+        recession_exponent=1.8,       # 非线性退水指数 (HBV是1.0线性)
+        time_delay_std=3.0,           # 随机时间延迟 (HBV是确定性)
     )
 
     # 生成"真实"径流
