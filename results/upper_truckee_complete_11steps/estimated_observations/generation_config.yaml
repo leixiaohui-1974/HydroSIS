@@ -1,0 +1,39 @@
+description: 估计径流序列生成配置
+version: '1.0'
+zone_configs:
+  1:
+    attenuation_factor: 0.85
+    baseflow_ratio: 0.08
+    description: 上游源头区 - 陡坡，快速汇流
+    lag_hours: 1.5
+    runoff_coefficient: 0.35
+  2:
+    attenuation_factor: 0.75
+    baseflow_ratio: 0.12
+    description: 中游过渡区 - 中等坡度
+    lag_hours: 3.0
+    runoff_coefficient: 0.34
+  3:
+    attenuation_factor: 0.65
+    baseflow_ratio: 0.15
+    description: 下游主河道区 - 缓坡，显著削峰
+    lag_hours: 5.0
+    runoff_coefficient: 0.33
+  4:
+    attenuation_factor: 0.7
+    baseflow_ratio: 0.1
+    description: Zone 4 - 默认参数
+    lag_hours: 3.5
+    runoff_coefficient: 0.345
+  5:
+    attenuation_factor: 0.7
+    baseflow_ratio: 0.1
+    description: Zone 5 - 默认参数
+    lag_hours: 3.5
+    runoff_coefficient: 0.345
+  6:
+    attenuation_factor: 0.7
+    baseflow_ratio: 0.1
+    description: Zone 6 - 默认参数
+    lag_hours: 3.5
+    runoff_coefficient: 0.345
