@@ -749,6 +749,14 @@ def partition_parameter_zones(
             continue
         zone_subzone_definitions[zone_id] = _generate_subzones_for_zone(zone_id, mask)
 
+    # First pass: compute zone_to_index for sequential numbering
+    temp_zone_downstream_map = {zone_id: node.downstream_id for zone_id, node in zones.items()}
+    temp_zone_depth = _compute_depth_map(temp_zone_downstream_map)
+    temp_sorted_zone_ids = sorted(zones.keys(), key=lambda zid: temp_zone_depth.get(zid, 0), reverse=True)
+    temp_zone_to_index: Dict[str, int] = {}
+    for temp_idx, temp_zone_id in enumerate(temp_sorted_zone_ids, start=1):
+        temp_zone_to_index[temp_zone_id] = temp_idx
+
     for zone_id, node in zones.items():
         mask = zone_masks.get(zone_id)
         if mask is None or int(mask.sum()) == 0:
@@ -764,8 +772,12 @@ def partition_parameter_zones(
         zone_row["effective_accum_threshold"] = requested_threshold
         zone_row["threshold_relaxed"] = False
 
+        # Use sequential zone index for subzone numbering
+        zone_index = temp_zone_to_index.get(zone_id, 1)
+
         for idx, definition in enumerate(sub_definitions, start=1):
-            sub_id = f"{zone_id}_sub{idx}"
+            # New encoding scheme: zone_index * 100 + subzone_index
+            sub_id = str(zone_index * 100 + idx)
             sub_mask = definition["mask"]
             area_cells = int(sub_mask.sum())
             if area_cells == 0:
@@ -793,6 +805,7 @@ def partition_parameter_zones(
                         },
                         "properties": {
                             "zone_id": zone_id,
+                            "zone_index": zone_index,
                             "subzone_id": sub_id,
                             "area_km2": area_km2,
                             "mean_elevation": mean_elev,
@@ -808,6 +821,7 @@ def partition_parameter_zones(
             subzone_rows.append(
                 {
                     "zone_id": zone_id,
+                    "zone_index": zone_index,
                     "subzone_id": sub_id,
                     "area_cells": area_cells,
                     "area_km2": area_km2,
@@ -874,6 +888,12 @@ def partition_parameter_zones(
     zone_depth = _compute_depth_map(zone_downstream_map)
     sorted_zone_ids = sorted(zones.keys(), key=lambda zid: zone_depth.get(zid, 0), reverse=True)
 
+    # Create zone index mapping: assign sequential numbers from upstream to downstream
+    # Highest depth (most upstream) gets index 1, lowest depth (outlet) gets highest index
+    zone_to_index: Dict[str, int] = {}
+    for idx, zone_id in enumerate(sorted_zone_ids, start=1):
+        zone_to_index[zone_id] = idx
+
     zone_features: List[Dict[str, object]] = []
     feature_lookup: Dict[str, Dict[str, object]] = {}
     for zone_id in sorted_zone_ids:
@@ -881,11 +901,13 @@ def partition_parameter_zones(
         if not rings:
             continue
         coordinates = [[ring] for ring in rings]
+        zone_index = zone_to_index.get(zone_id, 0)
         feature = {
             "type": "Feature",
             "geometry": {"type": "MultiPolygon", "coordinates": coordinates},
             "properties": {
                 "zone_id": zone_id,
+                "zone_index": zone_index,
                 "downstream_id": zones[zone_id].downstream_id,
                 "area_km2": zone_definitions[zone_id]["area_km2"],
                 "runoff_method": zones[zone_id].runoff_method,
@@ -897,6 +919,7 @@ def partition_parameter_zones(
 
     for row in zone_stats_rows:
         zid = row["zone_id"]
+        row["zone_index"] = zone_to_index.get(zid, 0)
         row["runoff_model"] = zones[zid].runoff_method
         row["routing_model"] = zones[zid].routing_method
         feature = feature_lookup.get(zid)
@@ -911,14 +934,15 @@ def partition_parameter_zones(
     (parameter_dir / "parameter_zones.geojson").write_text(json.dumps(zone_collection, indent=2), encoding="utf-8")
     with (parameter_dir / "parameter_zones.csv").open("w", encoding="utf-8") as handle:
         handle.write(
-            "zone_id,downstream_id,area_cells,area_km2,runoff_model,routing_model,subzone_count,requested_accum_threshold,effective_accum_threshold,threshold_relaxed\n"
+            "zone_id,zone_index,downstream_id,area_cells,area_km2,runoff_model,routing_model,subzone_count,requested_accum_threshold,effective_accum_threshold,threshold_relaxed\n"
         )
         for row in zone_stats_rows:
             requested = row.get("requested_accum_threshold")
             effective = row.get("effective_accum_threshold")
             handle.write(
-                "{zone_id},{downstream_id},{area_cells},{area_km2:.6f},{runoff_model},{routing_model},{subzone_count},{requested},{effective},{threshold_relaxed}\n".format(
+                "{zone_id},{zone_index},{downstream_id},{area_cells},{area_km2:.6f},{runoff_model},{routing_model},{subzone_count},{requested},{effective},{threshold_relaxed}\n".format(
                     zone_id=row["zone_id"],
+                    zone_index=row.get("zone_index", ""),
                     downstream_id=row.get("downstream_id", ""),
                     area_cells=row.get("area_cells", 0),
                     area_km2=row.get("area_km2", 0.0),
@@ -975,6 +999,10 @@ def partition_parameter_zones(
         slope = drop_m / length_m if length_m > 0 else 0.0
         downstream_id = row["downstream_subzone_id"]
 
+        # Get zone_index from subzone row
+        subzone_row = subzone_lookup.get(subzone_id, {})
+        zone_index = subzone_row.get("zone_index", "")
+
         channel_features.append(
             {
                 "type": "Feature",
@@ -982,6 +1010,7 @@ def partition_parameter_zones(
                 "properties": {
                     "segment_id": subzone_id,
                     "zone_id": zone_id,
+                    "zone_index": zone_index,
                     "subzone_id": subzone_id,
                     "length_m": length_m,
                     "slope": slope,
@@ -995,6 +1024,7 @@ def partition_parameter_zones(
             {
                 "segment_id": subzone_id,
                 "zone_id": zone_id,
+                "zone_index": zone_index,
                 "subzone_id": subzone_id,
                 "length_m": length_m,
                 "slope": slope,
@@ -1061,7 +1091,7 @@ def partition_parameter_zones(
     (parameter_dir / "parameter_subbasins.geojson").write_text(json.dumps(subzone_collection, indent=2), encoding="utf-8")
     with (parameter_dir / "parameter_subbasins.csv").open("w", encoding="utf-8") as handle:
         handle.write(
-            "zone_id,subzone_id,area_cells,area_km2,mean_elevation,max_accumulation,pour_row,pour_col,seed_accumulation,seed_threshold,downstream_subzone_id\n"
+            "zone_id,zone_index,subzone_id,area_cells,area_km2,mean_elevation,max_accumulation,pour_row,pour_col,seed_accumulation,seed_threshold,downstream_subzone_id\n"
         )
         for row in subzone_rows:
             seed_threshold_str = row.get("seed_threshold")
@@ -1072,8 +1102,9 @@ def partition_parameter_zones(
             else:
                 seed_threshold_str = f"{float(seed_threshold_str):.3f}"
             handle.write(
-                "{zone_id},{subzone_id},{area_cells},{area_km2:.6f},{mean_elevation:.2f},{max_accumulation:.2f},{pour_row},{pour_col},{seed_accumulation:.2f},{seed_threshold},{downstream_subzone_id}\n".format(
+                "{zone_id},{zone_index},{subzone_id},{area_cells},{area_km2:.6f},{mean_elevation:.2f},{max_accumulation:.2f},{pour_row},{pour_col},{seed_accumulation:.2f},{seed_threshold},{downstream_subzone_id}\n".format(
                     zone_id=row["zone_id"],
+                    zone_index=row.get("zone_index", ""),
                     subzone_id=row["subzone_id"],
                     area_cells=row["area_cells"],
                     area_km2=row["area_km2"],
@@ -1090,11 +1121,19 @@ def partition_parameter_zones(
     channel_collection = {"type": "FeatureCollection", "features": channel_features_sorted}
     (parameter_dir / "parameter_channels.geojson").write_text(json.dumps(channel_collection, indent=2), encoding="utf-8")
     with (parameter_dir / "parameter_channels.csv").open("w", encoding="utf-8") as handle:
-        handle.write("segment_id,zone_id,subzone_id,length_m,slope,drop_m,downstream_id,upstream_ids\n")
+        handle.write("segment_id,zone_id,zone_index,subzone_id,length_m,slope,drop_m,downstream_id,upstream_ids\n")
         for row in channel_rows:
             handle.write(
-                "{segment_id},{zone_id},{subzone_id},{length_m:.2f},{slope:.6f},{drop_m:.2f},{downstream_id},{upstream_ids}\n".format(
-                    **row
+                "{segment_id},{zone_id},{zone_index},{subzone_id},{length_m:.2f},{slope:.6f},{drop_m:.2f},{downstream_id},{upstream_ids}\n".format(
+                    segment_id=row["segment_id"],
+                    zone_id=row["zone_id"],
+                    zone_index=row.get("zone_index", ""),
+                    subzone_id=row["subzone_id"],
+                    length_m=row["length_m"],
+                    slope=row["slope"],
+                    drop_m=row["drop_m"],
+                    downstream_id=row["downstream_id"],
+                    upstream_ids=row["upstream_ids"],
                 )
             )
 
@@ -1237,9 +1276,8 @@ def partition_parameter_zones(
             plt.close()
 
         def _format_subzone_label(subzone_id: str) -> str:
-            suffix = subzone_id.split("_", 1)[1] if "_" in subzone_id else subzone_id
-            numeric = "".join(ch for ch in suffix if ch.isdigit())
-            return numeric or suffix
+            # Display full subzone ID (e.g., "101", "201") which encodes zone and subzone info
+            return str(subzone_id)
 
         subzone_label_style = {
             "fontsize": 8,
