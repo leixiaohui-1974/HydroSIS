@@ -515,6 +515,210 @@ def differential_evolution_optimization(
     )
 
 
+def particle_swarm_optimization(
+    objective_function: Callable,
+    param_bounds: Dict[str, List[float]],
+    maximize: bool = True,
+    n_particles: int = 30,
+    max_iterations: int = 100,
+    w: float = 0.7,
+    c1: float = 1.5,
+    c2: float = 1.5,
+    min_change: float = 1e-6,
+    patience: int = 15,
+    seed: Optional[int] = None,
+    verbose: bool = True
+) -> CalibrationResult:
+    """Particle Swarm Optimization (PSO) for parameter calibration.
+
+    PSO is a population-based stochastic optimization algorithm inspired by
+    social behavior of bird flocking. Particles move through parameter space
+    influenced by their own best position and the global best position.
+
+    Args:
+        objective_function: Function to optimize
+        param_bounds: Parameter bounds {name: [min, max]}
+        maximize: Whether to maximize the objective
+        n_particles: Number of particles in the swarm
+        max_iterations: Maximum number of iterations
+        w: Inertia weight (controls previous velocity influence)
+        c1: Cognitive coefficient (personal best influence)
+        c2: Social coefficient (global best influence)
+        min_change: Minimum improvement for convergence
+        patience: Stop if no improvement for this many iterations
+        seed: Random seed
+        verbose: Print progress
+
+    Returns:
+        CalibrationResult
+
+    Algorithm:
+        For each particle i:
+            v_i(t+1) = w*v_i(t) + c1*r1*(pbest_i - x_i(t)) + c2*r2*(gbest - x_i(t))
+            x_i(t+1) = x_i(t) + v_i(t+1)
+
+    Reference:
+        Kennedy, J., & Eberhart, R. (1995). Particle swarm optimization.
+        IEEE International Conference on Neural Networks.
+    """
+    if seed is not None:
+        np.random.seed(seed)
+
+    param_names = list(param_bounds.keys())
+    n_params = len(param_names)
+
+    logger.info(f"Starting PSO optimization")
+    logger.info(f"  Parameters: {n_params}")
+    logger.info(f"  Particles: {n_particles}")
+    logger.info(f"  Max iterations: {max_iterations}")
+    logger.info(f"  Inertia weight: {w}, c1: {c1}, c2: {c2}")
+
+    # Get bounds arrays
+    lower_bounds = np.array([param_bounds[name][0] for name in param_names])
+    upper_bounds = np.array([param_bounds[name][1] for name in param_names])
+    bounds_range = upper_bounds - lower_bounds
+
+    # Initialize particles
+    particles = np.random.uniform(lower_bounds, upper_bounds, size=(n_particles, n_params))
+
+    # Initialize velocities (10% of range)
+    velocities = np.random.uniform(-0.1 * bounds_range, 0.1 * bounds_range, size=(n_particles, n_params))
+
+    # Evaluate initial positions
+    start_time = time.time()
+    scores = np.zeros(n_particles)
+
+    for i in range(n_particles):
+        params_dict = {name: particles[i, j] for j, name in enumerate(param_names)}
+        try:
+            score = objective_function(**params_dict)
+            scores[i] = score if maximize else -score
+        except Exception as e:
+            logger.error(f"Error evaluating particle {i}: {e}")
+            scores[i] = -np.inf
+
+    n_evaluations = n_particles
+
+    # Initialize personal best
+    pbest_positions = particles.copy()
+    pbest_scores = scores.copy()
+
+    # Initialize global best
+    gbest_idx = np.argmax(pbest_scores)
+    gbest_position = pbest_positions[gbest_idx].copy()
+    gbest_score = pbest_scores[gbest_idx]
+
+    # Tracking
+    convergence_history = [gbest_score]
+    param_history = [{name: gbest_position[j] for j, name in enumerate(param_names)}]
+
+    no_improvement_count = 0
+    last_best = gbest_score
+
+    if verbose:
+        logger.info(f"Initial global best score: {gbest_score:.6f}")
+
+    # Main loop
+    for iteration in range(max_iterations):
+        for i in range(n_particles):
+            # Update velocity
+            r1 = np.random.random(n_params)
+            r2 = np.random.random(n_params)
+
+            cognitive = c1 * r1 * (pbest_positions[i] - particles[i])
+            social = c2 * r2 * (gbest_position - particles[i])
+            velocities[i] = w * velocities[i] + cognitive + social
+
+            # Limit velocity to 20% of bounds range
+            max_velocity = 0.2 * bounds_range
+            velocities[i] = np.clip(velocities[i], -max_velocity, max_velocity)
+
+            # Update position
+            particles[i] = particles[i] + velocities[i]
+
+            # Apply bounds
+            particles[i] = np.clip(particles[i], lower_bounds, upper_bounds)
+
+            # Evaluate new position
+            params_dict = {name: particles[i, j] for j, name in enumerate(param_names)}
+            try:
+                score = objective_function(**params_dict)
+                scores[i] = score if maximize else -score
+                n_evaluations += 1
+            except Exception as e:
+                logger.error(f"Error evaluating particle {i}: {e}")
+                scores[i] = -np.inf
+
+            # Update personal best
+            if scores[i] > pbest_scores[i]:
+                pbest_scores[i] = scores[i]
+                pbest_positions[i] = particles[i].copy()
+
+        # Update global best
+        current_best_idx = np.argmax(pbest_scores)
+        current_best_score = pbest_scores[current_best_idx]
+
+        if current_best_score > gbest_score:
+            improvement = current_best_score - gbest_score
+            gbest_score = current_best_score
+            gbest_position = pbest_positions[current_best_idx].copy()
+
+            if verbose and improvement > min_change:
+                logger.info(f"Iteration {iteration+1}: Best score = {gbest_score:.6f} (+{improvement:.6f})")
+
+        convergence_history.append(gbest_score)
+        param_history.append({name: gbest_position[j] for j, name in enumerate(param_names)})
+
+        # Check convergence
+        if abs(gbest_score - last_best) < min_change:
+            no_improvement_count += 1
+        else:
+            no_improvement_count = 0
+
+        if no_improvement_count >= patience:
+            logger.info(f"Converged: No improvement for {patience} iterations")
+            break
+
+        last_best = gbest_score
+
+        # Progress report
+        if verbose and (iteration + 1) % 10 == 0:
+            swarm_diversity = np.std(particles, axis=0).mean()
+            logger.info(f"Iteration {iteration+1}/{max_iterations}: "
+                       f"Score = {gbest_score:.6f}, Diversity = {swarm_diversity:.4f}")
+
+    computation_time = time.time() - start_time
+
+    # Convert score back if minimizing
+    final_score = gbest_score if maximize else -gbest_score
+    convergence_history = [s if maximize else -s for s in convergence_history]
+
+    best_params_dict = {name: float(gbest_position[j]) for j, name in enumerate(param_names)}
+
+    logger.info(f"PSO completed in {computation_time:.2f}s")
+    logger.info(f"Final score: {final_score:.6f}")
+
+    return CalibrationResult(
+        best_params=best_params_dict,
+        best_score=final_score,
+        n_iterations=iteration + 1,
+        n_evaluations=n_evaluations,
+        convergence_history=convergence_history,
+        param_history=param_history,
+        computation_time=computation_time,
+        success=True,
+        message=f"PSO completed after {iteration+1} iterations",
+        method="PSO",
+        additional_info={
+            'n_particles': n_particles,
+            'inertia_weight': w,
+            'cognitive_coef': c1,
+            'social_coef': c2,
+            'final_swarm_diversity': float(np.std(particles, axis=0).mean()),
+        }
+    )
+
+
 def calibrate_model(
     objective_function: Callable,
     param_bounds: Dict[str, List[float]],
@@ -556,14 +760,17 @@ def calibrate_model(
         return sce_ua_optimization(objective_function, param_bounds, maximize, **kwargs)
     elif method in ['de', 'differential_evolution']:
         return differential_evolution_optimization(objective_function, param_bounds, maximize, **kwargs)
+    elif method == 'pso':
+        return particle_swarm_optimization(objective_function, param_bounds, maximize, **kwargs)
     else:
         raise ValueError(f"Unknown calibration method: {method}. "
-                        f"Available: 'sce_ua', 'differential_evolution'")
+                        f"Available: 'sce_ua', 'differential_evolution', 'pso'")
 
 
 __all__ = [
     'CalibrationResult',
     'sce_ua_optimization',
     'differential_evolution_optimization',
+    'particle_swarm_optimization',
     'calibrate_model',
 ]

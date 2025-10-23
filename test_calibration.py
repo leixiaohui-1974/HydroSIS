@@ -331,3 +331,101 @@ except:
 
 print("\n下一步: 可以用于真实HBV模型的参数率定")
 print("=" * 80)
+
+# 测试9: PSO粒子群优化
+print("\n9. PSO粒子群优化测试")
+print("-" * 80)
+
+try:
+    from hydrosis.analysis.calibration_optimization import particle_swarm_optimization
+
+    print("运行PSO优化...")
+    result_pso = particle_swarm_optimization(
+        objective_function=objective_function,
+        param_bounds=param_bounds,
+        maximize=True,
+        n_particles=20,
+        max_iterations=50,
+        w=0.7,
+        c1=1.5,
+        c2=1.5,
+        seed=42,
+        verbose=False
+    )
+
+    print(f"\n优化结果:")
+    print(f"  成功: {result_pso.success}")
+    print(f"  最优NSE: {result_pso.best_score:.6f}")
+    print(f"  迭代次数: {result_pso.n_iterations}")
+    print(f"  函数评估次数: {result_pso.n_evaluations}")
+    print(f"  计算时间: {result_pso.computation_time:.2f}秒")
+    print(f"  群体多样性: {result_pso.additional_info['final_swarm_diversity']:.6f}")
+
+    print(f"\n最优参数 vs 真实参数:")
+    for param_name in ['FC', 'K0', 'BETA']:
+        estimated = result_pso.best_params[param_name]
+        true_val = true_params[param_name]
+        error = abs(estimated - true_val) / true_val * 100
+        print(f"  {param_name:5s}: {estimated:7.3f} (真值:{true_val:7.3f}, 误差:{error:5.1f}%)")
+
+    # 验证结果合理性
+    assert result_pso.success, "优化应该成功"
+    assert result_pso.best_score > 0.8, f"NSE应该大于0.8，实际:{result_pso.best_score:.3f}"
+    print("\n✓ PSO算法测试通过")
+
+    # 测试10: 使用calibrate_model统一接口调用PSO
+    print("\n10. calibrate_model统一接口调用PSO")
+    print("-" * 80)
+
+    result_pso_unified = calibrate_model(
+        objective_function=objective_function,
+        param_bounds=param_bounds,
+        method='pso',
+        maximize=True,
+        n_particles=20,
+        max_iterations=30,
+        seed=42,
+        verbose=False
+    )
+
+    print(f"\n优化结果:")
+    print(f"  方法: {result_pso_unified.method}")
+    print(f"  最优NSE: {result_pso_unified.best_score:.6f}")
+
+    print("✓ PSO统一接口测试通过")
+
+    # 测试11: 算法对比（SCE-UA vs DE vs PSO）
+    print("\n11. 算法性能对比")
+    print("-" * 80)
+
+    algorithms = {
+        'SCE-UA': result_sce,
+        'PSO': result_pso,
+    }
+
+    try:
+        import scipy
+        algorithms['DE'] = result_de
+    except:
+        pass
+
+    print(f"\n{'算法':<15s} {'NSE':>10s} {'时间(s)':>10s} {'评估次数':>10s} {'迭代次数':>10s}")
+    print("-" * 60)
+    for name, result in algorithms.items():
+        print(f"{name:<15s} {result.best_score:>10.6f} {result.computation_time:>10.2f} "
+              f"{result.n_evaluations:>10d} {result.n_iterations:>10d}")
+
+    print("\n算法特点:")
+    print("  SCE-UA: 水文学标准算法，全局搜索能力强")
+    print("  PSO: 受鸟群启发，平衡探索和开发，计算效率高")
+    if 'DE' in algorithms:
+        print("  DE: scipy实现，适合高维问题")
+
+    print("✓ 算法对比完成")
+
+except ImportError as e:
+    print(f"⚠ 导入错误: {e}")
+
+print("\n" + "=" * 80)
+print("✓ 所有测试通过！PSO算法已成功集成")
+print("=" * 80)

@@ -49,6 +49,7 @@ from .calibration_optimization import (
     CalibrationResult,
     sce_ua_optimization,
     differential_evolution_optimization,
+    particle_swarm_optimization,
     calibrate_model,
 )
 
@@ -105,6 +106,7 @@ __all__ = [
     "CalibrationResult",
     "sce_ua_optimization",
     "differential_evolution_optimization",
+    "particle_swarm_optimization",
     "calibrate_model",
     # Visualization
     "plot_hydrograph_comparison",
