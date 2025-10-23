@@ -250,29 +250,33 @@ def step02_pour_point_generation(
     flow_acc_path: Path,
     output_dir: Path,
     main_stream_count: int = 3,
-    tributaries_per_main: int = 3,
 ) -> Dict[str, object]:
     """
-    第2步：汇水点生成（层次化汇水点生成策略）
+    第2步：汇水点生成（Pfafstetter编码方案）
 
     策略：
     1. 找到流域出口点（最大累积数点）
     2. 从出口点向上追溯主干流
-    3. 在主干流上均匀选择3个汇水点
-    4. 对每个主干流汇水点，找到流向它的最大的3个支流汇水点
-    5. 形成层次化的汇水点结构
+    3. 在主干流上选3个点，使它们控制的流域面积基本3等分
+    4. 对每个主干流分区，选择1个最大支流汇入点
+    5. 使用Pfafstetter风格的数字编码
+
+    编码方案：
+    - 主干流（从下游到上游）：10, 20, 30
+    - 对应的支流：11, 21, 31
 
     输入：
     - 流向栅格
     - 流量累计栅格
 
     输出：
+    - 6个汇水点：3个干流 + 3个支流
     - Pour points GeoJSON文件
     - Pour points统计表
     - Pour points位置图
     """
     print("\n" + "="*80)
-    print(f"第2步：汇水点生成（{main_stream_count}个干流 + 每个干流{tributaries_per_main}个支流）")
+    print(f"第2步：汇水点生成（{main_stream_count}个干流 + {main_stream_count}个支流，Pfafstetter编码）")
     print("="*80)
 
     step_dir = output_dir / "step_02_pour_points"
@@ -289,6 +293,7 @@ def step02_pour_point_generation(
         flowacc = np.where(np.isfinite(flowacc), flowacc, 0.0)
         transform = src.transform
         rows, cols = flowacc.shape
+        cell_area_km2 = abs(src.res[0] * src.res[1]) / 1_000_000.0
 
     # 读取流向数据
     with rasterio.open(flow_dir_path) as src:
@@ -299,10 +304,10 @@ def step02_pour_point_generation(
     # 1. 找到出口点（流量累计最大的点）
     outlet_row, outlet_col = np.unravel_index(np.argmax(flowacc), flowacc.shape)
     outlet_acc = float(flowacc[outlet_row, outlet_col])
-    print(f"  ✓ 识别出口点: ({outlet_row}, {outlet_col}), 累计={outlet_acc:.0f}")
+    total_basin_area_km2 = outlet_acc * cell_area_km2
+    print(f"  ✓ 识别出口点: ({outlet_row}, {outlet_col}), 累计={outlet_acc:.0f}, 流域面积={total_basin_area_km2:.2f} km²")
 
-    # 2. 沿主干流向上追溯，找到干流上的3个均匀分布点
-    # Richdem D8 flow direction encoding (1-8)
+    # 2. D8流向编码（Richdem使用1-8）
     D8_OFFSETS = {
         1: (0, 1),   # East
         2: (-1, 1),  # NE
@@ -314,7 +319,7 @@ def step02_pour_point_generation(
         8: (1, 1),   # SE
     }
 
-    # 反向追溯：找到流向当前点的上游点
+    # 反向追溯：找到所有流向当前点的上游点
     def find_all_upstream(r, c):
         """找到所有流向(r,c)的上游点"""
         upstream_cells = []
@@ -334,7 +339,7 @@ def step02_pour_point_generation(
                         upstream_cells.append((nr, nc, flowacc[nr, nc]))
         return upstream_cells
 
-    # 沿主干流追溯（选择流量累计最大的路径）
+    # 3. 追溯主干流（沿流量累计最大的路径）
     main_stream_cells = [(outlet_row, outlet_col)]
     current = (outlet_row, outlet_col)
     visited = {(outlet_row, outlet_col)}
@@ -344,7 +349,7 @@ def step02_pour_point_generation(
         if not upstream:
             break
 
-        # 选择流量累计最大的上游点
+        # 选择流量累计最大的上游点（主干流）
         upstream.sort(key=lambda x: x[2], reverse=True)
         next_cell = (upstream[0][0], upstream[0][1])
 
@@ -360,28 +365,50 @@ def step02_pour_point_generation(
 
     print(f"  ✓ 追溯主干流: {len(main_stream_cells)}个格网")
 
-    # 在主干流上选择3个点（均匀分布）
+    # 4. 在主干流上选择3个点，使它们控制的流域面积基本3等分
+    # 计算主干流上每个点控制的累积流量（即面积）
+    target_areas = [total_basin_area_km2 * (i + 1) / (main_stream_count + 1)
+                    for i in range(main_stream_count)]
+
     main_stream_points = []
-    stream_length = len(main_stream_cells)
-    if stream_length >= 3:
-        # 选择1/4, 1/2, 3/4位置的点作为干流汇水点
-        positions = [stream_length // 4, stream_length // 2, stream_length * 3 // 4]
-        for i, pos in enumerate(positions):
-            r, c = main_stream_cells[pos]
+
+    for idx, target_area in enumerate(target_areas):
+        # 在主干流上找到最接近目标面积的点
+        best_cell = None
+        best_diff = float('inf')
+
+        for r, c in main_stream_cells:
+            cell_area = flowacc[r, c] * cell_area_km2
+            diff = abs(cell_area - target_area)
+            if diff < best_diff:
+                best_diff = diff
+                best_cell = (r, c)
+
+        if best_cell:
+            r, c = best_cell
             x, y = transform * (c, r)
+            controlled_area = flowacc[r, c] * cell_area_km2
+
+            # Pfafstetter编码：10, 20, 30（从下游到上游）
+            pfaf_code = (idx + 1) * 10
+
             main_stream_points.append({
-                'id': f'M{i+1}',
+                'id': str(pfaf_code),
                 'row': int(r),
                 'col': int(c),
                 'x': float(x),
                 'y': float(y),
                 'accumulation': float(flowacc[r, c]),
+                'controlled_area_km2': float(controlled_area),
                 'type': 'main_stream',
+                'pfafstetter_code': pfaf_code,
             })
 
-    print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点")
+    print(f"  ✓ 选择{len(main_stream_points)}个干流汇水点（3等分流域面积）")
+    for p in main_stream_points:
+        print(f"    - {p['id']}: 控制面积={p['controlled_area_km2']:.2f} km²")
 
-    # 3. 层次化支流识别：为每个干流汇水点找到其最大的3个支流
+    # 5. 为每个干流分区找到1个最大支流汇入点
     main_stream_set = set(main_stream_cells)
 
     # 定义函数：追溯一个点的所有上游格网
@@ -389,7 +416,7 @@ def step02_pour_point_generation(
         """追溯汇水点的所有上游格网"""
         watershed = set()
         queue = [(pour_r, pour_c)]
-        visited = {(pour_r, pour_c)}
+        visited_ws = {(pour_r, pour_c)}
 
         while queue:
             r, c = queue.pop(0)
@@ -398,8 +425,8 @@ def step02_pour_point_generation(
             # 找到所有流向当前点的上游点
             upstream = find_all_upstream(r, c)
             for ur, uc, _ in upstream:
-                if (ur, uc) not in visited:
-                    visited.add((ur, uc))
+                if (ur, uc) not in visited_ws:
+                    visited_ws.add((ur, uc))
                     queue.append((ur, uc))
 
             if len(watershed) > 100000:  # 防止无限循环
@@ -407,18 +434,26 @@ def step02_pour_point_generation(
 
         return watershed
 
-    # 为每个干流汇水点找到其支流
     tributary_points = []
 
-    for main_idx, main_point in enumerate(main_stream_points):
+    # 反向处理（从上游到下游），确保支流不重叠
+    for main_idx in range(len(main_stream_points) - 1, -1, -1):
+        main_point = main_stream_points[main_idx]
         main_id = main_point['id']
         main_r, main_c = main_point['row'], main_point['col']
 
-        print(f"  ⚙ 为干流点{main_id}寻找支流...")
+        print(f"  ⚙ 为干流点{main_id}寻找最大支流...")
 
         # 追溯该干流点的流域范围
         watershed = delineate_watershed(main_r, main_c)
-        print(f"    - 流域范围: {len(watershed)}个格网")
+
+        # 如果不是最下游的点，需要排除下游干流点的流域
+        if main_idx > 0:
+            downstream_point = main_stream_points[main_idx - 1]
+            downstream_watershed = delineate_watershed(downstream_point['row'], downstream_point['col'])
+            watershed = watershed - downstream_watershed
+
+        print(f"    - 本分区流域范围: {len(watershed)}个格网")
 
         # 在流域内寻找候选支流点（不在主干流上的高流量点）
         threshold = main_point['accumulation'] * 0.05  # 至少是干流点流量的5%
@@ -430,145 +465,126 @@ def step02_pour_point_generation(
             if (wr, wc) not in main_stream_set and acc > threshold:
                 candidate_tribs.append((wr, wc, acc))
 
-        # 按流量排序
-        candidate_tribs.sort(key=lambda x: x[2], reverse=True)
+        # 按流量排序，选择最大的
+        if candidate_tribs:
+            candidate_tribs.sort(key=lambda x: x[2], reverse=True)
+            tr, tc, tacc = candidate_tribs[0]
 
-        # 选择前N个支流点，确保空间分布
-        min_dist = 30  # 最小间距30个格网
-        selected_tribs = []
-
-        for tr, tc, tacc in candidate_tribs:
-            # 检查与已选支流的距离
-            too_close = False
-            for st in selected_tribs:
-                dist = np.sqrt((tr - st[0])**2 + (tc - st[1])**2)
-                if dist < min_dist:
-                    too_close = True
-                    break
-
-            if not too_close:
-                selected_tribs.append((tr, tc, tacc))
-
-                if len(selected_tribs) >= tributaries_per_main:
-                    break
-
-        # 添加到支流列表
-        for trib_idx, (tr, tc, tacc) in enumerate(selected_tribs):
             x, y = transform * (tc, tr)
-            trib_id = f'{main_id}_T{trib_idx+1}'
+            trib_area = tacc * cell_area_km2
+
+            # Pfafstetter编码：11, 21, 31（与对应干流相关）
+            pfaf_code = int(main_id) + 1
+
             tributary_points.append({
-                'id': trib_id,
+                'id': str(pfaf_code),
                 'row': int(tr),
                 'col': int(tc),
                 'x': float(x),
                 'y': float(y),
                 'accumulation': float(tacc),
+                'controlled_area_km2': float(trib_area),
                 'type': 'tributary',
-                'parent_main': main_id,
+                'main_stream_id': main_id,
+                'pfafstetter_code': pfaf_code,
             })
 
-        print(f"    ✓ 找到{len(selected_tribs)}个支流点")
+            print(f"    - 选择支流{pfaf_code}: 控制面积={trib_area:.2f} km²")
+        else:
+            print(f"    - 未找到合适的支流")
 
-    print(f"  ✓ 总共选择{len(tributary_points)}个支流汇水点")
+    # 6. 合并所有汇水点
+    all_points = main_stream_points + tributary_points
+    print(f"  ✓ 生成总共{len(all_points)}个汇水点（{len(main_stream_points)}干流 + {len(tributary_points)}支流）")
 
-    # 合并所有汇水点
-    all_points_data = main_stream_points + tributary_points
-
-    # 转换为PourPoint对象
-    from hydrosis.delineation.utils import PourPoint
-    pour_points = [
-        PourPoint(
-            id=p['id'],
-            row=p['row'],
-            col=p['col'],
-            x=p['x'],
-            y=p['y'],
-            accumulation=p['accumulation'],
-            attributes={'type': p['type']},
-        )
-        for p in all_points_data
-    ]
-
-    print(f"  ✓ 总共生成{len(pour_points)}个汇水点")
-
-    # 保存GeoJSON
-    pour_geojson = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": {"type": "Point", "coordinates": [pp.x, pp.y]},
-                "properties": {
-                    "id": pp.id,
-                    "row": pp.row,
-                    "col": pp.col,
-                    "accumulation": pp.accumulation,
-                },
+    # 7. 保存为GeoJSON
+    features = []
+    for point in all_points:
+        feature = {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [point['x'], point['y']]
+            },
+            'properties': {
+                'id': point['id'],
+                'type': point['type'],
+                'row': point['row'],
+                'col': point['col'],
+                'accumulation': point['accumulation'],
+                'controlled_area_km2': point['controlled_area_km2'],
+                'pfafstetter_code': point['pfafstetter_code'],
             }
-            for pp in pour_points
-        ],
+        }
+        if point['type'] == 'tributary':
+            feature['properties']['main_stream_id'] = point['main_stream_id']
+        features.append(feature)
+
+    geojson = {
+        'type': 'FeatureCollection',
+        'features': features
     }
 
-    geojson_file = step_dir / "2.1_pour_points.geojson"
-    geojson_file.write_text(json.dumps(pour_geojson, indent=2), encoding='utf-8')
-    results["outputs"].append(str(geojson_file))
-    print(f"  ✓ 保存GeoJSON: {geojson_file.name}")
+    geojson_path = step_dir / "2.1_pour_points.geojson"
+    with open(geojson_path, 'w') as f:
+        json.dump(geojson, f, indent=2)
+    results["outputs"].append(str(geojson_path))
+    print(f"  ✓ 保存汇水点GeoJSON: {geojson_path.name}")
 
-    # 保存统计表
-    stats = pd.DataFrame([
-        {
-            'ID': pp.id,
-            'X': pp.x,
-            'Y': pp.y,
-            'Row': pp.row,
-            'Col': pp.col,
-            'Accumulation': pp.accumulation,
-        }
-        for pp in pour_points
-    ])
-    stats_file = step_dir / "2.2_pour_points_table.csv"
-    stats.to_csv(stats_file, index=False)
-    results["outputs"].append(str(stats_file))
-    print(f"  ✓ 保存统计表: {stats_file.name}")
+    # 8. 保存统计表
+    stats_df = pd.DataFrame(all_points)
+    stats_df = stats_df[['id', 'type', 'pfafstetter_code', 'row', 'col', 'x', 'y',
+                          'accumulation', 'controlled_area_km2']]
+    stats_path = step_dir / "2.2_pour_points_table.csv"
+    stats_df.to_csv(stats_path, index=False)
+    results["outputs"].append(str(stats_path))
+    print(f"  ✓ 保存汇水点统计表: {stats_path.name}")
 
-    # 可视化（在流量累计背景上）
-    if HAS_RASTERIO:
-        with rasterio.open(flow_acc_path) as src:
-            flowacc = src.read(1)
-            flowacc = np.where(np.isfinite(flowacc), flowacc, 0.0)
+    # 9. 可视化
+    fig, ax = plt.subplots(figsize=(12, 10))
 
-        fig, ax = plt.subplots(figsize=(10, 8))
-        acc_plot = np.where(flowacc > 0, flowacc, np.nan)
-        im = ax.imshow(np.log1p(acc_plot), cmap='Blues', aspect='auto')
-        plt.colorbar(im, ax=ax, label='Log(1 + Flow Accumulation)')
+    # 绘制流量累计作为背景
+    flowacc_log = np.log10(flowacc + 1)
+    im = ax.imshow(flowacc_log, cmap='Blues', aspect='auto')
+    plt.colorbar(im, ax=ax, label='Log10(Flow Accumulation + 1)', shrink=0.8)
 
-        # 绘制pour points
-        rows = [pp.row for pp in pour_points]
-        cols = [pp.col for pp in pour_points]
-        ax.scatter(cols, rows, c='red', s=100, marker='o',
-                  edgecolors='white', linewidths=2, zorder=5)
+    # 绘制主干流
+    if main_stream_cells:
+        stream_rows = [c[0] for c in main_stream_cells]
+        stream_cols = [c[1] for c in main_stream_cells]
+        ax.plot(stream_cols, stream_rows, 'r-', linewidth=2, alpha=0.7, label='Main Stream')
 
-        for pp in pour_points:
-            ax.text(pp.col, pp.row, f' {pp.id}',
-                   fontsize=10, color='red', fontweight='bold',
-                   verticalalignment='center')
+    # 绘制汇水点
+    for point in all_points:
+        if point['type'] == 'main_stream':
+            ax.plot(point['col'], point['row'], 'ro', markersize=12,
+                   markeredgecolor='white', markeredgewidth=2, label='Main Stream Point' if point == main_stream_points[0] else '')
+            ax.text(point['col'] + 5, point['row'], point['id'], fontsize=12, fontweight='bold',
+                   color='red', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        else:
+            ax.plot(point['col'], point['row'], 'go', markersize=10,
+                   markeredgecolor='white', markeredgewidth=2, label='Tributary Point' if point == tributary_points[0] else '')
+            ax.text(point['col'] + 5, point['row'], point['id'], fontsize=10, fontweight='bold',
+                   color='green', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
-        ax.set_title('Pour Points on Flow Accumulation')
-        ax.set_xlabel('Column')
-        ax.set_ylabel('Row')
+    ax.set_title('Upper Truckee River - Pour Points (Pfafstetter Encoding)', fontsize=14, fontweight='bold')
+    ax.set_xlabel('Column')
+    ax.set_ylabel('Row')
+    ax.legend(loc='best', fontsize=10)
+    ax.grid(True, alpha=0.3)
 
-        fig_file = step_dir / "2.3_pour_points_map.png"
-        plt.savefig(fig_file, dpi=200, bbox_inches='tight')
-        plt.close()
-        results["outputs"].append(str(fig_file))
-        print(f"  ✓ 生成位置图: {fig_file.name}")
+    map_path = step_dir / "2.3_pour_points_map.png"
+    plt.savefig(map_path, dpi=200, bbox_inches='tight')
+    plt.close()
+    results["outputs"].append(str(map_path))
+    print(f"  ✓ 生成汇水点位置图: {map_path.name}")
 
-    results["pour_points"] = pour_points
-    results["pour_points_path"] = geojson_file
+    results["pour_points"] = all_points
+    results["main_stream_cells"] = main_stream_cells
+    results["pour_points_path"] = geojson_path
 
     print(f"第2步完成：生成{len(results['outputs'])}个输出文件")
     return results
-
 # ============================================================================
 # 第3步：参数分区和子流域划分
 # ============================================================================
@@ -1582,7 +1598,7 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
     print(f"     - 汇流模型库: {len(routing_models)}个")
     print(f"     - 参数区（率定单元）: {len(updated_parameter_zones)}个 [提供参数]")
     print(f"     - 子流域（计算单元）: {len(subzone_list)}个 [用于降水和产汇流计算]")
-    print(f"  ℹ 概念：183个子流域分组在12个参数区下，参数区提供模型参数")
+    print(f"  ℹ 概念：{len(subzone_list)}个子流域分组在{len(updated_parameter_zones)}个参数区下，参数区提供模型参数")
 
     # 准备forcing数据（使用实际的subbasin_series列）
     # subbasin_series包含所有subzone的降水数据
@@ -1897,10 +1913,10 @@ def main():
         )
         all_results['step01'] = result1
 
-        # 第2步：汇水点生成（6个：3个干流 + 3个支流）
+        # 第2步：汇水点生成（6个：3个干流 + 3个支流，Pfafstetter编码）
         result2 = step02_pour_point_generation(
             flow_dir_path, flow_acc_path, output_root,
-            main_stream_count=3, tributaries_per_main=3
+            main_stream_count=3
         )
         all_results['step02'] = result2
         pour_points_path = result2['pour_points_path']
