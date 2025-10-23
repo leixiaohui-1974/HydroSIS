@@ -1455,44 +1455,55 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
         zone_to_subzones[zone_id].append(subzone.subzone_id)
 
     # 创建修正后的parameter_zones，使用实际的subzone IDs
+    # 关键：parameter zones提供models和parameters，subbasins只是计算单元
     updated_parameter_zones = []
+
+    # 创建subzone的downstream映射，用于找到每个zone的outlet subzone
+    subzone_downstream = {sz.subzone_id: sz.downstream_subzone_id
+                         for sz in partition_outputs.subzone_summaries}
+
     for zone in partition_outputs.parameter_zones:
         # 获取该zone下的所有subzone IDs
         subzone_ids = zone_to_subzones.get(zone.id, [])
         if not subzone_ids:
             continue
 
-        # 使用第一个subzone作为control_point（代表整个zone）
-        control_point = subzone_ids[0] if subzone_ids else zone.id
+        # 找到该zone的outlet subzone（下游不在本zone内的subzone，即控制点位置）
+        # 这是监测数据的位置
+        outlet_subzone = None
+        for sz_id in subzone_ids:
+            downstream_id = subzone_downstream.get(sz_id)
+            # 如果downstream不在本zone内，或为None，则为outlet
+            if downstream_id is None or downstream_id not in subzone_ids:
+                outlet_subzone = sz_id
+                break
+
+        # 如果没找到（理论上不应该），使用第一个
+        if outlet_subzone is None:
+            outlet_subzone = subzone_ids[0]
 
         updated_zone = ParameterZoneConfig(
             id=zone.id,
             description=zone.description,
-            control_points=[control_point],  # 使用实际存在的subzone ID
-            parameters=zone.parameters,
-            explicit_subbasins=subzone_ids,  # 明确列出所有subzones
+            control_points=[outlet_subzone],  # 使用zone的outlet subzone作为控制点
+            parameters=zone.parameters,  # 包含runoff_model和routing_model的参数
+            explicit_subbasins=subzone_ids,  # 明确列出该zone的所有subzones
         )
         updated_parameter_zones.append(updated_zone)
 
     # 从partition_outputs创建包含183个subzones的delineation配置
-    # 每个subzone需要有runoff_model和routing_model参数
+    # 关键修正：subzones只是计算单元，不应有自己的模型参数
+    # 模型参数应该来自它们所属的parameter zone
     subzone_list = []
-    zone_models = {zone.id: (zone.parameters.get('runoff_model', 'hbv'),
-                             zone.parameters.get('routing_model', 'muskingum'))
-                   for zone in partition_outputs.parameter_zones}
 
     for subzone in partition_outputs.subzone_summaries:
-        zone_id = subzone.zone_id
-        runoff_model, routing_model = zone_models.get(zone_id, ('hbv', 'muskingum'))
-
+        # Subbasins只包含基本信息：id, area, downstream
+        # 不包含runoff_model和routing_model - 这些来自parameter zones
         subzone_obj = {
             'id': subzone.subzone_id,
             'area_km2': subzone.area_km2,
             'downstream': subzone.downstream_subzone_id,
-            'parameters': {
-                'runoff_model': runoff_model,
-                'routing_model': routing_model,
-            }
+            'parameters': {},  # 空参数字典 - 参数来自zone
         }
         subzone_list.append(subzone_obj)
 
@@ -1529,11 +1540,12 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
         evaluation=evaluation_config,
     )
 
-    print(f"  ⚙ 配置完成：")
-    print(f"     - 产流模型: {len(runoff_models)}个")
-    print(f"     - 汇流模型: {len(routing_models)}个")
-    print(f"     - 参数区: {len(updated_parameter_zones)}个")
-    print(f"     - 子区域: {len(subzone_list)}个")
+    print(f"  ⚙ 配置完成（正确的概念模型）：")
+    print(f"     - 产流模型库: {len(runoff_models)}个")
+    print(f"     - 汇流模型库: {len(routing_models)}个")
+    print(f"     - 参数区（率定单元）: {len(updated_parameter_zones)}个 [提供参数]")
+    print(f"     - 子流域（计算单元）: {len(subzone_list)}个 [用于降水和产汇流计算]")
+    print(f"  ℹ 概念：183个子流域分组在12个参数区下，参数区提供模型参数")
 
     # 准备forcing数据（使用实际的subbasin_series列）
     # subbasin_series包含所有subzone的降水数据
