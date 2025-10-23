@@ -290,28 +290,36 @@ def step02_pour_point_generation(
     print(f"  ✓ 识别出口点: ({outlet_row}, {outlet_col}), 累计={outlet_acc:.0f}")
 
     # 2. 沿主干流向上追溯，找到干流上的3个均匀分布点
+    # Richdem D8 flow direction encoding (1-8)
     D8_OFFSETS = {
-        0: (0, 1),   # East
-        1: (-1, 1),  # NE
-        2: (-1, 0),  # North
-        3: (-1, -1), # NW
-        4: (0, -1),  # West
-        5: (1, -1),  # SW
-        6: (1, 0),   # South
-        7: (1, 1),   # SE
+        1: (0, 1),   # East
+        2: (-1, 1),  # NE
+        3: (-1, 0),  # North
+        4: (-1, -1), # NW
+        5: (0, -1),  # West
+        6: (1, -1),  # SW
+        7: (1, 0),   # South
+        8: (1, 1),   # SE
     }
 
     # 反向追溯：找到流向当前点的上游点
     def find_all_upstream(r, c):
         """找到所有流向(r,c)的上游点"""
         upstream_cells = []
+        # 检查周围8个格网
         for code, (dr, dc) in D8_OFFSETS.items():
-            nr, nc = r - dr, c - dc  # 反向偏移
+            # 邻居格网位置
+            nr, nc = r + dr, c + dc
             if 0 <= nr < rows and 0 <= nc < cols:
-                # 检查这个邻居是否流向当前点
-                neighbor_code = int(flowdir[nr, nc])
-                if neighbor_code == code:  # 确认流向
-                    upstream_cells.append((nr, nc, flowacc[nr, nc]))
+                # 获取邻居的流向代码
+                neighbor_flowdir = int(flowdir[nr, nc])
+                # 计算邻居流向的目标位置
+                if neighbor_flowdir in D8_OFFSETS:
+                    target_dr, target_dc = D8_OFFSETS[neighbor_flowdir]
+                    target_r, target_c = nr + target_dr, nc + target_dc
+                    # 如果邻居流向当前格网，则它是上游
+                    if target_r == r and target_c == c:
+                        upstream_cells.append((nr, nc, flowacc[nr, nc]))
         return upstream_cells
 
     # 沿主干流追溯（选择流量累计最大的路径）
@@ -779,6 +787,128 @@ def step03_parameter_zones_and_subbasins(
         results["outputs"].append(str(stats_file))
         print(f"  ✓ 保存子区统计: {stats_file.name}")
 
+    # ========================================================================
+    # 生成可视化图片
+    # ========================================================================
+    print("  ⚙ 生成可视化图片...")
+
+    # 3.5 子流域分区可视化
+    if subbasin_geojson.exists():
+        geojson_data = json.loads(subbasin_geojson.read_text(encoding='utf-8'))
+        fig, ax = plt.subplots(figsize=(12, 10))
+
+        # 绘制DEM作为背景
+        with rasterio.open(dem_path) as src:
+            dem_array = src.read(1)
+            dem_array = np.where(np.isfinite(dem_array), dem_array, np.nan)
+            extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
+            im = ax.imshow(dem_array, cmap='terrain', extent=extent, alpha=0.5)
+            plt.colorbar(im, ax=ax, label='Elevation (m)', shrink=0.8)
+
+        # 绘制子流域边界
+        from shapely.geometry import shape as shapely_shape
+        colors = plt.colormaps.get_cmap('tab10')
+        for i, feature in enumerate(geojson_data['features']):
+            geom = shapely_shape(feature['geometry'])
+            sub_id = feature['properties']['id']
+            area = feature['properties']['area_km2']
+
+            if geom.geom_type == 'Polygon':
+                x, y = geom.exterior.xy
+                ax.plot(x, y, linewidth=2, color=colors(i), label=f'{sub_id} ({area:.1f} km²)')
+                ax.fill(x, y, alpha=0.2, color=colors(i))
+
+            # 添加标签
+            centroid = geom.centroid
+            ax.text(centroid.x, centroid.y, sub_id, fontsize=12, fontweight='bold',
+                   ha='center', va='center', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
+        ax.set_title('Upper Truckee River - Subbasin Delineation', fontsize=14, fontweight='bold')
+        ax.set_xlabel('Longitude')
+        ax.set_ylabel('Latitude')
+        ax.legend(loc='best', fontsize=10)
+        ax.grid(True, alpha=0.3)
+
+        subbasin_map = step_dir / "3.5_subbasin_map.png"
+        plt.savefig(subbasin_map, dpi=200, bbox_inches='tight')
+        plt.close()
+        results["outputs"].append(str(subbasin_map))
+        print(f"  ✓ 生成子流域分区图: {subbasin_map.name}")
+
+    # 3.6 参数分区可视化
+    if param_subbasin_geojson.exists():
+        geojson_data = json.loads(param_subbasin_geojson.read_text(encoding='utf-8'))
+        fig, ax = plt.subplots(figsize=(12, 10))
+
+        # 绘制DEM作为背景
+        with rasterio.open(dem_path) as src:
+            dem_array = src.read(1)
+            dem_array = np.where(np.isfinite(dem_array), dem_array, np.nan)
+            extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
+            im = ax.imshow(dem_array, cmap='terrain', extent=extent, alpha=0.5)
+
+        # 绘制参数分区
+        from shapely.geometry import shape as shapely_shape
+        colors = plt.colormaps.get_cmap('Set3')
+        for i, feature in enumerate(geojson_data['features']):
+            geom = shapely_shape(feature['geometry'])
+            zone_id = feature['properties'].get('zone_id', f'Zone_{i}')
+            area = feature['properties'].get('area_km2', 0)
+
+            if geom.geom_type == 'Polygon':
+                x, y = geom.exterior.xy
+                ax.plot(x, y, linewidth=1.5, color=colors(i), label=f'{zone_id} ({area:.1f} km²)')
+                ax.fill(x, y, alpha=0.3, color=colors(i))
+
+        ax.set_title('Upper Truckee River - Parameter Zones', fontsize=14, fontweight='bold')
+        ax.set_xlabel('Longitude')
+        ax.set_ylabel('Latitude')
+        ax.legend(loc='best', fontsize=9)
+        ax.grid(True, alpha=0.3)
+
+        param_zone_map = step_dir / "3.6_parameter_zones_map.png"
+        plt.savefig(param_zone_map, dpi=200, bbox_inches='tight')
+        plt.close()
+        results["outputs"].append(str(param_zone_map))
+        print(f"  ✓ 生成参数分区图: {param_zone_map.name}")
+
+    # 3.7 河道网络可视化
+    if channel_geojson.exists():
+        geojson_data = json.loads(channel_geojson.read_text(encoding='utf-8'))
+        fig, ax = plt.subplots(figsize=(12, 10))
+
+        # 绘制流量累计作为背景
+        with rasterio.open(flow_acc_path) as src:
+            flowacc = src.read(1)
+            flowacc = np.where(np.isfinite(flowacc), flowacc, 0)
+            flowacc_log = np.log10(flowacc + 1)
+            extent = [src.bounds.left, src.bounds.right, src.bounds.bottom, src.bounds.top]
+            im = ax.imshow(flowacc_log, cmap='Blues', extent=extent, alpha=0.6)
+            plt.colorbar(im, ax=ax, label='Log10(Flow Accumulation + 1)', shrink=0.8)
+
+        # 绘制河道网络
+        from shapely.geometry import shape as shapely_shape
+        for feature in geojson_data['features']:
+            geom = shapely_shape(feature['geometry'])
+            if geom.geom_type == 'LineString':
+                x, y = geom.xy
+                ax.plot(x, y, 'r-', linewidth=2, alpha=0.8)
+            elif geom.geom_type == 'MultiLineString':
+                for line in geom.geoms:
+                    x, y = line.xy
+                    ax.plot(x, y, 'r-', linewidth=2, alpha=0.8)
+
+        ax.set_title('Upper Truckee River - Channel Network', fontsize=14, fontweight='bold')
+        ax.set_xlabel('Longitude')
+        ax.set_ylabel('Latitude')
+        ax.grid(True, alpha=0.3)
+
+        channel_map = step_dir / "3.7_channel_network_map.png"
+        plt.savefig(channel_map, dpi=200, bbox_inches='tight')
+        plt.close()
+        results["outputs"].append(str(channel_map))
+        print(f"  ✓ 生成河道网络图: {channel_map.name}")
+
     # 创建有效的子流域几何形状（使用ConvexHull）
     from scipy.spatial import ConvexHull
     subbasin_geometries = {}
@@ -1175,19 +1305,39 @@ def step06_to_08_precipitation_processing(
     results["outputs"].append(str(ts_fig))
     print(f"  ✓ 雨量站时间序列图: {ts_fig.name}")
 
+    # 可视化子流域面雨量时间序列
+    fig, ax = plt.subplots(figsize=(14, 6))
+    colors = plt.colormaps.get_cmap('tab10')
+    for i, sub in enumerate(subbasins):
+        if sub.id in subbasin_series.columns:
+            ax.plot(subbasin_series.index, subbasin_series[sub.id],
+                   label=f'{sub.id} ({sub.area_km2:.1f} km²)',
+                   linewidth=1.5, color=colors(i))
+    ax.set_xlabel('Time', fontsize=12)
+    ax.set_ylabel('Precipitation (mm/hr)', fontsize=12)
+    ax.set_title('Subbasin Areal Precipitation Time Series', fontsize=14, fontweight='bold')
+    ax.legend(loc='best', fontsize=10)
+    ax.grid(True, alpha=0.3)
+
+    subbasin_fig = step8_dir / "8.4_subbasin_precipitation_hyetograph.png"
+    plt.savefig(subbasin_fig, dpi=200, bbox_inches='tight')
+    plt.close()
+    results["outputs"].append(str(subbasin_fig))
+    print(f"  ✓ 子流域雨量过程图: {subbasin_fig.name}")
+
     # 可视化流域平均过程
     fig, ax = plt.subplots(figsize=(12, 4))
     ax.fill_between(basin_series.index, 0, basin_series['precipitation_mm_per_hr'],
                     alpha=0.3, label='Basin Average')
     ax.plot(basin_series.index, basin_series['precipitation_mm_per_hr'],
            linewidth=2, color='blue')
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Precipitation (mm/hr)')
-    ax.set_title('Basin-Average Precipitation')
+    ax.set_xlabel('Time', fontsize=12)
+    ax.set_ylabel('Precipitation (mm/hr)', fontsize=12)
+    ax.set_title('Basin-Average Precipitation', fontsize=14, fontweight='bold')
     ax.grid(True, linestyle='--', alpha=0.6)
-    ax.legend()
+    ax.legend(fontsize=10)
 
-    basin_fig = step8_dir / "8.4_basin_precipitation_hyetograph.png"
+    basin_fig = step8_dir / "8.5_basin_precipitation_hyetograph.png"
     plt.savefig(basin_fig, dpi=200, bbox_inches='tight')
     plt.close()
     results["outputs"].append(str(basin_fig))

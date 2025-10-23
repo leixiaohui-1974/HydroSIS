@@ -6,15 +6,63 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6692370.41026828,
-          6653549.4698809385
+          -6694059.846049844,
+          6630798.401355872
+        ]
+      },
+      "properties": {
+        "id": "M1",
+        "row": 221,
+        "col": 402,
+        "accumulation": 112286.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6705660.6384165855,
+          6612890.38207129
+        ]
+      },
+      "properties": {
+        "id": "M2",
+        "row": 380,
+        "col": 299,
+        "accumulation": 69939.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6715346.736897554,
+          6588675.135868869
+        ]
+      },
+      "properties": {
+        "id": "M3",
+        "row": 595,
+        "col": 213,
+        "accumulation": 13132.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6685612.667142022,
+          6655351.534714607
         ]
       },
       "properties": {
         "id": "T1",
-        "row": 19,
-        "col": 417,
-        "accumulation": 122943.0
+        "row": 3,
+        "col": 477,
+        "accumulation": 37974.0
       }
     },
     {
@@ -22,15 +70,15 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6690230.458278298,
-          6648255.904432037
+          -6689216.796809359,
+          6650959.0016825395
         ]
       },
       "properties": {
         "id": "T2",
-        "row": 66,
-        "col": 436,
-        "accumulation": 121567.0
+        "row": 42,
+        "col": 445,
+        "accumulation": 37326.0
       }
     },
     {
@@ -38,15 +86,15 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6689779.942069881,
-          6642624.451826822
+          -6685950.554298336,
+          6646341.2105462635
         ]
       },
       "properties": {
         "id": "T3",
-        "row": 116,
-        "col": 440,
-        "accumulation": 117763.0
+        "row": 83,
+        "col": 474,
+        "accumulation": 36540.0
       }
     }
   ]
