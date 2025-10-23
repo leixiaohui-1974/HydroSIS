@@ -1,9 +1,0 @@
-parameter,sensitivity_index,rank,param_min,param_max
-FC,0.0,1,250.0,600.0
-BETA,0.0,2,1.5,3.5
-K0,0.0,3,0.1,0.5
-K1,0.0,4,0.02,0.15
-K2,0.0,5,0.005,0.05
-PERC,0.0,6,0.5,4.0
-initial_soil_ratio,0.0,7,0.3,0.9
-initial_upper,1.0,8,5.0,50.0
