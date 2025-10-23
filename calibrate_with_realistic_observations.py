@@ -23,8 +23,8 @@ import yaml
 import matplotlib.pyplot as plt
 from scipy.optimize import differential_evolution
 
-# 导入模型
-from hydrosis.runoff.enhanced_generator import EnhancedRunoffGenerator
+# 导入简单径流生成器（与HBV完全不同的结构）
+from simple_runoff_generator import SimpleRunoffGenerator, add_observation_errors
 
 
 def run_hbv_model(rainfall: np.ndarray, params: dict) -> np.ndarray:
@@ -83,90 +83,53 @@ def run_hbv_model(rainfall: np.ndarray, params: dict) -> np.ndarray:
 
 def generate_realistic_observations(rainfall: np.ndarray) -> dict:
     """
-    使用增强模型生成"观测数据"并添加真实的观测噪声
+    使用简单模型生成"观测数据"并添加真实的观测噪声
 
-    特点:
-    1. 使用不同的模型结构（增强模型 vs HBV）
-    2. 添加随机观测噪声（测量误差）
-    3. 添加系统偏差（仪器校准误差）
+    关键差异（与HBV完全不同）:
+    1. ❌ 不用HBV的非线性土壤产流（beta幂函数）
+    2. ❌ 不用HBV的多层储量结构
+    3. ✅ 用简单的初损后损法 + 固定径流系数
+    4. ✅ 用单一线性水库汇流
+    5. ✅ 添加更多随机波动和观测误差
     """
-    print("\n  使用增强模型生成观测数据:")
-    print("    模型结构: 土壤层 + 三分量线性水库")
+    print("\n  使用简单模型生成观测数据:")
+    print("    模型结构: 初损后损法 + 单一线性水库")
+    print("    ❌ 无HBV的beta幂函数产流")
+    print("    ❌ 无HBV的多层水库（upper/lower）")
 
-    # 增强模型参数（"真实"的流域特性）
-    generator = EnhancedRunoffGenerator(
-        # 土壤参数
-        soil_capacity=120.0,      # 土壤容量（不同于HBV的field_capacity）
-        soil_beta=1.8,            # 产流指数（不同于HBV的beta）
-
-        # 径流分配（HBV没有这个机制）
-        fast_threshold=0.65,
-        fast_ratio=0.35,
-        inter_ratio=0.40,
-        base_ratio=0.25,
-
-        # 水库参数（与HBV不同）
-        k_fast=0.20,              # 比HBV的k0更快
-        k_inter=0.10,             # HBV没有中间水库
-        k_base=0.018,             # 略小于HBV的k2
-
-        # 初始状态
-        initial_soil=50.0,        # 非零初始状态
-        initial_fast=2.0,
-        initial_inter=5.0,
-        initial_base=15.0,
-
-        # 蒸散发（HBV没有显式建模）
-        et_rate=0.12,
+    # 简单模型参数（完全不同于HBV）
+    generator = SimpleRunoffGenerator(
+        initial_loss=18.0,           # 初期损失 (HBV无此概念)
+        constant_loss=0.4,            # 固定损失率 (HBV用percolation)
+        runoff_coefficient=0.42,      # 固定系数 (HBV是状态依赖)
+        reservoir_k=0.18,             # 单一水库 (HBV有k0,k1,k2三个)
+        initial_storage=8.0,          # 初始储量
+        random_noise_level=0.15,      # 15%随机波动
+        random_seed=42,
     )
 
     # 生成"真实"径流
-    runoff_true = []
-    for p in rainfall:
-        runoff, components = generator.step(p)
-        runoff_true.append(runoff)
+    runoff_true, stats = generator.generate(rainfall)
 
-    runoff_true = np.array(runoff_true)
+    print(f"    真实径流系数: {stats['runoff_coefficient']:.4f}")
 
-    print(f"    真实径流系数: {runoff_true.sum() / rainfall.sum():.4f}")
+    # 添加观测误差（更多噪声）
+    print("\n  添加观测误差:")
 
-    # 添加观测噪声
-    print("\n  添加观测噪声:")
+    observed = add_observation_errors(runoff_true, seed=42)
 
-    # 1. 随机测量误差（正态分布，相对误差）
-    noise_level = 0.05  # 5%相对误差（典型的流量计误差）
-    random_noise = np.random.RandomState(42).normal(0, noise_level, len(runoff_true))
-
-    # 2. 系统偏差（仪器校准误差）
-    systematic_bias = 1.03  # 3%系统高估（常见的水位-流量关系偏差）
-
-    # 3. 添加噪声（确保非负）
-    observed = runoff_true * systematic_bias * (1 + random_noise)
-    observed = np.maximum(observed, 0)
-
-    # 4. 模拟数据缺失（随机缺失5%的数据）
-    missing_rate = 0.05
-    missing_indices = np.random.RandomState(42).choice(
-        len(observed),
-        int(len(observed) * missing_rate),
-        replace=False
-    )
-
-    # 对缺失数据用线性插值
-    for idx in missing_indices:
-        if 0 < idx < len(observed) - 1:
-            observed[idx] = (observed[idx-1] + observed[idx+1]) / 2
-
-    print(f"    随机噪声: ±{noise_level*100:.1f}% (标准差)")
-    print(f"    系统偏差: +{(systematic_bias-1)*100:.1f}%")
-    print(f"    数据缺失: {missing_rate*100:.1f}% (已插值)")
+    print(f"    基础测量误差: ±10% (比之前更大)")
+    print(f"    系统偏差: +5%")
+    print(f"    流量依赖误差: 高流量误差更大")
+    print(f"    随机尖峰: 2% 数据点")
+    print(f"    数据缺失: 10% (已插值)")
     print(f"    观测径流系数: {observed.sum() / rainfall.sum():.4f}")
 
     return {
         'observed': observed,
         'true': runoff_true,
-        'noise_level': noise_level,
-        'systematic_bias': systematic_bias,
+        'noise_level': 0.10,
+        'systematic_bias': 1.05,
     }
 
 
