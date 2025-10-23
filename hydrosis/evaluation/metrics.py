@@ -16,7 +16,7 @@ def rmse(simulated: Sequence[float], observed: Sequence[float]) -> float:
     """Compute the root-mean-square error between two series."""
 
     _validate_lengths(simulated, observed)
-    if not simulated:
+    if len(simulated) == 0:
         return 0.0
     squared = [(s - o) ** 2 for s, o in zip(simulated, observed)]
     return math.sqrt(sum(squared) / len(squared))
@@ -26,7 +26,7 @@ def mae(simulated: Sequence[float], observed: Sequence[float]) -> float:
     """Compute the mean absolute error between two series."""
 
     _validate_lengths(simulated, observed)
-    if not simulated:
+    if len(simulated) == 0:
         return 0.0
     return sum(abs(s - o) for s, o in zip(simulated, observed)) / len(simulated)
 
@@ -51,7 +51,7 @@ def nash_sutcliffe_efficiency(
     """Nash-Sutcliffe efficiency (NSE) for hydrograph accuracy."""
 
     _validate_lengths(simulated, observed)
-    if not simulated:
+    if len(simulated) == 0:
         return 1.0
     mean_obs = sum(observed) / len(observed)
     numerator = sum((o - s) ** 2 for s, o in zip(simulated, observed))
@@ -82,7 +82,7 @@ def log_nash_sutcliffe_efficiency(
         Log NSE value (range: -inf to 1.0, perfect=1.0)
     """
     _validate_lengths(simulated, observed)
-    if not simulated:
+    if len(simulated) == 0:
         return 1.0
 
     log_sim = [math.log(s + epsilon) for s in simulated]
@@ -116,9 +116,6 @@ def kling_gupta_efficiency(
         KGE value (range: -inf to 1.0, perfect=1.0)
     """
     _validate_lengths(simulated, observed)
-    if not simulated:
-        return 1.0
-
     n = len(simulated)
     if n == 0:
         return 1.0
@@ -169,10 +166,9 @@ def pearson_correlation(
         Correlation coefficient (range: -1 to 1, perfect=1)
     """
     _validate_lengths(simulated, observed)
-    if not simulated:
-        return 1.0
-
     n = len(simulated)
+    if n == 0:
+        return 1.0
     mean_sim = sum(simulated) / n
     mean_obs = sum(observed) / n
 

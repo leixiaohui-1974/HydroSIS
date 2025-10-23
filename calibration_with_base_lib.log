@@ -1,0 +1,5 @@
+COULD NOT LOAD RichDEM ENGINE! NOTHING WILL WORK!
+Traceback (most recent call last):
+  File "/home/user/HydroSIS/calibrate_zone1_with_enhanced_obs.py", line 22, in <module>
+    from hydrosis.evaluation.metrics import (
+ImportError: cannot import name 'mean_absolute_error' from 'hydrosis.evaluation.metrics' (/home/user/HydroSIS/hydrosis/evaluation/metrics.py)
