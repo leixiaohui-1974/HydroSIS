@@ -1,0 +1,4 @@
+﻿id,model_type,应用子流域,travel_time(h),weighting_factor,time_step(h)
+muskingum_upper,Muskingum,"W170, W160",8,0.25,1
+muskingum_main,Muskingum,W180,12,0.2,1
+muskingum_outlet,Muskingum,W190,15,0.15,1
