@@ -1,0 +1,48 @@
+工作流结果目录: /home/user/HydroSIS/results/upper_truckee_complete_11steps
+
+================================================================================
+HydroSIS 工作流验证
+================================================================================
+
+结果目录: /home/user/HydroSIS/results/upper_truckee_complete_11steps
+
+验证 step_01...
+  ❌ 01_DEM处理
+    ❌ 缺失文件: 01.1_dem_elevation.png
+    ❌ 缺失文件: 01.2_flow_direction.png
+    ❌ 缺失文件: 01.3_flow_accumulation_log.png
+    ❌ 缺失文件: 01.4_slope_distribution.png
+    ❌ 缺失文件: terrain_statistics.csv
+验证 step_02...
+  ❌ 02_汇水点生成
+    ❌ 缺失文件: pour_points.geojson
+    ❌ 缺失文件: 02.1_pour_points_distribution.png
+    ❌ 缺失文件: pour_point_statistics.csv
+验证 step_03...
+  ❌ 03_参数分区和子流域划分
+    ❌ 缺失文件: subbasins.geojson
+    ❌ 缺失文件: parameter_zones.geojson
+    ❌ 缺失文件: 03.1_parameter_zones.png
+    ❌ 缺失文件: 03.2_subbasins_network.png
+验证 step_08...
+  ❌ 08_面雨量计算
+    ❌ 缺失文件: zone_rainfall.csv
+    ❌ 缺失文件: subbasin_rainfall.csv
+    ❌ 缺失文件: basin_average_rainfall.csv
+验证 step_09...
+  ❌ 09_水文模拟（产流）
+    ❌ HBV结果目录不存在
+验证 step_10...
+  ❌ 10_水动力模拟（汇流）
+    ❌ 缺失文件: routing_timeseries.csv
+    ❌ 缺失文件: 10.1_discharge_hydrograph.png
+验证 water_balance...
+  ✅ 水量平衡验证
+    ⚠️  降雨数据文件不存在，跳过水量平衡验证
+
+================================================================================
+❌ 工作流验证失败
+================================================================================
+
+生成验证报告...
+✓ 报告已保存: /home/user/HydroSIS/results/upper_truckee_complete_11steps/WORKFLOW_VALIDATION_REPORT.md
