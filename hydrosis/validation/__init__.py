@@ -19,6 +19,12 @@ from .hydrologic import (
     validate_runoff_coefficient,
     validate_mass_conservation,
 )
+from .precipitation import (
+    PrecipitationCriteria,
+    validate_precipitation_data,
+    identify_precipitation_outliers,
+    suggest_precipitation_fixes,
+)
 
 # Import parameter validation utilities from legacy validation module
 # These are kept for backward compatibility with existing code
@@ -41,6 +47,11 @@ __all__ = [
     "validate_water_balance",
     "validate_runoff_coefficient",
     "validate_mass_conservation",
+    # Precipitation validation
+    "PrecipitationCriteria",
+    "validate_precipitation_data",
+    "identify_precipitation_outliers",
+    "suggest_precipitation_fixes",
     # Parameter validation (legacy)
     "ParameterValidationError",
     "validate_positive",
