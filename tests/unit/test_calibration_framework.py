@@ -256,8 +256,8 @@ class TestHBVCalibrator:
                 'CFR': 0.05,
                 'CWH': 0.1,
             },
-            algorithm='sce_ua',
-            algorithm_params={'max_iterations': 3, 'n_complexes': 2},
+            algorithm='differential_evolution',
+            algorithm_params={'maxiter': 3, 'popsize': 5},
             objective_metric='nse',
             seed=42
         )

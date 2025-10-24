@@ -360,25 +360,37 @@ class BaseCalibrator(ABC):
         )
         
         computation_time = time.time() - start_time
-        
+
+        # 提取优化结果（支持字典和对象格式）
+        if isinstance(optimization_result, dict):
+            best_params_opt = optimization_result.get('best_params', {})
+            best_score_opt = optimization_result.get('best_score', None)
+        else:
+            best_params_opt = optimization_result.best_params
+            best_score_opt = optimization_result.best_score
+
+        # 使用缓存的最优参数（如果有的话）
+        final_best_params = self._best_params if self._best_params is not None else best_params_opt
+        final_best_score = self._best_simulated_score if self._best_params is not None else best_score_opt
+
         # 使用最优参数重新运行以获取完整输出
-        model = self.create_model(self._best_params)
+        model = self.create_model(final_best_params)
         best_simulated = self.run_model(model)
-        
+
         # 计算所有指标
         metrics = {
             "nse": self.calculate_metric(self.data.observed_runoff, best_simulated, "nse"),
             "kge": self.calculate_metric(self.data.observed_runoff, best_simulated, "kge"),
             "rmse": self.calculate_metric(self.data.observed_runoff, best_simulated, "rmse"),
         }
-        
+
         # 构建结果
         result = CalibrationResult(
-            best_params=self._best_params,
-            best_score=optimization_result.best_score,
+            best_params=final_best_params,
+            best_score=final_best_score,
             simulated_runoff=best_simulated,
             metrics=metrics,
-            convergence_history=getattr(optimization_result, 'history', []),
+            convergence_history=[],
             n_evaluations=self._evaluation_count,
             computation_time=computation_time,
             algorithm=self.config.algorithm,
