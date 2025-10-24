@@ -241,6 +241,24 @@ reporting:
     "5": "#9467bd"
     "6": "#8c564b"
 
+# Rain Gauge Configuration
+rain_gauge:
+  # Target density (gauges per 100 km²)
+  target_density: 0.01  # 1 gauge per 100 km² (fair quality)
+  excellent_density: 0.02  # 2 gauges per 100 km²
+  good_density: 0.01
+  fair_density: 0.005
+  poor_density: 0.002
+
+  # Spatial constraints
+  min_distance_m: 1000  # Minimum distance between gauges (meters)
+  buffer_distance_m: 500  # Buffer from zone boundaries
+
+  # Optimization parameters
+  random_seed: 42
+  max_iterations: 1000
+  optimization_method: "random_uniform"  # random_uniform, latin_hypercube, genetic
+
 # Performance Configuration
 performance:
   parallel_processing: true
