@@ -1,0 +1,83 @@
+{
+  "parameter_type": "calibrated",
+  "hbv_parameters": {
+    "degree_day_factor": 3.0,
+    "snow_threshold": 0.0,
+    "field_capacity": 258.12,
+    "beta": 3.0,
+    "k0": 0.05,
+    "k1": 0.01,
+    "k2": 0.017,
+    "percolation": 5.0,
+    "initial_snow": 0.0,
+    "initial_soil": 77.44,
+    "initial_upper": 5.33,
+    "initial_lower": 20.0
+  },
+  "results": [
+    {
+      "zone_id": "1",
+      "runoff_coefficient": 0.7593658838819506,
+      "total_precip_mm": 676.5476963364915,
+      "total_runoff_mm": 513.7472394168574,
+      "peak_runoff_m3s": 518.4848690112204,
+      "mean_runoff_m3s": 166.48622438085997
+    },
+    {
+      "zone_id": "2",
+      "runoff_coefficient": 0.7593658838819506,
+      "total_precip_mm": 676.5476963364915,
+      "total_runoff_mm": 513.7472394168574,
+      "peak_runoff_m3s": 1457.7806270885428,
+      "mean_runoff_m3s": 468.09542010816455
+    },
+    {
+      "zone_id": "3",
+      "runoff_coefficient": 0.7593658838819506,
+      "total_precip_mm": 676.5476963364915,
+      "total_runoff_mm": 513.7472394168574,
+      "peak_runoff_m3s": 655.3411958895898,
+      "mean_runoff_m3s": 210.43098440455014
+    },
+    {
+      "zone_id": "4",
+      "runoff_coefficient": 0.7593658838819506,
+      "total_precip_mm": 676.5476963364915,
+      "total_runoff_mm": 513.7472394168574,
+      "peak_runoff_m3s": 1396.9399325099337,
+      "mean_runoff_m3s": 448.5593870732593
+    },
+    {
+      "zone_id": "5",
+      "runoff_coefficient": 0.7593658838819506,
+      "total_precip_mm": 676.5476963364915,
+      "total_runoff_mm": 513.7472394168574,
+      "peak_runoff_m3s": 605.2122220553227,
+      "mean_runoff_m3s": 194.3345000429719
+    },
+    {
+      "zone_id": "6",
+      "runoff_coefficient": 0.7593658838819506,
+      "total_precip_mm": 676.5476963364915,
+      "total_runoff_mm": 513.7472394168574,
+      "peak_runoff_m3s": 1142.3956211378068,
+      "mean_runoff_m3s": 366.8248488623587
+    }
+  ],
+  "validation": {
+    "is_valid": true,
+    "errors": [],
+    "warnings": [],
+    "metrics": {
+      "1_runoff_coefficient": 0.7593658838819506,
+      "2_runoff_coefficient": 0.7593658838819506,
+      "3_runoff_coefficient": 0.7593658838819506,
+      "4_runoff_coefficient": 0.7593658838819506,
+      "5_runoff_coefficient": 0.7593658838819506,
+      "6_runoff_coefficient": 0.7593658838819506,
+      "mean_runoff_coefficient": 0.7593658838819506,
+      "max_runoff_coefficient": 0.7593658838819506,
+      "min_runoff_coefficient": 0.7593658838819506
+    }
+  }
+}

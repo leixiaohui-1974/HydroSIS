@@ -1,26 +1,14 @@
-"""Parameter calibration module for hydrological models."""
+"""统一校准框架
 
-from .optimizers import (
-    CalibrationResult,
-    calibrate_parameters,
-    differential_evolution_calibrate,
-)
-
-from .sensitivity import (
-    SensitivityResult,
-    one_at_a_time_sensitivity,
-    morris_sensitivity,
-    adaptive_bounds_from_sensitivity,
-    print_sensitivity_report,
-)
+提供抽象的模型校准接口，消除重复代码。
+"""
+from .base import BaseCalibrator, CalibrationData, CalibrationConfig, CalibrationResult
+from .hbv_calibrator import HBVCalibrator
 
 __all__ = [
+    "BaseCalibrator",
+    "CalibrationData",
+    "CalibrationConfig",
     "CalibrationResult",
-    "calibrate_parameters",
-    "differential_evolution_calibrate",
-    "SensitivityResult",
-    "one_at_a_time_sensitivity",
-    "morris_sensitivity",
-    "adaptive_bounds_from_sensitivity",
-    "print_sensitivity_report",
+    "HBVCalibrator",
 ]

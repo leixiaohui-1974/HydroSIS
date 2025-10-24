@@ -1,0 +1,169 @@
+# HydroSIS Validation Criteria Configuration
+# ==========================================
+# This file defines validation standards for all workflow steps.
+# All thresholds and criteria are configurable here to avoid hardcoding.
+
+# Global settings
+global:
+  strict_mode: false  # If true, warnings are treated as errors
+  enable_reports: true  # Generate validation reports
+  report_format: "text"  # "text" or "markdown"
+
+# Hydrologic validation criteria
+hydrologic:
+  name: "hydrologic_validation"
+  description: "Validation criteria for hydrological processes"
+
+  # Runoff coefficient validation
+  runoff_coefficient_min: 0.0      # Physical minimum (cannot be negative)
+  runoff_coefficient_max: 1.0      # Physical maximum (runoff <= precipitation)
+  runoff_coefficient_warning_low: 0.05   # Warn if < 5% (very low runoff)
+  runoff_coefficient_warning_high: 0.9   # Warn if > 90% (near impervious)
+
+  # Water balance validation
+  water_balance_max_error: 0.01    # Maximum 1% error in water balance
+
+  # Mass conservation (routing)
+  mass_conservation_tolerance: 0.001  # Maximum 0.1% error
+
+# Spatial data validation criteria
+spatial:
+  name: "spatial_validation"
+  description: "Validation criteria for spatial data and geometries"
+
+  # DEM validation
+  dem:
+    min_valid_pixels_ratio: 0.95   # At least 95% valid pixels
+    max_nodata_ratio: 0.05          # Maximum 5% NoData
+    elevation_range_check: true     # Check if elevation range is reasonable
+    min_elevation: -100.0           # meters
+    max_elevation: 5000.0           # meters
+
+  # Zone validation
+  zones:
+    expected_count: 6               # Expected number of parameter zones
+    count_tolerance: 0              # Must be exactly 6 (no tolerance)
+    min_area_km2: 10.0              # Minimum zone area
+    max_area_km2: 1000.0            # Maximum zone area
+    require_connected: true         # Zones must be spatially connected
+
+  # Subbasin validation
+  subbasins:
+    expected_total: 157             # Expected total subbasins
+    count_tolerance: 10             # Allow ±10 subbasins
+    min_area_km2: 2.0               # Minimum subbasin area
+    min_subbasins_per_zone: 5       # Each zone should have ≥5 subbasins
+
+  # Connectivity validation
+  connectivity:
+    validate_downstream: true       # Check downstream connections
+    allow_disconnected_zones: false # No isolated zones allowed
+
+# Time series validation criteria
+timeseries:
+  name: "timeseries_validation"
+  description: "Validation criteria for time series data"
+
+  # Precipitation validation
+  precipitation:
+    min_value: 0.0                  # mm/hr (cannot be negative)
+    max_value: 100.0                # mm/hr (extreme rainfall threshold)
+    require_continuous: true        # No gaps in time series
+    max_gap_hours: 0                # Maximum allowed gap
+
+  # Discharge validation
+  discharge:
+    min_value: 0.0                  # m³/s (cannot be negative)
+    max_value: 10000.0              # m³/s (flood threshold)
+    require_continuous: true
+    max_gap_hours: 0
+
+# Rain gauge distribution validation
+rain_gauge:
+  name: "rain_gauge_validation"
+  description: "Validation criteria for rain gauge distribution"
+
+  # Density standards (stations per km²)
+  density_grades:
+    excellent: 0.02                 # ≥0.02 stations/km² (50 km²/station)
+    good: 0.01                      # ≥0.01 stations/km² (100 km²/station)
+    fair: 0.005                     # ≥0.005 stations/km² (200 km²/station)
+    poor: 0.001                     # ≥0.001 stations/km² (1000 km²/station)
+
+  min_stations_per_zone: 1          # Each zone needs ≥1 station
+  target_density: 0.01               # Target: "good" grade
+  warn_if_no_coverage: true          # Warn if zone has no stations
+
+# Optimization validation
+optimization:
+  name: "optimization_validation"
+  description: "Validation criteria for optimization processes"
+
+  # Rain gauge optimization
+  rain_gauge_optimization:
+    max_iterations: 10              # Prevent infinite loops
+    min_spacing_m: 2000             # Minimum distance between stations
+    target_density: 0.01            # Target density (stations/km²)
+    convergence_tolerance: 0.001    # Stop if improvement < 0.1%
+
+  # Parameter calibration
+  parameter_calibration:
+    max_iterations: 100             # Maximum calibration iterations
+    convergence_tolerance: 0.001    # NSE improvement threshold
+    min_nse: 0.5                    # Minimum acceptable NSE
+    population_size: 15             # For differential evolution
+
+# Model performance validation
+model_performance:
+  name: "model_performance_validation"
+  description: "Validation criteria for model performance metrics"
+
+  # NSE thresholds (Nash-Sutcliffe Efficiency)
+  nse:
+    excellent: 0.75                 # NSE ≥ 0.75
+    good: 0.65                      # NSE ≥ 0.65
+    satisfactory: 0.50              # NSE ≥ 0.50
+    unsatisfactory: 0.50            # NSE < 0.50
+
+  # PBIAS thresholds (Percent Bias)
+  pbias:
+    excellent: 10.0                 # |PBIAS| < 10%
+    good: 15.0                      # |PBIAS| < 15%
+    satisfactory: 25.0              # |PBIAS| < 25%
+
+  # R² thresholds (Coefficient of Determination)
+  r_squared:
+    excellent: 0.85                 # R² ≥ 0.85
+    good: 0.75                      # R² ≥ 0.75
+    satisfactory: 0.60              # R² ≥ 0.60
+
+# Channel geometry validation
+channel:
+  name: "channel_validation"
+  description: "Validation criteria for channel cross-sections and profiles"
+
+  # Cross-section validation
+  cross_section:
+    min_spacing_m: 100              # Minimum spacing between sections
+    max_spacing_m: 1000             # Maximum spacing between sections
+    min_width_m: 5.0                # Minimum channel width
+    max_width_m: 500.0              # Maximum channel width
+    check_monotonic_elevation: true # Elevation should decrease downstream
+    monotonic_tolerance: 0.05       # Allow 5% local variation
+
+  # Profile validation
+  profile:
+    min_slope: 0.00001              # Minimum bed slope (m/m)
+    max_slope: 0.1                  # Maximum bed slope (m/m)
+    check_continuity: true          # Check geometric continuity
+
+# Pour point validation
+pour_points:
+  name: "pour_point_validation"
+  description: "Validation criteria for watershed pour points"
+
+  expected_total: 6                 # 3 main + 3 tributary
+  require_main_stream_points: 3     # Must have 3 main stream points
+  require_tributary_points: 3       # Must have 3 tributary points
+  min_accumulation: 100             # Minimum flow accumulation
+  check_location: true              # Verify points are on channel network

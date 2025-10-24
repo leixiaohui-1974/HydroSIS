@@ -1,0 +1,128 @@
+{
+  "zones": [
+    {
+      "zone_id": "1",
+      "parameters": {
+        "FC": 258.1167911142682,
+        "BETA": 3.0,
+        "K0": 0.05,
+        "K1": 0.01,
+        "K2": 0.01733461831321549,
+        "PERC": 5.0,
+        "initial_soil_ratio": 0.3,
+        "initial_upper": 5.330316265070393
+      },
+      "performance": {
+        "NSE": 0.7736680782239493,
+        "runoff_coefficient": 0.765484876300901
+      },
+      "success": false
+    },
+    {
+      "zone_id": "2",
+      "parameters": {
+        "FC": 258.1167913218793,
+        "BETA": 3.0,
+        "K0": 0.05,
+        "K1": 0.01,
+        "K2": 0.01733461828938989,
+        "PERC": 5.0,
+        "initial_soil_ratio": 0.3,
+        "initial_upper": 5.330316293935511
+      },
+      "performance": {
+        "NSE": 0.7736680781649314,
+        "runoff_coefficient": 0.7654848767012906
+      },
+      "success": false
+    },
+    {
+      "zone_id": "3",
+      "parameters": {
+        "FC": 258.1167914701363,
+        "BETA": 3.0,
+        "K0": 0.05,
+        "K1": 0.01,
+        "K2": 0.017334618261871434,
+        "PERC": 5.0,
+        "initial_soil_ratio": 0.3,
+        "initial_upper": 5.330316328845018
+      },
+      "performance": {
+        "NSE": 0.7736680781226403,
+        "runoff_coefficient": 0.7654848768655728
+      },
+      "success": false
+    },
+    {
+      "zone_id": "4",
+      "parameters": {
+        "FC": 258.1167909933541,
+        "BETA": 3.0,
+        "K0": 0.05,
+        "K1": 0.01,
+        "K2": 0.01733461832932575,
+        "PERC": 5.0,
+        "initial_soil_ratio": 0.3,
+        "initial_upper": 5.3303162356422735
+      },
+      "performance": {
+        "NSE": 0.77366807825845,
+        "runoff_coefficient": 0.7654848760478811
+      },
+      "success": false
+    },
+    {
+      "zone_id": "5",
+      "parameters": {
+        "FC": 258.11679126223066,
+        "BETA": 3.0,
+        "K0": 0.05,
+        "K1": 0.01,
+        "K2": 0.017334618300669076,
+        "PERC": 5.0,
+        "initial_soil_ratio": 0.3,
+        "initial_upper": 5.330316233315665
+      },
+      "performance": {
+        "NSE": 0.7736680781824181,
+        "runoff_coefficient": 0.7654848764166824
+      },
+      "success": false
+    },
+    {
+      "zone_id": "6",
+      "parameters": {
+        "FC": 258.1167913870933,
+        "BETA": 3.0,
+        "K0": 0.05,
+        "K1": 0.01,
+        "K2": 0.017334618295324192,
+        "PERC": 5.0,
+        "initial_soil_ratio": 0.3,
+        "initial_upper": 5.330316167357886
+      },
+      "performance": {
+        "NSE": 0.773668078147769,
+        "runoff_coefficient": 0.7654848764222654
+      },
+      "success": false
+    }
+  ],
+  "validation": {
+    "is_valid": true,
+    "errors": [],
+    "warnings": [],
+    "metrics": {
+      "1_runoff_coefficient": 0.765484876300901,
+      "2_runoff_coefficient": 0.7654848767012906,
+      "3_runoff_coefficient": 0.7654848768655728,
+      "4_runoff_coefficient": 0.7654848760478811,
+      "5_runoff_coefficient": 0.7654848764166824,
+      "6_runoff_coefficient": 0.7654848764222654,
+      "mean_runoff_coefficient": 0.7654848764590989,
+      "max_runoff_coefficient": 0.7654848768655728,
+      "min_runoff_coefficient": 0.7654848760478811
+    }
+  }
+}

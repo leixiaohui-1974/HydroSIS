@@ -1,0 +1,273 @@
+# HydroSIS Workflow Configuration
+# ================================
+# This file configures all workflow steps to enable full automation
+# without any hardcoded values in scripts.
+
+# Project metadata
+project:
+  name: "Upper Truckee Complete Workflow"
+  description: "Complete 11-step hydrological modeling workflow"
+  basin_name: "Upper Truckee River Basin"
+
+# Directory structure
+directories:
+  base_results: "results/upper_truckee_complete_11steps"
+  parameters: "results/upper_truckee_complete_11steps/parameters"
+  workflow_results: "results/upper_truckee_complete_11steps/workflow_results"
+  logs: "results/upper_truckee_complete_11steps/logs"
+
+# Step-specific configurations
+steps:
+  # Step 1: DEM Processing
+  step_01_dem:
+    output_dir: "step_01_dem"
+
+  # Step 2: Flow Direction
+  step_02_flow_direction:
+    output_dir: "step_02_flow_direction"
+
+  # Step 3: Delineation
+  step_03_delineation:
+    output_dir: "step_03_delineation"
+
+  # Step 4: Cross Sections
+  step_04_cross_sections:
+    output_dir: "step_04_cross_sections"
+
+  # Step 5: Rain Gauge Distribution
+  step_05_rain_gauges:
+    output_dir: "step_05_rain_gauges"
+    input:
+      rain_gauges: "data/rain_gauges/rain_gauges.csv"
+      zones_geojson: "parameters/parameter_zones.geojson"
+    output:
+      distribution_map: "5.1_rain_gauge_distribution.png"
+      density_evaluation: "5.2_rain_gauge_density_evaluation.csv"
+      coverage_report: "5.3_zone_coverage_report.txt"
+
+  # Step 6: Precipitation Generation
+  step_06_precipitation:
+    output_dir: "step_06_precipitation"
+    duration_hours: 168
+    timestep_hours: 1
+
+  # Step 7: Thiessen Polygons
+  step_07_thiessen:
+    output_dir: "step_07_thiessen_polygons"
+
+  # Step 8: Areal Precipitation
+  step_08_areal_rainfall:
+    output_dir: "step_08_areal_rainfall"
+    input:
+      precipitation_timeseries: "step_06_precipitation/precipitation_timeseries.csv"
+      thiessen_polygons: "step_07_thiessen_polygons/thiessen_polygons.geojson"
+      subbasins: "parameters/parameter_subbasins.csv"
+    output:
+      areal_precipitation: "8.1_parameter_areal_precipitation.csv"
+
+  # Step 9: Runoff Generation
+  step_09_runoff:
+    output_dir: "step_09_runoff"
+    input:
+      precipitation: "step_08_areal_rainfall/8.1_parameter_areal_precipitation.csv"
+      subbasins: "parameters/parameter_subbasins.csv"
+      zones_geojson: "parameters/parameter_zones.geojson"
+    output:
+      runoff_timeseries: "9.0_runoff_timeseries.csv"
+      cumulative_curves: "9.1_zone_cumulative_runoff.png"
+      coefficient_evaluation: "9.2_runoff_coefficient_evaluation.csv"
+      runoff_hydrograph: "9.3_zone_runoff_timeseries.png"
+      report: "9.4_enhancement_report.txt"
+    validation:
+      use_validation_framework: true
+      criteria_file: "config/validation_criteria.yaml"
+
+  # Step 10: Channel Routing
+  step_10_routing:
+    output_dir: "step_10_routing"
+    input:
+      runoff: "step_09_runoff/9.0_runoff_timeseries.csv"
+      cross_sections: "step_04_cross_sections/cross_sections.csv"
+    output:
+      discharge_timeseries: "10.1_discharge_timeseries.csv"
+
+  # Step 11: Calibration and Validation
+  step_11_calibration:
+    output_dir: "step_11_calibration"
+
+# HBV Model Configuration
+hbv_model:
+  # Default parameters (will be calibrated)
+  default_parameters:
+    degree_day_factor: 3.0
+    snow_threshold: 0.0
+    field_capacity: 100.0
+    beta: 1.0
+    k0: 0.15
+    k1: 0.05
+    k2: 0.01
+    percolation: 2.0
+    initial_snow: 0.0
+    initial_soil: 40.0
+    initial_upper: 5.0
+    initial_lower: 20.0
+
+  # Calibrated parameters (2025-10-24)
+  # All 6 zones converged to same optimal parameters
+  # Performance: NSE=0.7737, KGE=0.8867, RC=0.7655
+  calibrated_parameters:
+    degree_day_factor: 3.0
+    snow_threshold: 0.0
+    field_capacity: 258.12          # FC: Soil maximum capacity (mm)
+    beta: 3.0                        # BETA: Soil water curve exponent
+    k0: 0.05                         # K0: Fast runoff recession coefficient
+    k1: 0.01                         # K1: Medium runoff recession coefficient
+    k2: 0.017                        # K2: Baseflow recession coefficient
+    percolation: 5.0                 # PERC: Percolation rate (mm/h)
+    initial_snow: 0.0
+    initial_soil: 77.44              # 0.3 * FC (initial soil moisture ratio)
+    initial_upper: 5.33              # Initial upper reservoir
+    initial_lower: 20.0
+
+  # Use calibrated parameters by default
+  use_calibrated: true
+  calibration_date: "2025-10-24"
+  calibration_results_path: "results/upper_truckee_complete_11steps/hbv_calibration/calibration_summary.json"
+
+  # Calibration settings
+  calibration:
+    enabled: true
+    method: "differential_evolution"
+    max_iterations: 100
+    population_size: 15
+    convergence_tolerance: 0.001
+
+    # Parameter bounds for calibration
+    parameter_bounds:
+      field_capacity: [50.0, 300.0]
+      beta: [1.0, 3.0]
+      k0: [0.05, 0.5]
+      k1: [0.01, 0.15]
+      k2: [0.001, 0.05]
+      percolation: [0.5, 5.0]
+      initial_soil: [20.0, 100.0]
+      initial_upper: [1.0, 20.0]
+      initial_lower: [5.0, 50.0]
+
+    # Objective function
+    objective: "NSE"  # Nash-Sutcliffe Efficiency
+    target_nse: 0.65  # Target NSE for acceptable calibration
+
+# Rain Gauge Optimization Configuration
+rain_gauge_optimization:
+  enabled: true
+  max_iterations: 10
+  min_spacing_m: 2000
+  target_density: 0.01  # stations/km² (from validation_criteria.yaml)
+  convergence_tolerance: 0.001
+
+  # Optimization algorithm
+  algorithm: "iterative_placement"
+
+  # Initial gauge configuration
+  initial_gauges:
+    file: "data/rain_gauges/rain_gauges.csv"
+    columns:
+      id: "station_id"
+      lon: "longitude"
+      lat: "latitude"
+
+  # Output files
+  output:
+    optimized_gauges: "optimized_rain_gauges.csv"
+    optimization_report: "optimization_report.txt"
+    density_evolution: "density_evolution.png"
+
+# Enhanced Runoff Generator Configuration
+enhanced_runoff_generator:
+  # For generating "observed" data during calibration
+  soil_capacity: 300.0
+  soil_beta: 2.0
+  fast_threshold: 0.7
+  fast_ratio: 0.4
+  inter_ratio: 0.35
+  base_ratio: 0.25
+  k_fast: 0.3
+  k_inter: 0.08
+  k_base: 0.02
+  initial_soil: 150.0
+  initial_fast: 5.0
+  initial_inter: 10.0
+  initial_base: 20.0
+  et_rate: 0.1
+  time_step_hours: 1.0
+
+# Validation Configuration
+validation:
+  criteria_file: "config/validation_criteria.yaml"
+  enable_reports: true
+  report_format: "text"  # "text" or "markdown"
+  strict_mode: false  # If true, warnings are treated as errors
+
+  # Steps that require validation
+  validate_steps:
+    - step_02_flow_direction
+    - step_03_delineation
+    - step_05_rain_gauges
+    - step_09_runoff
+    - step_10_routing
+    - step_11_calibration
+
+# Reporting Configuration
+reporting:
+  enabled: true
+  format: "markdown"
+  include_plots: true
+  dpi: 300
+
+  # Plot styling
+  plots:
+    style: "seaborn-v0_8-darkgrid"
+    figure_size: [10, 6]
+    font_size: 10
+    line_width: 2
+
+  # Colors for zones (matplotlib color names or hex)
+  zone_colors:
+    "1": "#1f77b4"
+    "2": "#ff7f0e"
+    "3": "#2ca02c"
+    "4": "#d62728"
+    "5": "#9467bd"
+    "6": "#8c564b"
+
+# Rain Gauge Configuration
+rain_gauge:
+  # Target density (gauges per 100 km²)
+  target_density: 0.01  # 1 gauge per 100 km² (fair quality)
+  excellent_density: 0.02  # 2 gauges per 100 km²
+  good_density: 0.01
+  fair_density: 0.005
+  poor_density: 0.002
+
+  # Spatial constraints
+  min_distance_m: 1000  # Minimum distance between gauges (meters)
+  buffer_distance_m: 500  # Buffer from zone boundaries
+
+  # Optimization parameters
+  random_seed: 42
+  max_iterations: 1000
+  optimization_method: "random_uniform"  # random_uniform, latin_hypercube, genetic
+
+# Performance Configuration
+performance:
+  parallel_processing: true
+  max_workers: 4
+  chunk_size: 100
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  to_file: true
+  log_directory: "logs"

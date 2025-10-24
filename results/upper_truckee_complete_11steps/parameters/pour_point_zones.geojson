@@ -57,16 +57,16 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6709321.082609975,
-          6598755.436032202
+          -6708476.3647191925,
+          6600275.92823561
         ]
       },
       "properties": {
-        "id": "2t",
-        "zone_id": "2t",
-        "row": 505,
-        "col": 266,
-        "accumulation": 29853.0
+        "id": "1t",
+        "zone_id": "1t",
+        "row": 492,
+        "col": 274,
+        "accumulation": 11036.0
       }
     },
     {
@@ -74,16 +74,33 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -6707293.759672098,
-          6602584.823803748
+          -6707237.445146046,
+          6602528.509277696
+        ]
+      },
+      "properties": {
+        "id": "2t",
+        "zone_id": "2t",
+        "row": 472,
+        "col": 285,
+        "accumulation": 13949.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6698452.379081911,
+          6627419.529792744
         ]
       },
       "properties": {
         "id": "3t",
         "zone_id": "3t",
-        "row": 471,
-        "col": 284,
-        "accumulation": 59794.0
+        "row": 251,
+        "col": 363,
+        "accumulation": 12882.0
       }
     }
   ]

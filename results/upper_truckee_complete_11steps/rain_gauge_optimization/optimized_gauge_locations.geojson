@@ -1,0 +1,250 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6694373.290393165,
+          6635108.660561938
+        ]
+      },
+      "properties": {
+        "id": "station_01",
+        "gauge_id": "station_01"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6708723.124415659,
+          6586644.863826469
+        ]
+      },
+      "properties": {
+        "id": "station_02",
+        "gauge_id": "station_02"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6694511.129963309,
+          6597683.770090094
+        ]
+      },
+      "properties": {
+        "id": "station_03",
+        "gauge_id": "station_03"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6707670.490054943,
+          6570736.582809536
+        ]
+      },
+      "properties": {
+        "id": "station_04",
+        "gauge_id": "station_04"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6714033.93620127,
+          6599065.613473567
+        ]
+      },
+      "properties": {
+        "id": "station_05",
+        "gauge_id": "station_05"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6707542.458098409,
+          6583369.513085163
+        ]
+      },
+      "properties": {
+        "id": "station_06",
+        "gauge_id": "station_06"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6718501.403554186,
+          6625026.925599345
+        ]
+      },
+      "properties": {
+        "id": "station_07",
+        "gauge_id": "station_07"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6697122.646039214,
+          6594027.529033192
+        ]
+      },
+      "properties": {
+        "id": "station_08",
+        "gauge_id": "station_08"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6691161.204451172,
+          6636730.410811921
+        ]
+      },
+      "properties": {
+        "id": "station_09",
+        "gauge_id": "station_09"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6711249.423758994,
+          6591942.802014072
+        ]
+      },
+      "properties": {
+        "id": "station_10",
+        "gauge_id": "station_10"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6705099.948953453,
+          6582428.164433205
+        ]
+      },
+      "properties": {
+        "id": "station_11",
+        "gauge_id": "station_11",
+        "zone_id": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6699435.026751074,
+          6592847.670059227
+        ]
+      },
+      "properties": {
+        "id": "station_12",
+        "gauge_id": "station_12",
+        "zone_id": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6708327.946868927,
+          6614830.314181869
+        ]
+      },
+      "properties": {
+        "id": "station_13",
+        "gauge_id": "station_13",
+        "zone_id": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6698670.603823294,
+          6608447.584525815
+        ]
+      },
+      "properties": {
+        "id": "station_14",
+        "gauge_id": "station_14",
+        "zone_id": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6706609.477101383,
+          6599539.810920905
+        ]
+      },
+      "properties": {
+        "id": "station_15",
+        "gauge_id": "station_15",
+        "zone_id": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6713259.88154846,
+          6629054.263322358
+        ]
+      },
+      "properties": {
+        "id": "station_16",
+        "gauge_id": "station_16",
+        "zone_id": 5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -6716445.966307412,
+          6628161.836799743
+        ]
+      },
+      "properties": {
+        "id": "station_17",
+        "gauge_id": "station_17",
+        "zone_id": 5
+      }
+    }
+  ]
+}

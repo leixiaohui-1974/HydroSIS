@@ -13,6 +13,8 @@ from .channel_profile import (
     run_channel_profile_model,
 )
 
+from .optimization import calibrate_model
+
 __all__ = [
     "ChannelProfileConfig",
     "PreprocessResult",
@@ -24,4 +26,5 @@ __all__ = [
     "build_zone_grid",
     "extract_centerline",
     "load_cross_sections",
+    "calibrate_model",
 ]
