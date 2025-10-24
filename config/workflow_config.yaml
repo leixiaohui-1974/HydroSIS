@@ -112,6 +112,28 @@ hbv_model:
     initial_upper: 5.0
     initial_lower: 20.0
 
+  # Calibrated parameters (2025-10-24)
+  # All 6 zones converged to same optimal parameters
+  # Performance: NSE=0.7737, KGE=0.8867, RC=0.7655
+  calibrated_parameters:
+    degree_day_factor: 3.0
+    snow_threshold: 0.0
+    field_capacity: 258.12          # FC: Soil maximum capacity (mm)
+    beta: 3.0                        # BETA: Soil water curve exponent
+    k0: 0.05                         # K0: Fast runoff recession coefficient
+    k1: 0.01                         # K1: Medium runoff recession coefficient
+    k2: 0.017                        # K2: Baseflow recession coefficient
+    percolation: 5.0                 # PERC: Percolation rate (mm/h)
+    initial_snow: 0.0
+    initial_soil: 77.44              # 0.3 * FC (initial soil moisture ratio)
+    initial_upper: 5.33              # Initial upper reservoir
+    initial_lower: 20.0
+
+  # Use calibrated parameters by default
+  use_calibrated: true
+  calibration_date: "2025-10-24"
+  calibration_results_path: "results/upper_truckee_complete_11steps/hbv_calibration/calibration_summary.json"
+
   # Calibration settings
   calibration:
     enabled: true
