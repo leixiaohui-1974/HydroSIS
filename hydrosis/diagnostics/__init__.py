@@ -5,6 +5,7 @@
 from .base import BaseDiagnostic, DiagnosticResult, DiagnosticIssue, IssueSeverity
 from .water_balance import WaterBalanceDiagnostic
 from .precipitation import PrecipitationDiagnostic
+from .hbv_configuration import HBVConfigurationDiagnostic
 
 __all__ = [
     "BaseDiagnostic",
@@ -13,4 +14,5 @@ __all__ = [
     "IssueSeverity",
     "WaterBalanceDiagnostic",
     "PrecipitationDiagnostic",
+    "HBVConfigurationDiagnostic",
 ]

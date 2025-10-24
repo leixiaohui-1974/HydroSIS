@@ -12,7 +12,8 @@ from hydrosis.diagnostics import (
     DiagnosticIssue,
     IssueSeverity,
     WaterBalanceDiagnostic,
-    PrecipitationDiagnostic
+    PrecipitationDiagnostic,
+    HBVConfigurationDiagnostic
 )
 
 
@@ -518,3 +519,297 @@ class TestPrecipitationDiagnostic:
         # 检查图表是否生成
         fig_files = list(temp_output_dir.glob("*.png"))
         assert len(fig_files) > 0
+
+@pytest.mark.unit
+@pytest.mark.diagnostics
+class TestHBVConfigurationDiagnostic:
+    """测试 HBVConfigurationDiagnostic"""
+
+    @pytest.fixture
+    def temp_output_dir(self):
+        """创建临时输出目录"""
+        temp_dir = Path(tempfile.mkdtemp())
+        yield temp_dir
+        shutil.rmtree(temp_dir)
+
+    @pytest.fixture
+    def sample_hbv_data(self):
+        """生成示例HBV配置数据"""
+        np.random.seed(42)
+        
+        # 生成48小时的降雨数据
+        n_hours = 48
+        precipitation_mmh = np.random.gamma(2, 2, size=n_hours)
+        
+        # 生成模拟的观测径流（基于简单的径流系数）
+        area_km2 = 100.0
+        runoff_coefficient = 0.5
+        observed_m3s = precipitation_mmh * area_km2 * 1000 / 3600 * runoff_coefficient
+        
+        # 添加一些噪声
+        observed_m3s += np.random.normal(0, 0.5, size=n_hours)
+        observed_m3s = np.maximum(observed_m3s, 0)  # 确保非负
+        
+        # HBV参数
+        hbv_params = {
+            'FC': 400.0,
+            'BETA': 2.0,
+            'K0': 0.25,
+            'K1': 0.08,
+            'K2': 0.02,
+            'PERC': 2.0,
+            'LP': 0.7,
+            'MAXBAS': 3.0,
+            'TT': 0.0,
+            'CFMAX': 3.5,
+            'CFR': 0.05,
+            'CWH': 0.1,
+            'initial_soil': 300.0,
+            'initial_upper': 20.0,
+            'initial_lower': 100.0,
+            'initial_snow': 0.0,
+        }
+        
+        return {
+            'precipitation_mmh': precipitation_mmh,
+            'observed_m3s': observed_m3s,
+            'area_km2': area_km2,
+            'hbv_params': hbv_params,
+            'timestep_hours': 1.0
+        }
+
+    def test_diagnostic_creation(self, temp_output_dir):
+        """测试诊断器创建"""
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False,
+            runoff_coeff_range=(0.3, 0.7),
+            k2_estimate=0.02,
+            area_km2=100.0,
+            timestep_hours=1.0
+        )
+
+        assert diagnostic.diagnostic_name == "HBV配置诊断"
+        assert diagnostic.output_dir == temp_output_dir
+        assert diagnostic.runoff_coeff_range == (0.3, 0.7)
+        assert diagnostic.k2_estimate == 0.02
+
+    def test_load_data(self, temp_output_dir, sample_hbv_data):
+        """测试数据加载"""
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False
+        )
+        
+        diagnostic.load_data(**sample_hbv_data)
+        
+        assert diagnostic.precipitation_mmh is not None
+        assert diagnostic.observed_m3s is not None
+        assert diagnostic.area_km2 == sample_hbv_data['area_km2']
+        assert len(diagnostic.precipitation_mmh) == len(sample_hbv_data['precipitation_mmh'])
+
+    def test_unit_conversion_check(self, temp_output_dir, sample_hbv_data):
+        """测试单位转换检查"""
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False
+        )
+
+        diagnostic.load_data(**sample_hbv_data)
+        result = DiagnosticResult(diagnostic_name=diagnostic.diagnostic_name)
+
+        diagnostic._check_unit_conversion(result)
+        
+        # 应该有转换相关的指标
+        assert 'max_precipitation_mmh' in result.metrics
+        assert 'max_precipitation_m3s' in result.metrics
+        assert 'max_observed_m3s' in result.metrics
+
+    def test_water_balance_check(self, temp_output_dir, sample_hbv_data):
+        """测试水量平衡检查"""
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False,
+            runoff_coeff_range=(0.3, 0.7)
+        )
+
+        diagnostic.load_data(**sample_hbv_data)
+        result = DiagnosticResult(diagnostic_name=diagnostic.diagnostic_name)
+
+        diagnostic._check_water_balance(result)
+        
+        # 应该计算出关键指标
+        assert 'total_precipitation_mm' in result.metrics
+        assert 'total_runoff_mm' in result.metrics
+        assert 'runoff_coefficient' in result.metrics
+        assert 'storage_change_mm' in result.metrics
+        
+        # 径流系数应该在合理范围内（因为我们是这样生成数据的）
+        rc = result.metrics['runoff_coefficient']
+        assert rc > 0
+
+    def test_initial_state_estimation(self, temp_output_dir, sample_hbv_data):
+        """测试初始状态估计"""
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False,
+            k2_estimate=0.02
+        )
+
+        diagnostic.load_data(**sample_hbv_data)
+        result = DiagnosticResult(diagnostic_name=diagnostic.diagnostic_name)
+
+        diagnostic._estimate_initial_state(result)
+        
+        # 应该估算出初始下层储量
+        assert 'initial_baseflow_m3s' in result.metrics
+        assert 'estimated_initial_lower_mm' in result.metrics
+        assert diagnostic.estimated_initial_lower is not None
+        
+        # 验证估算公式: S_lower = Q_base / K2
+        initial_bf = result.metrics['initial_baseflow_m3s']
+        expected_lower = initial_bf / 0.02
+        assert abs(result.metrics['estimated_initial_lower_mm'] - expected_lower) < 0.01
+
+    def test_initial_state_comparison(self, temp_output_dir, sample_hbv_data):
+        """测试初始状态对比"""
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False,
+            k2_estimate=0.02
+        )
+
+        diagnostic.load_data(**sample_hbv_data)
+        result = DiagnosticResult(diagnostic_name=diagnostic.diagnostic_name)
+
+        diagnostic._estimate_initial_state(result)
+        
+        # 如果配置的initial_lower与估算值相差很大，应该有ERROR
+        if 'configured_initial_lower_mm' in result.metrics:
+            est = result.metrics['estimated_initial_lower_mm']
+            conf = result.metrics['configured_initial_lower_mm']
+            rel_diff = abs(conf - est) / est
+            
+            assert 'initial_lower_relative_diff' in result.metrics
+            if rel_diff > 0.5:
+                # 应该有问题报告
+                initial_issues = [
+                    issue for issue in result.issues
+                    if issue.category == "initial_state"
+                ]
+                assert len(initial_issues) > 0
+
+    def test_analyze_without_hbv_simulation(self, temp_output_dir, sample_hbv_data):
+        """测试不带HBV模拟的分析"""
+        # 移除HBV参数
+        data_without_hbv = sample_hbv_data.copy()
+        data_without_hbv.pop('hbv_params')
+        
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False
+        )
+        
+        diagnostic.load_data(**data_without_hbv)
+        result = diagnostic.analyze()
+        
+        # 应该有基本的诊断结果
+        assert isinstance(result, DiagnosticResult)
+        assert 'total_precipitation_mm' in result.metrics
+        assert 'runoff_coefficient' in result.metrics
+        assert 'estimated_initial_lower_mm' in result.metrics
+        
+        # 但不应该有HBV模拟相关的指标
+        assert 'hbv_total_runoff_mm' not in result.metrics
+
+    def test_full_diagnostic_run(self, temp_output_dir, sample_hbv_data):
+        """测试完整诊断流程（不包括HBV模拟以避免依赖）"""
+        data_without_hbv = sample_hbv_data.copy()
+        data_without_hbv.pop('hbv_params')
+        
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False,
+            runoff_coeff_range=(0.3, 0.7)
+        )
+        
+        result = diagnostic.run(**data_without_hbv)
+        
+        assert result is not None
+        assert isinstance(result, DiagnosticResult)
+        
+        # 检查报告文件
+        report_files = list(temp_output_dir.glob("*.txt"))
+        assert len(report_files) > 0
+
+    def test_recommendations_generation(self, temp_output_dir, sample_hbv_data):
+        """测试建议生成"""
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False
+        )
+        
+        diagnostic.load_data(**sample_hbv_data)
+        result = diagnostic.analyze()
+        
+        # 应该有建议
+        assert isinstance(result.recommendations, list)
+        # 基于短时间序列应该有建议
+        assert any("时间序列" in rec or "30-90天" in rec for rec in result.recommendations)
+
+    def test_visualization(self, temp_output_dir, sample_hbv_data):
+        """测试可视化生成"""
+        data_without_hbv = sample_hbv_data.copy()
+        data_without_hbv.pop('hbv_params')
+        
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False
+        )
+        
+        diagnostic.load_data(**data_without_hbv)
+        diagnostic.analyze()
+        diagnostic.visualize()
+        
+        # 检查图表是否生成
+        fig_files = list(temp_output_dir.glob("*.png"))
+        assert len(fig_files) > 0
+
+    def test_runoff_coefficient_anomaly_detection(self, temp_output_dir):
+        """测试径流系数异常检测"""
+        # 生成异常高的径流系数数据
+        np.random.seed(42)
+        n_hours = 24
+        precipitation_mmh = np.ones(n_hours) * 10  # 10 mm/h
+        area_km2 = 100.0
+        
+        # 设置观测径流远大于降雨（不合理）
+        observed_m3s = precipitation_mmh * area_km2 * 1000 / 3600 * 2.0  # 200%径流系数
+        
+        diagnostic = HBVConfigurationDiagnostic(
+            output_dir=temp_output_dir,
+            verbose=False,
+            runoff_coeff_range=(0.3, 0.7)
+        )
+        
+        diagnostic.load_data(
+            precipitation_mmh=precipitation_mmh,
+            observed_m3s=observed_m3s,
+            area_km2=area_km2,
+            timestep_hours=1.0
+        )
+        
+        result = diagnostic.analyze()
+        
+        # 应该检测到径流系数异常
+        rc_issues = [
+            issue for issue in result.issues
+            if issue.category == "runoff_coefficient"
+        ]
+        assert len(rc_issues) > 0
+        
+        # 至少应该有一个CRITICAL或WARNING
+        assert any(
+            issue.severity in [IssueSeverity.CRITICAL, IssueSeverity.WARNING]
+            for issue in rc_issues
+        )

@@ -1,17 +1,36 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """诊断分区2降雨异常问题
 
+使用统一的诊断框架重构版本。
+
 分析为什么分区2的降雨量只有344mm，而其他分区是600-900mm
+
+用法:
+    python scripts/diagnostics/diagnose_zone2_precipitation.py
+
+输入:
+    - results/upper_truckee_complete_11steps/step_08_areal_rainfall/8.1_parameter_areal_precipitation.csv
+    - results/upper_truckee_complete_11steps/parameters/parameter_zones.geojson
+    - results/upper_truckee_complete_11steps/parameters/parameter_subbasins.csv
+
+输出:
+    - results/upper_truckee_complete_11steps/diagnostics/降雨空间分布诊断_report.txt
+    - results/upper_truckee_complete_11steps/diagnostics/降雨空间分布诊断_report.json
+    - results/upper_truckee_complete_11steps/diagnostics/降雨空间分布诊断_visualization.png
+    - results/upper_truckee_complete_11steps/diagnostics/zone_*_precipitation_detail.png
+    - results/upper_truckee_complete_11steps/diagnostics/zone2_diagnosis_report.txt (传统格式)
 """
+import sys
+sys.path.insert(0, '/home/user/HydroSIS')
+
 import json
 from pathlib import Path
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
-# 设置中文字体
-plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial Unicode MS', 'SimHei']
-plt.rcParams['axes.unicode_minus'] = False
+from hydrosis.diagnostics import PrecipitationDiagnostic, IssueSeverity
+
 
 def load_zone_info(geojson_path):
     """加载分区信息"""
@@ -27,179 +46,12 @@ def load_zone_info(geojson_path):
         })
     return zones
 
-def load_subbasin_info(csv_path):
-    """加载子流域信息"""
-    return pd.read_csv(csv_path)
-
-def analyze_zone_precipitation(zone_id, precip_df, subbasins_df, output_dir):
-    """分析指定分区的降雨分布"""
-    print(f"\n{'='*80}")
-    print(f"分区 {zone_id} 降雨诊断分析")
-    print(f"{'='*80}")
-
-    # 找到该分区的所有子流域
-    zone_subbasins = subbasins_df[subbasins_df['zone_id'] == zone_id]
-
-    print(f"\n1. 基本信息")
-    print(f"  - 子流域数量: {len(zone_subbasins)}")
-    print(f"  - 总面积: {zone_subbasins['area_km2'].sum():.2f} km²")
-
-    # 分析每个子流域的降雨
-    print(f"\n2. 子流域降雨统计")
-    print(f"  {'子流域ID':>10} {'面积(km²)':>12} {'总降雨(mm)':>14} {'平均雨强(mm/h)':>18} {'权重':>8}")
-    print(f"  {'-'*10} {'-'*12} {'-'*14} {'-'*18} {'-'*8}")
-
-    total_area = zone_subbasins['area_km2'].sum()
-    subbasin_precip = []
-
-    for _, subbasin in zone_subbasins.iterrows():
-        subbasin_id = str(int(subbasin['subzone_id']))
-        area = subbasin['area_km2']
-        weight = area / total_area
-
-        if subbasin_id in precip_df.columns:
-            precip_series = precip_df[subbasin_id]
-            total_precip = precip_series.sum()
-            mean_intensity = precip_series.mean()
-
-            subbasin_precip.append({
-                'subbasin_id': subbasin_id,
-                'area_km2': area,
-                'total_precip_mm': total_precip,
-                'mean_intensity_mm_h': mean_intensity,
-                'weight': weight,
-                'weighted_precip': total_precip * weight
-            })
-
-            print(f"  {subbasin_id:>10} {area:>12.2f} {total_precip:>14.2f} {mean_intensity:>18.4f} {weight:>8.4f}")
-        else:
-            print(f"  {subbasin_id:>10} {area:>12.2f} {'N/A':>14} {'N/A':>18} {weight:>8.4f}")
-
-    # 计算面积加权平均降雨
-    if subbasin_precip:
-        weighted_avg = sum(s['weighted_precip'] for s in subbasin_precip)
-        min_precip = min(s['total_precip_mm'] for s in subbasin_precip)
-        max_precip = max(s['total_precip_mm'] for s in subbasin_precip)
-
-        print(f"\n3. 分区汇总")
-        print(f"  - 面积加权平均降雨: {weighted_avg:.2f} mm")
-        print(f"  - 最小降雨: {min_precip:.2f} mm")
-        print(f"  - 最大降雨: {max_precip:.2f} mm")
-        print(f"  - 变异系数: {np.std([s['total_precip_mm'] for s in subbasin_precip]) / np.mean([s['total_precip_mm'] for s in subbasin_precip]):.4f}")
-
-        # 可视化
-        fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-
-        # 子图1: 子流域降雨柱状图
-        ax1 = axes[0, 0]
-        subbasin_ids = [s['subbasin_id'] for s in subbasin_precip]
-        precip_values = [s['total_precip_mm'] for s in subbasin_precip]
-        colors = ['red' if p < 400 else 'orange' if p < 600 else 'green' for p in precip_values]
-
-        ax1.bar(range(len(subbasin_ids)), precip_values, color=colors)
-        ax1.axhline(y=weighted_avg, color='blue', linestyle='--', linewidth=2, label=f'加权平均: {weighted_avg:.1f}mm')
-        ax1.set_xlabel('子流域索引')
-        ax1.set_ylabel('总降雨 (mm)')
-        ax1.set_title(f'分区{zone_id}各子流域降雨分布')
-        ax1.legend()
-        ax1.grid(True, alpha=0.3)
-
-        # 子图2: 降雨-面积权重散点图
-        ax2 = axes[0, 1]
-        areas = [s['area_km2'] for s in subbasin_precip]
-        weights = [s['weight'] for s in subbasin_precip]
-        scatter = ax2.scatter(precip_values, weights, s=[a*10 for a in areas], c=precip_values, cmap='RdYlGn', alpha=0.6)
-        ax2.set_xlabel('总降雨 (mm)')
-        ax2.set_ylabel('面积权重')
-        ax2.set_title(f'分区{zone_id}降雨与权重关系 (气泡大小=面积)')
-        plt.colorbar(scatter, ax=ax2, label='降雨量(mm)')
-        ax2.grid(True, alpha=0.3)
-
-        # 子图3: 时间序列
-        ax3 = axes[1, 0]
-        for s in subbasin_precip[:5]:  # 只显示前5个避免拥挤
-            subbasin_id = s['subbasin_id']
-            ax3.plot(precip_df[subbasin_id].values, label=f'子流域{subbasin_id}', alpha=0.7)
-        ax3.set_xlabel('时间步 (小时)')
-        ax3.set_ylabel('降雨强度 (mm/h)')
-        ax3.set_title(f'分区{zone_id}降雨时间序列 (前5个子流域)')
-        ax3.legend(fontsize=8)
-        ax3.grid(True, alpha=0.3)
-
-        # 子图4: 降雨分布直方图
-        ax4 = axes[1, 1]
-        ax4.hist(precip_values, bins=20, color='skyblue', edgecolor='black', alpha=0.7)
-        ax4.axvline(x=weighted_avg, color='red', linestyle='--', linewidth=2, label=f'加权平均: {weighted_avg:.1f}mm')
-        ax4.set_xlabel('总降雨 (mm)')
-        ax4.set_ylabel('子流域数量')
-        ax4.set_title(f'分区{zone_id}降雨分布直方图')
-        ax4.legend()
-        ax4.grid(True, alpha=0.3)
-
-        plt.tight_layout()
-        output_path = output_dir / f'zone_{zone_id}_precipitation_diagnosis.png'
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
-        plt.close()
-
-        print(f"\n4. 可视化已保存: {output_path}")
-
-        return {
-            'zone_id': zone_id,
-            'weighted_avg_precip': weighted_avg,
-            'min_precip': min_precip,
-            'max_precip': max_precip,
-            'num_subbasins': len(subbasin_precip),
-            'subbasin_details': subbasin_precip
-        }
-
-    return None
-
-def compare_all_zones(precip_df, subbasins_df, zones):
-    """比较所有分区的降雨"""
-    print(f"\n{'='*80}")
-    print("所有分区降雨对比")
-    print(f"{'='*80}")
-
-    print(f"\n{'分区ID':>8} {'子流域数':>10} {'总面积(km²)':>14} {'加权平均降雨(mm)':>20} {'最小(mm)':>12} {'最大(mm)':>12}")
-    print(f"{'-'*8} {'-'*10} {'-'*14} {'-'*20} {'-'*12} {'-'*12}")
-
-    zone_stats = []
-    for zone in sorted(zones, key=lambda x: x['zone_id']):
-        zone_id = zone['zone_id']
-        zone_subbasins = subbasins_df[subbasins_df['zone_id'] == zone_id]
-        total_area = zone_subbasins['area_km2'].sum()
-
-        precip_values = []
-        for _, subbasin in zone_subbasins.iterrows():
-            subbasin_id = str(int(subbasin['subzone_id']))
-            if subbasin_id in precip_df.columns:
-                weight = subbasin['area_km2'] / total_area
-                precip = precip_df[subbasin_id].sum()
-                precip_values.append((precip, weight))
-
-        if precip_values:
-            weighted_avg = sum(p * w for p, w in precip_values)
-            min_p = min(p for p, w in precip_values)
-            max_p = max(p for p, w in precip_values)
-
-            zone_stats.append({
-                'zone_id': zone_id,
-                'num_subbasins': len(zone_subbasins),
-                'area_km2': total_area,
-                'weighted_avg': weighted_avg,
-                'min': min_p,
-                'max': max_p
-            })
-
-            print(f"{zone_id:>8} {len(zone_subbasins):>10} {total_area:>14.2f} {weighted_avg:>20.2f} {min_p:>12.2f} {max_p:>12.2f}")
-
-    return zone_stats
 
 def main():
     """主函数"""
-    print("\n" + "="*80)
-    print("分区2降雨异常诊断工具")
-    print("="*80)
+    print("=" * 80)
+    print("分区2降雨异常诊断工具 (使用统一诊断框架)")
+    print("=" * 80)
 
     # 数据路径
     base_dir = Path("results/upper_truckee_complete_11steps")
@@ -211,55 +63,182 @@ def main():
 
     # 加载数据
     print("\n⚙ 加载数据...")
-    precip_df = pd.read_csv(precip_path, index_col='Timestamp')
-    zones = load_zone_info(zones_path)
-    subbasins_df = load_subbasin_info(subbasins_path)
+    try:
+        precip_df = pd.read_csv(precip_path, index_col='Timestamp')
+        zones = load_zone_info(zones_path)
+        subbasins_df = pd.read_csv(subbasins_path)
 
-    print(f"  ✓ 降雨数据: {len(precip_df)} 小时, {len(precip_df.columns)} 个子流域")
-    print(f"  ✓ 分区信息: {len(zones)} 个分区")
-    print(f"  ✓ 子流域信息: {len(subbasins_df)} 个子流域")
+        print(f"  ✓ 降雨数据: {len(precip_df)} 小时, {len(precip_df.columns)} 个子流域")
+        print(f"  ✓ 分区信息: {len(zones)} 个分区")
+        print(f"  ✓ 子流域信息: {len(subbasins_df)} 个子流域")
 
-    # 比较所有分区
-    zone_stats = compare_all_zones(precip_df, subbasins_df, zones)
+    except FileNotFoundError as e:
+        print(f"\n❌ 错误: 找不到文件")
+        print(f"   {e}")
+        print("\n请确保已运行完整的11步工作流")
+        return
 
-    # 详细分析分区2
-    zone2_result = analyze_zone_precipitation(2, precip_df, subbasins_df, output_dir)
+    # 创建诊断器
+    diagnostic = PrecipitationDiagnostic(
+        output_dir=output_dir,
+        verbose=True,
+        anomaly_threshold=0.3  # 30%差异视为异常
+    )
 
-    # 对比分析: 分区2 vs 其他分区
-    print(f"\n{'='*80}")
-    print("对比分析: 分区2 vs 其他分区")
-    print(f"{'='*80}")
+    # 运行诊断
+    print("\n🔍 运行降雨空间分布诊断...")
+    result = diagnostic.run(
+        precipitation_df=precip_df,
+        subbasins_df=subbasins_df
+    )
 
-    zone2_avg = next(z['weighted_avg'] for z in zone_stats if z['zone_id'] == 2)
-    other_zones_avg = np.mean([z['weighted_avg'] for z in zone_stats if z['zone_id'] != 2])
+    # 显示结果摘要
+    print("\n" + "=" * 80)
+    print("诊断结果摘要")
+    print("=" * 80)
 
-    print(f"\n分区2平均降雨: {zone2_avg:.2f} mm")
-    print(f"其他分区平均降雨: {other_zones_avg:.2f} mm")
-    print(f"差异: {zone2_avg - other_zones_avg:.2f} mm ({(zone2_avg/other_zones_avg - 1)*100:.1f}%)")
+    # 分区降雨统计
+    print(f"\n📊 各分区降雨统计:")
+    print(f"{'分区ID':>8} {'面积加权平均(mm)':>20} {'变异系数(CV)':>15}")
+    print("-" * 50)
 
-    # 生成诊断报告
-    report_path = output_dir / "zone2_diagnosis_report.txt"
-    with open(report_path, 'w', encoding='utf-8') as f:
-        f.write("="*80 + "\n")
+    zone_ids = sorted(set(subbasins_df['zone_id']))
+    for zone_id in zone_ids:
+        avg_key = f"zone_{zone_id}_weighted_avg_mm"
+        cv_key = f"zone_{zone_id}_cv"
+
+        if avg_key in result.metrics:
+            avg = result.metrics[avg_key]
+            cv = result.metrics.get(cv_key, 0)
+            print(f"{zone_id:>8} {avg:>20.2f} {cv:>15.4f}")
+
+    # 显示问题
+    print(f"\n⚠️  发现的问题: {len(result.issues)}")
+
+    # 分区降雨异常
+    anomalies = [
+        issue for issue in result.issues
+        if issue.category == "zone_precipitation_anomaly"
+    ]
+
+    if anomalies:
+        print(f"\n🔴 降雨异常分区 ({len(anomalies)}):")
+        for issue in anomalies:
+            zone_id = issue.details.get('zone_id', 'unknown')
+            zone_precip = issue.details.get('zone_precipitation', 0)
+            overall_mean = issue.details.get('overall_mean', 0)
+            diff = issue.details.get('relative_difference', 0)
+
+            print(f"  • Zone {zone_id}: {zone_precip:.1f}mm "
+                  f"(平均{overall_mean:.1f}mm, 差异{diff*100:+.1f}%)")
+            if issue.suggestion:
+                print(f"    💡 {issue.suggestion}")
+
+    # 数据质量问题
+    quality_issues = [
+        issue for issue in result.issues
+        if issue.category == "data_quality"
+    ]
+
+    if quality_issues:
+        print(f"\n⚠️  数据质量问题 ({len(quality_issues)}):")
+        for issue in quality_issues:
+            print(f"  • {issue.message}")
+
+    # 显示修复建议
+    if result.recommendations:
+        print("\n" + "=" * 80)
+        print("修复建议")
+        print("=" * 80)
+        for i, rec in enumerate(result.recommendations, 1):
+            print(f"\n{i}. {rec}")
+
+    # 生成传统格式的报告（向后兼容）
+    print("\n" + "=" * 80)
+    print("生成传统格式报告（向后兼容）")
+    print("=" * 80)
+
+    legacy_report_path = output_dir / "zone2_diagnosis_report.txt"
+    generate_legacy_report(result, zones, subbasins_df, legacy_report_path)
+    print(f"✓ 传统报告已保存: {legacy_report_path}")
+
+    # 显示所有输出文件
+    print("\n" + "=" * 80)
+    print("输出文件")
+    print("=" * 80)
+    print(f"\n📁 输出目录: {output_dir}")
+    print(f"  1. zone2_diagnosis_report.txt (传统格式)")
+    print(f"  2. 降雨空间分布诊断_report.txt (新格式)")
+    print(f"  3. 降雨空间分布诊断_report.json (JSON格式)")
+    print(f"  4. 降雨空间分布诊断_visualization.png (分区对比)")
+
+    # 列出各分区详细图
+    detail_figs = list(output_dir.glob("zone_*_precipitation_detail.png"))
+    if detail_figs:
+        print(f"\n  详细诊断图 ({len(detail_figs)}个):")
+        for fig in sorted(detail_figs):
+            print(f"    • {fig.name}")
+
+    print("\n✅ 诊断完成！请查看输出目录下的结果文件")
+
+
+def generate_legacy_report(result, zones, subbasins_df, output_path):
+    """生成传统格式的报告（向后兼容）"""
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write("=" * 80 + "\n")
         f.write("分区2降雨异常诊断报告\n")
-        f.write("="*80 + "\n\n")
+        f.write("=" * 80 + "\n\n")
+
+        # 获取分区2数据
+        zone2_avg = result.metrics.get('zone_2_weighted_avg_mm', 0)
+
+        # 计算其他分区平均
+        other_zones_precip = []
+        zone_ids = sorted(set(subbasins_df['zone_id']))
+        for zone_id in zone_ids:
+            if zone_id != 2:
+                avg_key = f"zone_{zone_id}_weighted_avg_mm"
+                if avg_key in result.metrics:
+                    other_zones_precip.append(result.metrics[avg_key])
+
+        other_zones_avg = np.mean(other_zones_precip) if other_zones_precip else 0
+
+        # 问题描述
         f.write("1. 问题描述\n")
         f.write(f"  - 分区2降雨量: {zone2_avg:.2f} mm\n")
         f.write(f"  - 其他分区平均: {other_zones_avg:.2f} mm\n")
-        f.write(f"  - 差异: {(zone2_avg/other_zones_avg - 1)*100:.1f}%\n\n")
+        if other_zones_avg > 0:
+            diff_pct = (zone2_avg / other_zones_avg - 1) * 100
+            f.write(f"  - 差异: {diff_pct:.1f}%\n")
+        f.write("\n")
+
+        # 可能原因
         f.write("2. 可能原因\n")
         f.write("  a) 雨量站分布不均 - 分区2可能缺少雨量站覆盖\n")
         f.write("  b) Thiessen多边形权重问题 - 权重分配不合理\n")
         f.write("  c) 合成降雨数据问题 - 随机生成的降雨场分布不均\n")
-        f.write("  d) 子流域划分问题 - 分区2子流域面积分布异常\n\n")
-        f.write("3. 建议措施\n")
-        f.write("  a) 检查雨量站位置和Thiessen多边形\n")
-        f.write("  b) 使用真实降雨数据替代合成数据\n")
-        f.write("  c) 优化降雨插值方法(如IDW或Kriging)\n")
-        f.write("  d) 增加分区2的雨量站密度\n\n")
+        f.write("  d) 子流域划分问题 - 分区2子流域面积分布异常\n")
+        f.write("\n")
 
-    print(f"\n✓ 诊断报告已保存: {report_path}")
-    print(f"✓ 诊断完成！请查看 {output_dir} 目录下的结果文件")
+        # 建议措施
+        f.write("3. 建议措施\n")
+        if result.recommendations:
+            for i, rec in enumerate(result.recommendations, 1):
+                f.write(f"  {chr(96+i)}) {rec}\n")
+        else:
+            f.write("  a) 检查雨量站位置和Thiessen多边形\n")
+            f.write("  b) 使用真实降雨数据替代合成数据\n")
+            f.write("  c) 优化降雨插值方法(如IDW或Kriging)\n")
+            f.write("  d) 增加分区2的雨量站密度\n")
+        f.write("\n")
+
+        # 说明
+        f.write("说明:\n")
+        f.write("  本报告由HydroSIS统一诊断框架自动生成。\n")
+        f.write("  框架自动检测了降雨空间分布异常、数据质量问题，\n")
+        f.write("  并生成了详细的可视化图表。\n")
+        f.write("  更多详细信息请查看同目录下的其他诊断报告文件。\n")
+
 
 if __name__ == "__main__":
     main()
