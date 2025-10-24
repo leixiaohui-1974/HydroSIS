@@ -455,3 +455,188 @@ class HydroProjectConfig:
             scenarios=list(self.scenarios),
             evaluation=self.evaluation,
         )
+
+# Validation configuration loading
+# =================================
+
+def load_validation_criteria(config_path: Path) -> Dict[str, object]:
+    """Load validation criteria from YAML configuration file.
+
+    This function loads validation criteria for all workflow steps,
+    enabling configurable validation standards without hardcoding.
+
+    Parameters
+    ----------
+    config_path : Path
+        Path to validation_criteria.yaml file
+
+    Returns
+    -------
+    dict
+        Dictionary containing validation criteria for different
+        validation categories (hydrologic, spatial, timeseries, etc.)
+
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> criteria = load_validation_criteria(Path("config/validation_criteria.yaml"))
+    >>> hydrologic_criteria = criteria["hydrologic"]
+    >>> print(hydrologic_criteria["runoff_coefficient_max"])
+    1.0
+
+    Notes
+    -----
+    The validation criteria file should define standards for:
+    - hydrologic: Water balance, runoff coefficients, mass conservation
+    - spatial: DEM quality, zone geometry, connectivity
+    - timeseries: Precipitation, discharge data quality
+    - rain_gauge: Station distribution and density
+    - model_performance: NSE, PBIAS, R² thresholds
+    """
+    if yaml is None:
+        raise ImportError(
+            "PyYAML is required to load validation criteria from YAML files."
+        )
+
+    config_path = Path(config_path)
+    if not config_path.exists():
+        raise FileNotFoundError(f"Validation criteria file not found: {config_path}")
+
+    data = yaml.safe_load(config_path.read_text())
+    return data
+
+
+def create_hydrologic_criteria(config_path: Optional[Path] = None) -> object:
+    """Create HydrologicCriteria object from configuration file.
+
+    Parameters
+    ----------
+    config_path : Path, optional
+        Path to validation_criteria.yaml. If None, uses default criteria.
+
+    Returns
+    -------
+    HydrologicCriteria
+        Hydrologic validation criteria object
+
+    Examples
+    --------
+    >>> criteria = create_hydrologic_criteria(Path("config/validation_criteria.yaml"))
+    >>> from hydrosis.validation import validate_runoff_coefficient
+    >>> result = validate_runoff_coefficient(coeffs, criteria=criteria)
+    """
+    from hydrosis.validation.hydrologic import HydrologicCriteria
+
+    if config_path is None:
+        return HydrologicCriteria()
+
+    all_criteria = load_validation_criteria(config_path)
+    hydrologic_data = all_criteria.get("hydrologic", {})
+
+    return HydrologicCriteria.from_dict(hydrologic_data)
+
+
+def load_workflow_config(config_path: Path) -> Dict:
+    """Load workflow configuration from YAML file.
+
+    This function loads the comprehensive workflow configuration that defines
+    all paths, parameters, and settings for the complete HydroSIS workflow,
+    eliminating the need for hardcoded values in scripts.
+
+    Parameters
+    ----------
+    config_path : Path
+        Path to workflow_config.yaml file
+
+    Returns
+    -------
+    dict
+        Workflow configuration with keys:
+        - project: Project metadata
+        - directories: Directory structure
+        - steps: Step-specific configurations
+        - hbv_model: HBV model parameters and calibration settings
+        - rain_gauge_optimization: Rain gauge optimization settings
+        - validation: Validation configuration
+        - reporting: Report generation settings
+
+    Raises
+    ------
+    ImportError
+        If PyYAML is not installed
+    FileNotFoundError
+        If config_path does not exist
+
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> config = load_workflow_config(Path("config/workflow_config.yaml"))
+    >>> base_dir = Path(config["directories"]["base_results"])
+    >>> step9_config = config["steps"]["step_09_runoff"]
+    >>> hbv_params = config["hbv_model"]["default_parameters"]
+    """
+    if yaml is None:
+        raise ImportError(
+            "PyYAML is required to load workflow configuration from YAML files."
+        )
+
+    config_path = Path(config_path)
+    if not config_path.exists():
+        raise FileNotFoundError(f"Workflow configuration file not found: {config_path}")
+
+    data = yaml.safe_load(config_path.read_text())
+    return data
+
+
+def get_step_paths(workflow_config: Dict, step_name: str, base_dir: Optional[Path] = None) -> Dict[str, Path]:
+    """Get input and output paths for a workflow step.
+
+    Parameters
+    ----------
+    workflow_config : dict
+        Workflow configuration from load_workflow_config()
+    step_name : str
+        Step name (e.g., "step_09_runoff")
+    base_dir : Path, optional
+        Base results directory. If None, uses config["directories"]["base_results"]
+
+    Returns
+    -------
+    dict
+        Dictionary with keys:
+        - output_dir: Output directory for this step
+        - input: Dict of input file paths
+        - output: Dict of output file paths
+
+    Examples
+    --------
+    >>> config = load_workflow_config(Path("config/workflow_config.yaml"))
+    >>> paths = get_step_paths(config, "step_09_runoff")
+    >>> precip_path = paths["input"]["precipitation"]
+    >>> output_dir = paths["output_dir"]
+    """
+    if base_dir is None:
+        base_dir = Path(workflow_config["directories"]["base_results"])
+    else:
+        base_dir = Path(base_dir)
+
+    step_config = workflow_config["steps"].get(step_name, {})
+
+    # Build output directory
+    output_dir = base_dir / step_config.get("output_dir", step_name)
+
+    # Build input paths
+    input_paths = {}
+    for key, rel_path in step_config.get("input", {}).items():
+        input_paths[key] = base_dir / rel_path
+
+    # Build output paths
+    output_paths = {}
+    for key, filename in step_config.get("output", {}).items():
+        output_paths[key] = output_dir / filename
+
+    return {
+        "output_dir": output_dir,
+        "input": input_paths,
+        "output": output_paths,
+    }
