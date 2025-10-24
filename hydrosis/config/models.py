@@ -11,11 +11,11 @@ try:  # pragma: no cover - optional dependency
 except ImportError:  # pragma: no cover - fallback for tests without PyYAML
     yaml = None
 
-from .model import Subbasin
-from .runoff.base import RunoffModelConfig
-from .routing.base import RoutingModelConfig
-from .delineation.dem_delineator import DelineationConfig
-from .parameters.zone import ParameterZoneConfig
+from ..model import Subbasin
+from ..runoff.base import RunoffModelConfig
+from ..routing.base import RoutingModelConfig
+from ..delineation.dem_delineator import DelineationConfig
+from ..parameters.zone import ParameterZoneConfig
 
 
 @dataclass
