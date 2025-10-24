@@ -13,6 +13,10 @@
 敏感性分析：
 - HydrologicSensitivityAnalyzer: 水文模型敏感性分析器
 - analyze_model_sensitivity: 便捷函数
+
+模型对比：
+- ModelComparator: 多模型性能对比器
+- compare_models: 便捷函数
 """
 from .base import BaseCalibrator, CalibrationData, CalibrationConfig, CalibrationResult
 from .hbv_calibrator import HBVCalibrator
@@ -23,6 +27,12 @@ from .sensitivity_analyzer import (
     HydrologicSensitivityAnalyzer,
     ModelSensitivityResult,
     analyze_model_sensitivity
+)
+from .model_comparison import (
+    ModelComparator,
+    ModelComparisonResult,
+    ModelPerformance,
+    compare_models
 )
 
 __all__ = [
@@ -48,4 +58,10 @@ __all__ = [
     "HydrologicSensitivityAnalyzer",
     "ModelSensitivityResult",
     "analyze_model_sensitivity",
+
+    # 模型对比
+    "ModelComparator",
+    "ModelComparisonResult",
+    "ModelPerformance",
+    "compare_models",
 ]
