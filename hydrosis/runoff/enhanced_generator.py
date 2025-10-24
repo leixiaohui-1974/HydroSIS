@@ -307,9 +307,9 @@ class EnhancedRunoffGenerator:
             'total_precip_mm': total_precip_mm,
             'total_runoff_mm': total_runoff_mm,
             'runoff_coefficient': runoff_coefficient,
-            'mean_runoff_m3s': runoff_m3s.mean(),
-            'peak_runoff_m3s': runoff_m3s.max(),
-            'min_runoff_m3s': runoff_m3s.min(),
+            'mean_runoff_m3s': runoff_m3s.mean() if len(runoff_m3s) > 0 else 0.0,
+            'peak_runoff_m3s': runoff_m3s.max() if len(runoff_m3s) > 0 else 0.0,
+            'min_runoff_m3s': runoff_m3s.min() if len(runoff_m3s) > 0 else 0.0,
         }
 
         if return_components:
