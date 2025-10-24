@@ -1,376 +1,325 @@
 #!/usr/bin/env python3
-"""
-Zone 1 HBV参数自动率定（使用增强型观测数据 + 基础库）
+"""Zone 1 HBV参数自动率定（使用增强型观测数据 + 统一校准框架）
 
-本脚本展示如何正确使用HydroSIS基础库进行参数率定。
+使用统一的HBVCalibrator框架重构版本。
+
+本脚本展示如何：
+1. 使用增强型观测数据进行校准
+2. 使用统一的HBVCalibrator框架
+3. 自动化的结果保存和报告
+
+重构改进：
+- 使用统一的HBVCalibrator接口
+- 更简洁的代码结构
+- 自动化的结果保存
+- 更好的可维护性
+
 遵循 .claude/AI_DEVELOPMENT_GUIDE.md 中的最佳实践。
+
+Author: Claude Code (Refactored)
+Date: 2025-01-24
 """
 import sys
+sys.path.insert(0, '/home/user/HydroSIS')
+
 from pathlib import Path
 import numpy as np
 import pandas as pd
 from datetime import datetime
 import yaml
 
-REPO_ROOT = Path(__file__).resolve().parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
-# ✅ 使用基础库的功能模块
 from hydrosis.runoff.hbv import HBVRunoff
-from hydrosis.calibration import calibrate_parameters, CalibrationResult
-from hydrosis.evaluation.metrics import (
-    nash_sutcliffe_efficiency,
-    log_nash_sutcliffe_efficiency,
-    kling_gupta_efficiency,
-    rmse,
-    mae,
-    percent_bias,
-)
-from hydrosis.reporting.charts import (
-    plot_hydrograph,
-    plot_scatter,
-    plot_convergence,
-)
+from hydrosis.calibration import HBVCalibrator, CalibrationData, CalibrationConfig
+from hydrosis.analysis import calculate_metrics
 
-print("=" * 80)
-print("Zone 1 HBV参数自动率定（使用增强型观测 + 基础库）")
-print("=" * 80)
 
-# ============================================================================
-# 步骤 1: 加载数据
-# ============================================================================
-print("\n步骤 1: 加载Zone 1的数据")
-print("-" * 80)
+def main():
+    """主函数"""
+    print("=" * 80)
+    print("Zone 1 HBV参数自动率定（使用增强型观测 + 统一校准框架）")
+    print("=" * 80)
 
-results_dir = Path("results/upper_truckee_complete_11steps")
+    results_dir = Path("results/upper_truckee_complete_11steps")
 
-# 1.1 加载增强型观测径流
-obs_file = results_dir / "enhanced_observations" / "zone_1_enhanced_runoff.csv"
-if not obs_file.exists():
-    print(f"错误: 观测数据不存在: {obs_file}")
-    print(f"请先运行: python test_enhanced_generator.py")
-    sys.exit(1)
+    # ========================================================================
+    # 步骤 1: 加载数据
+    # ========================================================================
+    print("\n步骤 1: 加载Zone 1的数据")
+    print("-" * 80)
 
-obs_df = pd.read_csv(obs_file)
-observed_runoff = obs_df['discharge_m3s'].values
-times = pd.to_datetime(obs_df['datetime'])
+    # 1.1 加载增强型观测径流
+    obs_file = results_dir / "enhanced_observations" / "zone_1_enhanced_runoff.csv"
+    if not obs_file.exists():
+        print(f"❌ 错误: 观测数据不存在: {obs_file}")
+        print(f"   请先运行: python test_enhanced_generator.py")
+        return 1
 
-print(f"✓ 加载观测径流: {obs_file}")
-print(f"  时间范围: {times.min()} 到 {times.max()}")
-print(f"  数据点数: {len(observed_runoff)}")
-print(f"  流量范围: {observed_runoff.min():.2f} - {observed_runoff.max():.2f} m³/s")
+    obs_df = pd.read_csv(obs_file)
+    observed_runoff = obs_df['discharge_m3s'].values
+    times = pd.to_datetime(obs_df['datetime'])
 
-# 1.2 加载降雨数据
-precip_file = results_dir / "step_08_areal_rainfall" / "8.2_subbasin_areal_precipitation.csv"
-precip_df = pd.read_csv(precip_file, index_col=0)
+    print(f"✓ 加载观测径流: {obs_file.name}")
+    print(f"  时间范围: {times.min()} 到 {times.max()}")
+    print(f"  数据点数: {len(observed_runoff)}")
+    print(f"  流量范围: {observed_runoff.min():.2f} - {observed_runoff.max():.2f} m³/s")
 
-# Zone 1的子分区ID (从3.4_subzone_statistics.csv获取)
-zone1_subbasins = [str(i) for i in range(10, 24)]
-zone1_cols = [col for col in precip_df.columns if col in zone1_subbasins]
-precipitation = precip_df[zone1_cols].mean(axis=1).values
+    # 1.2 加载降雨数据
+    precip_file = results_dir / "step_08_areal_rainfall" / "8.2_subbasin_areal_precipitation.csv"
 
-print(f"\n✓ 加载降雨数据: {precip_file}")
-print(f"  Zone 1子分区: {len(zone1_cols)}个 ({zone1_subbasins[0]}-{zone1_subbasins[-1]})")
-print(f"  降雨范围: {precipitation.min():.2f} - {precipitation.max():.2f} mm/h")
-print(f"  平均降雨: {precipitation.mean():.2f} mm/h")
+    try:
+        precip_df = pd.read_csv(precip_file, index_col=0)
+    except FileNotFoundError:
+        print(f"❌ 错误: 找不到降雨数据: {precip_file}")
+        return 1
 
-# 1.3 生成简化温度数据
-temperature = np.linspace(5, 15, len(precipitation))
+    # Zone 1的子分区ID
+    zone1_subbasins = [str(i) for i in range(10, 24)]
+    zone1_cols = [col for col in precip_df.columns if col in zone1_subbasins]
+    precipitation = precip_df[zone1_cols].mean(axis=1).values
 
-# 1.4 Zone 1流域面积
-zone1_area_km2 = 139.995
+    print(f"\n✓ 加载降雨数据: {precip_file.name}")
+    print(f"  Zone 1子分区: {len(zone1_cols)}个 ({zone1_subbasins[0]}-{zone1_subbasins[-1]})")
+    print(f"  降雨范围: {precipitation.min():.2f} - {precipitation.max():.2f} mm/h")
+    print(f"  平均降雨: {precipitation.mean():.2f} mm/h")
 
-print(f"\n✓ Zone 1流域面积: {zone1_area_km2:.2f} km²")
+    # 1.3 生成简化温度数据
+    temperature = np.linspace(5, 15, len(precipitation))
 
-# ============================================================================
-# 步骤 2: 定义HBV模型和目标函数
-# ============================================================================
-print("\n步骤 2: 定义HBV模型和目标函数")
-print("-" * 80)
+    # 1.4 Zone 1流域面积
+    zone1_area_km2 = 139.995
 
-# HBV参数搜索范围
-param_bounds = [
-    (250, 600),     # FC: 土壤最大容量
-    (1.5, 3.5),     # BETA: 土壤蓄水曲线指数
-    (0.1, 0.5),     # K0: 快速径流退水系数
-    (0.02, 0.15),   # K1: 中速径流退水系数
-    (0.005, 0.05),  # K2: 基流退水系数
-    (0.5, 4.0),     # PERC: 渗透速率
-    (0.3, 0.9),     # initial_soil_ratio: 初始土壤湿度比例
-    (5, 50),        # initial_upper: 初始上层储量
-]
+    print(f"\n✓ Zone 1流域面积: {zone1_area_km2:.2f} km²")
 
-param_names = ['FC', 'BETA', 'K0', 'K1', 'K2', 'PERC', 'initial_soil_ratio', 'initial_upper']
+    # ========================================================================
+    # 步骤 2: 配置HBV校准器
+    # ========================================================================
+    print("\n步骤 2: 配置HBV校准器")
+    print("-" * 80)
 
-# 固定参数
-fixed_params = {
-    'LP': 0.7,
-    'MAXBAS': 3.0,
-    'TT': 0.0,
-    'CFMAX': 3.5,
-    'CFR': 0.05,
-    'CWH': 0.1,
-}
+    # HBV参数搜索范围
+    param_bounds = {
+        'FC': [250, 600],                # 土壤最大容量
+        'BETA': [1.5, 3.5],              # 土壤蓄水曲线指数
+        'K0': [0.1, 0.5],                # 快速径流退水系数
+        'K1': [0.02, 0.15],              # 中速径流退水系数
+        'K2': [0.005, 0.05],             # 基流退水系数
+        'PERC': [0.5, 4.0],              # 渗透速率
+        'initial_soil_ratio': [0.3, 0.9],  # 初始土壤湿度比例
+        'initial_upper': [5, 50],        # 初始上层储量
+    }
 
-print(f"待率定参数: {len(param_bounds)}个")
-for name, (min_val, max_val) in zip(param_names, param_bounds):
-    print(f"  {name:<20s}: [{min_val:>8.3f}, {max_val:>8.3f}]")
+    print(f"待率定参数: {len(param_bounds)}个")
+    for name, (min_val, max_val) in param_bounds.items():
+        print(f"  {name:<20s}: [{min_val:>8.3f}, {max_val:>8.3f}]")
 
-# 定义HBV模型函数
-class MockSubbasin:
-    def __init__(self, area_km2):
-        self.area_km2 = area_km2
-
-subbasin = MockSubbasin(zone1_area_km2)
-
-def run_hbv_model(params_list):
-    """
-    运行HBV模型并返回径流时间序列
-
-    Parameters
-    ----------
-    params_list : list of float
-        参数值列表 [FC, BETA, K0, K1, K2, PERC, initial_soil_ratio, initial_upper]
-
-    Returns
-    -------
-    np.ndarray
-        径流时间序列 (m³/s)
-    """
-    FC, BETA, K0, K1, K2, PERC, initial_soil_ratio, initial_upper = params_list
-
-    params = {
-        'FC': FC,
-        'BETA': BETA,
-        'K0': K0,
-        'K1': K1,
-        'K2': K2,
-        'PERC': PERC,
-        **fixed_params,
-        'initial_soil': FC * initial_soil_ratio,
-        'initial_upper': initial_upper,
+    # 固定参数
+    fixed_params = {
+        'LP': 0.7,
+        'MAXBAS': 3.0,
+        'TT': 0.0,
+        'CFMAX': 3.5,
+        'CFR': 0.05,
+        'CWH': 0.1,
         'initial_lower': 30.0,
         'initial_snow': 0.0
     }
 
-    hbv = HBVRunoff(params)
-    runoff_m3s = hbv.simulate(subbasin, precipitation.tolist())
-
-    return np.array(runoff_m3s)
-
-# 定义目标函数（最大化NSE）
-def objective_function(params):
-    """
-    目标函数：计算NSE
-
-    Parameters
-    ----------
-    params : list of float
-        参数值列表
-
-    Returns
-    -------
-    float
-        NSE值（用于最大化）
-    """
-    try:
-        simulated = run_hbv_model(params)
-        # ✅ 使用基础库的metrics模块
-        nse = nash_sutcliffe_efficiency(simulated, observed_runoff)
-        return nse
-    except Exception as e:
-        return -999.0  # 返回极差值表示失败
-
-# 测试HBV模型
-print("\n测试HBV模型...")
-default_params = [400, 2.0, 0.25, 0.08, 0.02, 2.0, 0.6, 20]
-test_runoff = run_hbv_model(default_params)
-test_nse = nash_sutcliffe_efficiency(test_runoff, observed_runoff)
-print(f"  模型输出长度: {len(test_runoff)}")
-print(f"  初始NSE (默认参数): {test_nse:.4f}")
-
-# ============================================================================
-# 步骤 3: 参数率定
-# ============================================================================
-print("\n步骤 3: 参数率定")
-print("-" * 80)
-
-print("\n运行Differential Evolution率定...")
-print("  这可能需要几分钟时间...")
-
-# ✅ 使用基础库的calibration模块
-result = calibrate_parameters(
-    objective_function=objective_function,
-    param_bounds=param_bounds,
-    algorithm="differential_evolution",
-    maximize=True,
-    maxiter=150,
-    popsize=20,
-    seed=42,
-    polish=True
-)
-
-print(f"\n  ✓ 完成!")
-print(f"    最优NSE: {result.best_score:.6f}")
-print(f"    函数评估: {result.n_evaluations}")
-print(f"    计算时间: {result.computation_time:.2f}秒")
-
-# ============================================================================
-# 步骤 4: 使用最优参数运行HBV模型
-# ============================================================================
-print("\n步骤 4: 使用最优参数运行HBV模型")
-print("-" * 80)
-
-# 运行模型
-final_simulated = run_hbv_model(result.best_params)
-
-# ✅ 使用基础库计算所有性能指标
-final_metrics = {
-    'nse': nash_sutcliffe_efficiency(final_simulated, observed_runoff),
-    'rmse': rmse(final_simulated, observed_runoff),
-    'mae': mae(final_simulated, observed_runoff),
-    'pbias': percent_bias(final_simulated, observed_runoff),
-    'kge': kling_gupta_efficiency(final_simulated, observed_runoff),
-    'log_nse': log_nash_sutcliffe_efficiency(final_simulated, observed_runoff, epsilon=1e-6),
-}
-
-print(f"\n率定后性能指标:")
-for metric, value in final_metrics.items():
-    print(f"  {metric.upper():<10s}: {value:>8.4f}")
-
-# 打印最优参数
-print(f"\n最优参数:")
-for name, value, (min_val, max_val) in zip(param_names, result.best_params, param_bounds):
-    range_pct = (value - min_val) / (max_val - min_val) * 100
-    print(f"  {name:<20s}: {value:>10.4f}  (范围的{range_pct:>5.1f}%)")
-
-# ============================================================================
-# 步骤 5: 保存结果
-# ============================================================================
-print("\n步骤 5: 保存结果")
-print("-" * 80)
-
-output_dir = results_dir / "calibration_enhanced"
-output_dir.mkdir(parents=True, exist_ok=True)
-
-# 保存参数配置
-calibration_yaml = {
-    'description': f'Zone 1 HBV参数率定结果（增强型观测）',
-    'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-    'calibration_info': {
-        'algorithm': result.algorithm,
-        'observation_type': 'EnhancedRunoffGenerator',
-        'n_evaluations': result.n_evaluations,
-        'computation_time': result.computation_time,
-    },
-    'metrics': {k: float(v) for k, v in final_metrics.items()},
-    'zones': {
-        1: {
-            'runoff_model': 'HBV',
-            'parameters': {
-                name: float(value)
-                for name, value in zip(param_names[:6], result.best_params[:6])
-            },
-            'initial_conditions': {
-                'initial_soil': float(result.best_params[0] * result.best_params[6]),
-                'initial_upper': float(result.best_params[7]),
-                'initial_lower': 30.0,
-                'initial_snow': 0.0,
-            },
-            'fixed_parameters': fixed_params,
-        }
-    }
-}
-
-yaml_file = output_dir / "zone1_calibrated_parameters.yaml"
-with open(yaml_file, 'w') as f:
-    yaml.dump(calibration_yaml, f, default_flow_style=False, sort_keys=False)
-print(f"✓ 保存参数配置: {yaml_file}")
-
-# 保存径流对比数据
-comparison_df = pd.DataFrame({
-    'datetime': times,
-    'observed_m3s': observed_runoff,
-    'simulated_m3s': final_simulated,
-    'residual_m3s': observed_runoff - final_simulated
-})
-comparison_file = output_dir / "zone1_calibrated_runoff.csv"
-comparison_df.to_csv(comparison_file, index=False)
-print(f"✓ 保存径流对比数据: {comparison_file}")
-
-# ============================================================================
-# 步骤 6: 生成可视化图表
-# ============================================================================
-print("\n步骤 6: 生成可视化图表")
-print("-" * 80)
-
-# ✅ 使用基础库的可视化功能
-# 1. 水文过程对比图
-plot_hydrograph(
-    output_path=output_dir / "zone1_hydrograph.png",
-    simulations={"HBV": final_simulated.tolist()},
-    observed=observed_runoff.tolist(),
-    title=f"Zone 1 HBV Calibration (NSE={final_metrics['nse']:.4f})",
-    xlabel="Time Step (hour)",
-    ylabel="Discharge (m³/s)"
-)
-print("  ✓ 保存: zone1_hydrograph.png")
-
-# 2. 散点图
-plot_scatter(
-    output_path=output_dir / "zone1_scatter.png",
-    observed=observed_runoff.tolist(),
-    simulated=final_simulated.tolist(),
-    title=f"Observed vs Simulated (R²={final_metrics['nse']:.4f})",
-    xlabel="Observed (m³/s)",
-    ylabel="Simulated (m³/s)",
-    equal_axis=True
-)
-print("  ✓ 保存: zone1_scatter.png")
-
-# 3. 收敛历史
-if result.convergence_history:
-    plot_convergence(
-        output_path=output_dir / "zone1_convergence.png",
-        convergence_history=result.convergence_history,
-        title="Calibration Convergence History",
-        ylabel="NSE",
-        maximize=True
+    # 创建校准数据
+    calib_data = CalibrationData(
+        precipitation=precipitation,
+        observed_runoff=observed_runoff,
+        area_km2=zone1_area_km2,
+        temperature=temperature
     )
-    print("  ✓ 保存: zone1_convergence.png")
 
-print(f"\n✓ 所有图表已保存到: {output_dir}")
+    # 创建校准配置
+    calib_config = CalibrationConfig(
+        param_bounds=param_bounds,
+        fixed_params=fixed_params,
+        algorithm='differential_evolution',
+        objective_metric='nse',
+        maximize_objective=True,
+        algorithm_options={
+            'maxiter': 50,
+            'seed': 42,
+            'workers': 1,
+            'atol': 0.001,
+            'tol': 0.001
+        }
+    )
 
-# ============================================================================
-# 步骤 7: 总结
-# ============================================================================
-print("\n" + "=" * 80)
-print("Zone 1 HBV参数率定完成！")
-print("=" * 80)
+    print(f"\n✓ 校准配置:")
+    print(f"  算法: {calib_config.algorithm}")
+    print(f"  目标: 最大化 {calib_config.objective_metric.upper()}")
+    print(f"  最大迭代: {calib_config.algorithm_options['maxiter']}")
 
-print(f"\n【率定数据】")
-print(f"  观测类型: 增强型径流生成器")
-print(f"  时间步数: {len(observed_runoff)}")
-print(f"  平均流量: {observed_runoff.mean():.2f} m³/s")
-print(f"  峰值流量: {observed_runoff.max():.2f} m³/s")
+    # ========================================================================
+    # 步骤 3: 测试HBV模型（使用默认参数）
+    # ========================================================================
+    print("\n步骤 3: 测试HBV模型")
+    print("-" * 80)
 
-print(f"\n【率定结果】")
-print(f"  算法: {result.algorithm}")
-print(f"  最优NSE: {result.best_score:.6f}")
-print(f"  计算时间: {result.computation_time:.2f}秒")
-print(f"  函数评估: {result.n_evaluations}次")
+    # 使用默认参数测试
+    default_params = {
+        'FC': 400, 'BETA': 2.0, 'K0': 0.25, 'K1': 0.08,
+        'K2': 0.02, 'PERC': 2.0, 'initial_soil': 240,
+        'initial_upper': 20, **fixed_params
+    }
 
-print(f"\n【性能指标】")
-for metric, value in final_metrics.items():
-    print(f"  {metric.upper()}: {value:.6f}")
+    class MockSubbasin:
+        def __init__(self, area_km2):
+            self.area_km2 = area_km2
 
-print(f"\n【输出文件】")
-print(f"  参数配置: {yaml_file.name}")
-print(f"  径流数据: {comparison_file.name}")
-print(f"  可视化图表: zone1_*.png")
+    subbasin = MockSubbasin(zone1_area_km2)
+    hbv_test = HBVRunoff(default_params)
+    test_runoff = np.array(hbv_test.simulate(subbasin, precipitation.tolist()))
 
-print("\n" + "=" * 80)
-print("✓ 本脚本展示了如何正确使用HydroSIS基础库")
-print("✓ 遵循 .claude/AI_DEVELOPMENT_GUIDE.md 中的最佳实践")
-print("=" * 80)
+    from hydrosis.evaluation.metrics import nash_sutcliffe_efficiency
+    test_nse = nash_sutcliffe_efficiency(test_runoff, observed_runoff)
+
+    print(f"✓ 模型测试完成")
+    print(f"  输出长度: {len(test_runoff)}")
+    print(f"  初始NSE (默认参数): {test_nse:.4f}")
+
+    # ========================================================================
+    # 步骤 4: 运行校准
+    # ========================================================================
+    print("\n步骤 4: 运行HBV校准")
+    print("-" * 80)
+
+    # 创建校准器
+    output_dir = results_dir / "calibration_enhanced"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    calibrator = HBVCalibrator(
+        data=calib_data,
+        config=calib_config,
+        output_dir=output_dir
+    )
+
+    # 运行校准
+    print("正在运行校准...")
+    print(f"使用增强型观测数据: {len(observed_runoff)}个时间步")
+    result = calibrator.run_calibration()
+
+    print(f"\n✓ 校准完成!")
+    print(f"  最优NSE: {result.best_score:.6f}")
+    print(f"  函数评估: {result.n_evaluations}")
+    print(f"  计算时间: {result.elapsed_time:.2f}秒")
+
+    # ========================================================================
+    # 步骤 5: 结果分析
+    # ========================================================================
+    print("\n步骤 5: 结果分析")
+    print("-" * 80)
+
+    # 显示最优参数
+    print("\n最优参数:")
+    for param, value in result.best_params.items():
+        if param in param_bounds:
+            bounds = param_bounds[param]
+            print(f"  {param:<20s}: {value:>10.4f}  (范围: [{bounds[0]:.2f}, {bounds[1]:.2f}])")
+
+    # 使用最优参数运行模型
+    final_params = {**fixed_params, **result.best_params}
+
+    # 处理 initial_soil_ratio
+    if 'initial_soil_ratio' in result.best_params:
+        final_params['initial_soil'] = result.best_params['initial_soil_ratio'] * result.best_params['FC']
+        final_params.pop('initial_soil_ratio')
+
+    hbv_final = HBVRunoff(final_params)
+    final_runoff = np.array(hbv_final.simulate(subbasin, precipitation.tolist()))
+
+    # 计算所有指标
+    final_metrics = calculate_metrics(
+        observed_runoff,
+        final_runoff,
+        metrics=['nse', 'log_nse', 'kge', 'rmse', 'mae', 'pbias']
+    )
+
+    print("\n性能指标:")
+    for metric, value in final_metrics.items():
+        if 'peak' not in metric and 'time' not in metric:
+            print(f"  {metric.upper():10s}: {value:8.6f}")
+
+    # 性能提升
+    nse_improvement = final_metrics['nse'] - test_nse
+    print(f"\nNSE提升: {test_nse:.4f} → {final_metrics['nse']:.4f} (Δ{nse_improvement:+.4f})")
+
+    # ========================================================================
+    # 步骤 6: 保存结果
+    # ========================================================================
+    print("\n步骤 6: 保存结果")
+    print("-" * 80)
+
+    # 使用框架的保存功能
+    calibrator.save_results(result)
+    print(f"✓ 校准结果已由HBVCalibrator自动保存")
+
+    # 保存额外的增强型观测特定信息
+    enhanced_info = {
+        'description': 'Zone 1 HBV校准（使用增强型观测数据）',
+        'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'framework': 'HBVCalibrator (统一校准框架)',
+        'data_source': 'enhanced_observations',
+        'obs_file': str(obs_file),
+        'time_range': {
+            'start': str(times.min()),
+            'end': str(times.max()),
+            'n_timesteps': len(observed_runoff)
+        },
+        'performance': {
+            'initial_nse': float(test_nse),
+            'final_nse': float(final_metrics['nse']),
+            'improvement': float(nse_improvement),
+            **{k: float(v) for k, v in final_metrics.items()
+               if 'peak' not in k and 'time' not in k}
+        },
+        'refactored': True,
+        'benefits': [
+            '使用统一的HBVCalibrator接口',
+            '自动化的结果保存和报告',
+            '更简洁的代码结构',
+            '更好的可维护性'
+        ]
+    }
+
+    info_file = output_dir / "zone1_enhanced_calibration_info.yaml"
+    with open(info_file, 'w') as f:
+        yaml.dump(enhanced_info, f, default_flow_style=False, sort_keys=False)
+
+    print(f"✓ 保存增强型校准信息: {info_file.name}")
+
+    # ========================================================================
+    # 总结
+    # ========================================================================
+    print("\n" + "=" * 80)
+    print("校准完成总结")
+    print("=" * 80)
+
+    print(f"\n📊 校准结果:")
+    print(f"  - 初始NSE: {test_nse:.4f}")
+    print(f"  - 最优NSE: {final_metrics['nse']:.4f}")
+    print(f"  - 提升: {nse_improvement:+.4f}")
+
+    print(f"\n📁 输出文件:")
+    print(f"  - {info_file}")
+    print(f"  - 以及HBVCalibrator自动生成的完整校准报告")
+
+    print("\n✨ 重构改进:")
+    print("  1. 使用统一的HBVCalibrator框架")
+    print("  2. 代码更简洁，易于维护")
+    print("  3. 自动化的结果保存和报告")
+    print("  4. 标准化的配置接口")
+
+    print("\n" + "=" * 80)
+    print("✓ 本脚本展示了如何使用HBVCalibrator处理增强型观测数据")
+    print("✓ 遵循 .claude/AI_DEVELOPMENT_GUIDE.md 最佳实践")
+    print("=" * 80)
+
+    return 0
+
+
+if __name__ == "__main__":
+    exit(main())
