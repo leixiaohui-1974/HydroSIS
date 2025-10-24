@@ -52,6 +52,7 @@ from hydrosis.config import (
     ParameterZoneConfig,
     RoutingModelConfig,
     RunoffModelConfig,
+    load_workflow_config,
 )
 from hydrosis.delineation import utils as dutils
 from hydrosis.delineation.channel_analysis import (
@@ -1785,26 +1786,64 @@ def step09_to_10_hydrologic_and_hydraulic_simulation(
         "outputs": [],
     }
 
+    # 加载工作流配置文件以获取率定后的HBV参数
+    try:
+        workflow_config = load_workflow_config(Path("config/workflow_config.yaml"))
+        hbv_config = workflow_config.get("hbv_model", {})
+        use_calibrated = hbv_config.get("use_calibrated", False)
+
+        if use_calibrated and "calibrated_parameters" in hbv_config:
+            hbv_params_source = hbv_config["calibrated_parameters"]
+            print("  ✓ 使用率定后的HBV参数")
+        else:
+            hbv_params_source = hbv_config.get("default_parameters", {})
+            print("  ⚠ 使用默认HBV参数")
+
+        # 将配置文件中的参数映射到HBV模型参数
+        # 注意：配置文件使用不同的参数名称
+        hbv_params = {
+            "TT": hbv_params_source.get("snow_threshold", 0.0),  # 雪温阈值
+            "CFMAX": hbv_params_source.get("degree_day_factor", 3.0),  # 度日因子
+            "CFR": 0.05,  # 冻结补偿系数（配置中未指定）
+            "CWH": 0.1,   # 持水量（配置中未指定）
+            "FC": hbv_params_source.get("field_capacity", 100.0),  # 田间持水量
+            "LP": 0.7,    # 蒸散发阈值（配置中未指定）
+            "BETA": hbv_params_source.get("beta", 1.0),  # 土壤水分曲线指数
+            "K0": hbv_params_source.get("k0", 0.15),  # 快速径流衰减系数
+            "K1": hbv_params_source.get("k1", 0.05),  # 中等径流衰减系数
+            "K2": hbv_params_source.get("k2", 0.01),  # 基流衰减系数
+            "PERC": hbv_params_source.get("percolation", 2.0),  # 渗透率
+            "UZL": 5.0,   # 上层区阈值（配置中未指定）
+            "MAXBAS": 3.0,  # 最大基流（配置中未指定）
+        }
+        print(f"  ✓ HBV参数: FC={hbv_params['FC']:.2f}, BETA={hbv_params['BETA']:.2f}, "
+              f"K0={hbv_params['K0']:.3f}, K1={hbv_params['K1']:.3f}, K2={hbv_params['K2']:.3f}, "
+              f"PERC={hbv_params['PERC']:.2f}")
+
+    except Exception as e:
+        print(f"  ⚠ 无法加载配置文件，使用默认参数: {e}")
+        hbv_params = {
+            "TT": 0.0,
+            "CFMAX": 3.5,
+            "CFR": 0.05,
+            "CWH": 0.1,
+            "FC": 250.0,
+            "LP": 0.7,
+            "BETA": 2.0,
+            "K0": 0.05,
+            "K1": 0.01,
+            "K2": 0.001,
+            "PERC": 1.5,
+            "UZL": 5.0,
+            "MAXBAS": 3.0,
+        }
+
     # 配置产流模型（ID必须与parameters中的runoff_model匹配）
     runoff_models = [
         RunoffModelConfig(
             id="hbv",  # 与parameter_zones中的runoff_model键匹配
             model_type="hbv",
-            parameters={
-                "TT": 0.0,
-                "CFMAX": 3.5,
-                "CFR": 0.05,
-                "CWH": 0.1,
-                "FC": 250.0,
-                "LP": 0.7,
-                "BETA": 2.0,
-                "K0": 0.05,
-                "K1": 0.01,
-                "K2": 0.001,
-                "PERC": 1.5,
-                "UZL": 5.0,
-                "MAXBAS": 3.0,
-            }
+            parameters=hbv_params
         ),
         RunoffModelConfig(
             id="scs_curve_number",
