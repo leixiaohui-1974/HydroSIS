@@ -22,6 +22,12 @@ from .models import (
     get_step_paths,
 )
 
+# Import config classes from their source modules for convenience
+from ..runoff.base import RunoffModelConfig
+from ..routing.base import RoutingModelConfig
+from ..delineation.dem_delineator import DelineationConfig
+from ..parameters.zone import ParameterZoneConfig
+
 __all__ = [
     # 新的配置管理器
     "ConfigManager",
@@ -36,6 +42,11 @@ __all__ = [
     "ModelStructureConfig",
     "ParameterPartitionConfig",
     "HydroProjectConfig",
+    # 模型配置类
+    "RunoffModelConfig",
+    "RoutingModelConfig",
+    "DelineationConfig",
+    "ParameterZoneConfig",
     # 辅助函数
     "load_validation_criteria",
     "create_hydrologic_criteria",

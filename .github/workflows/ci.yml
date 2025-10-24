@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, claude/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install system dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          gdal-bin \
+          libgdal-dev \
+          python3-gdal \
+          libproj-dev \
+          libgeos-dev
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+
+        # Install GDAL first (matches system GDAL version)
+        export GDAL_VERSION=$(gdal-config --version)
+        pip install GDAL==${GDAL_VERSION}
+
+        # Install core dependencies
+        pip install numpy scipy pandas
+
+        # Install geospatial dependencies (skip GDAL as already installed)
+        pip install pyproj Shapely Fiona rasterio
+
+        # Install testing dependencies
+        pip install pytest pytest-cov pytest-asyncio
+
+        # Install other dependencies (skip optional ones that may fail)
+        pip install PyYAML click tqdm psutil
+
+        # Install the package in development mode
+        pip install -e .
+
+    - name: Run tests
+      run: |
+        pytest tests/ -v --cov=hydrosis --cov-report=xml --cov-report=term-missing
+
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.10' && matrix.os == 'ubuntu-latest'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  lint:
+    name: Code quality checks
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+
+    - name: Run flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 hydrosis/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 hydrosis/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Check code formatting with black
+      run: |
+        black --check hydrosis/ tests/ || echo "Black would reformat files"
+
+    - name: Check import sorting with isort
+      run: |
+        isort --check-only hydrosis/ tests/ || echo "isort would reformat files"
+
+    - name: Type checking with mypy (optional)
+      continue-on-error: true
+      run: |
+        mypy hydrosis/ --ignore-missing-imports || echo "Type checking found issues"
+
+  docs:
+    name: Documentation build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install sphinx sphinx-rtd-theme
+
+    - name: Check documentation
+      run: |
+        cd docs
+        make html || echo "Documentation build needs setup"

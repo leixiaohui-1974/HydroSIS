@@ -8,8 +8,8 @@ from hydrosis.hydrodynamics import (
     SaintVenantSolver,
     RiverReach,
     BoundaryCondition,
-    HydrodynamicRoutingModel
 )
+from hydrosis.hydrodynamics.routing_interface import HydrodynamicRoutingModel
 
 warnings.warn(
     "routing.hydrodynamic_1d is deprecated, please use hydrosis.hydrodynamics",

@@ -3,200 +3,137 @@
 """
 真实场景的参数率定：使用增强模型生成观测数据，用HBV模型率定
 
-关键改进:
-1. ✅ 观测数据来自增强模型（不同的模型结构）
-2. ✅ 添加观测噪声（模拟真实测量误差）
-3. ✅ 用HBV模型率定（测试结构不匹配情况）
-4. ✅ 评估模型偏差和不确定性
+目标：
+1. 观测数据来自增强模型（不同的模型结构）
+2. 添加观测噪声（模拟真实测量误差）
+3. 用HBV模型率定（测试结构不匹配情况）
+4. 评估模型偏差和不确定性
 
-这才是真实的率定场景！
+重构特点：
+- 使用 HBVCalibrator 统一校准框架
+- 使用 CalibrationData 和 CalibrationConfig 标准接口
+- 自动保存结果和生成报告
 """
 
 import sys
 from pathlib import Path
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 import numpy as np
 import pandas as pd
-import yaml
-import matplotlib.pyplot as plt
-from scipy.optimize import differential_evolution
 
-# 导入简单径流生成器（与HBV完全不同的结构）
-from simple_runoff_generator import SimpleRunoffGenerator, add_observation_errors
+from hydrosis.calibration.base_calibrator import CalibrationData, CalibrationConfig
+from hydrosis.calibration.hbv_calibrator import HBVCalibrator
+from hydrosis.evaluation.metrics import calculate_metrics
 
 
-def run_hbv_model(rainfall: np.ndarray, params: dict) -> np.ndarray:
-    """运行HBV模型"""
-    snow = params.get('initial_snow', 0.0)
-    soil = params.get('initial_soil', 0.0)
-    upper = params.get('initial_upper', 0.0)
-    lower = params.get('initial_lower', 0.0)
-
-    degree_day_factor = params.get('degree_day_factor', 3.0)
-    snow_threshold = params.get('snow_threshold', 0.0)
-    field_capacity = params.get('field_capacity', 80.0)
-    beta = max(1e-6, params.get('beta', 1.0))
-    k0 = params.get('k0', 0.12)
-    k1 = params.get('k1', 0.08)
-    k2 = params.get('k2', 0.02)
-    percolation = params.get('percolation', 1.0)
-
-    runoff_list = []
-
-    for p in rainfall:
-        rainfall_step = max(0.0, p - snow_threshold)
-        snowfall = max(0.0, p - rainfall_step)
-        snow += snowfall
-
-        melt = degree_day_factor * max(0.0, rainfall_step - snow_threshold)
-        melt = min(melt, snow)
-        snow -= melt
-
-        effective_precip = rainfall_step + melt
-        soil_deficit = max(0.0, field_capacity - soil)
-
-        if soil > 0 and field_capacity > 0:
-            recharge = effective_precip * ((soil / field_capacity) ** beta)
-        else:
-            recharge = 0.0
-
-        recharge = min(recharge, soil_deficit)
-        soil += effective_precip - recharge
-
-        quickflow = k0 * upper
-        actual_percolation = min(percolation, max(0.0, upper + recharge - quickflow))
-        upper += recharge - quickflow - actual_percolation
-        upper = max(0.0, upper)
-
-        lower += actual_percolation - k2 * lower
-        lower = max(0.0, lower)
-
-        baseflow = k1 * upper + k2 * lower
-        total_runoff = quickflow + baseflow
-
-        runoff_list.append(total_runoff)
-
-    return np.array(runoff_list)
-
-
-def generate_realistic_observations(rainfall: np.ndarray) -> dict:
+def load_or_generate_observations(rainfall: np.ndarray) -> tuple:
     """
-    使用简单模型生成"观测数据"并添加真实的观测噪声
+    生成或加载"观测"径流数据
 
-    关键差异（与HBV完全不同）:
-    1. ❌ 不用HBV的非线性土壤产流（beta幂函数）
-    2. ❌ 不用HBV的多层储量结构
-    3. ✅ 用简单的初损后损法 + 固定径流系数
-    4. ✅ 用单一线性水库汇流
-    5. ✅ 添加更多随机波动和观测误差
+    注意：如果simple_runoff_generator模块可用，使用它生成观测数据
+    否则使用简化的方法
+
+    Parameters
+    ----------
+    rainfall : np.ndarray
+        降雨时间序列 (mm/h)
+
+    Returns
+    -------
+    tuple
+        (observed_runoff, true_runoff, metadata)
     """
-    print("\n  使用简化模型v2生成观测数据:")
-    print("    模型结构: 初损后损 + 阈值效应 + 饱和超渗 + 非线性退水")
-    print("    ❌ 无HBV的beta幂函数产流")
-    print("    ❌ 无HBV的多层线性水库（upper/lower）")
-    print("    ✅ 有降雨阈值（2.5mm/h）+ 饱和超渗 + 非线性退水")
-    print("    ✅ 有随机时间延迟（峰值不确定性）")
+    try:
+        # 尝试导入自定义简单模型
+        from simple_runoff_generator import SimpleRunoffGenerator, add_observation_errors
 
-    # 简单模型参数（v2增强非线性版本）
-    generator = SimpleRunoffGenerator(
-        initial_loss=18.0,           # 初期损失 (HBV无此概念)
-        constant_loss=0.4,            # 固定损失率 (HBV用percolation)
-        runoff_coefficient=0.42,      # 固定系数 (HBV是状态依赖)
-        reservoir_k=0.18,             # 水库系数
-        initial_storage=8.0,          # 初始储量
-        random_noise_level=0.15,      # 15%随机波动
-        random_seed=42,
-        # 新增非线性参数
-        rainfall_threshold=2.5,       # 降雨阈值 (HBV无此机制)
-        saturation_capacity=30.0,     # 土壤饱和容量
-        recession_exponent=1.8,       # 非线性退水指数 (HBV是1.0线性)
-        time_delay_std=3.0,           # 随机时间延迟 (HBV是确定性)
-    )
+        print("  使用 SimpleRunoffGenerator 生成观测数据:")
+        print("    模型结构: 初损后损 + 阈值效应 + 饱和超渗 + 非线性退水")
 
-    # 生成"真实"径流
-    runoff_true, stats = generator.generate(rainfall)
+        generator = SimpleRunoffGenerator(
+            initial_loss=18.0,
+            constant_loss=0.4,
+            runoff_coefficient=0.42,
+            reservoir_k=0.18,
+            initial_storage=8.0,
+            random_noise_level=0.15,
+            random_seed=42,
+            rainfall_threshold=2.5,
+            saturation_capacity=30.0,
+            recession_exponent=1.8,
+            time_delay_std=3.0,
+        )
 
-    print(f"    真实径流系数: {stats['runoff_coefficient']:.4f}")
+        runoff_true, stats = generator.generate(rainfall)
+        observed = add_observation_errors(runoff_true, seed=42)
 
-    # 添加观测误差（更多噪声）
-    print("\n  添加观测误差:")
+        print(f"    真实径流系数: {stats['runoff_coefficient']:.4f}")
+        print(f"    观测径流系数: {observed.sum() / rainfall.sum():.4f}")
 
-    observed = add_observation_errors(runoff_true, seed=42)
+        metadata = {
+            'generation_method': 'SimpleRunoffGenerator',
+            'true_runoff_coefficient': stats['runoff_coefficient'],
+            'noise_level': 0.10,
+            'systematic_bias': 1.05,
+        }
 
-    print(f"    基础测量误差: ±10% (比之前更大)")
-    print(f"    系统偏差: +5%")
-    print(f"    流量依赖误差: 高流量误差更大")
-    print(f"    随机尖峰: 2% 数据点")
-    print(f"    数据缺失: 10% (已插值)")
-    print(f"    观测径流系数: {observed.sum() / rainfall.sum():.4f}")
+    except ImportError:
+        # 如果模块不可用，使用简化方法
+        print("  ⚠ SimpleRunoffGenerator 不可用，使用简化方法生成观测数据")
+        print("    使用固定径流系数 0.42")
 
-    return {
-        'observed': observed,
-        'true': runoff_true,
-        'noise_level': 0.10,
-        'systematic_bias': 1.05,
-    }
+        # 简单的径流生成：固定径流系数 + 滞后
+        runoff_coefficient = 0.42
+        runoff_true = rainfall * runoff_coefficient
 
+        # 添加简单的滞后效应
+        runoff_true = np.convolve(runoff_true, [0.3, 0.5, 0.2], mode='same')
 
-def calculate_metrics(observed: np.ndarray, simulated: np.ndarray) -> dict:
-    """计算性能指标"""
-    # NSE
-    mean_obs = np.mean(observed)
-    nse = 1 - np.sum((observed - simulated)**2) / np.sum((observed - mean_obs)**2)
+        # 添加噪声
+        np.random.seed(42)
+        noise = np.random.normal(0, 0.05, len(runoff_true))
+        observed = runoff_true * (1 + noise) * 1.05  # 5%噪声 + 5%系统偏差
+        observed = np.maximum(observed, 0)
 
-    # RMSE
-    rmse_val = np.sqrt(np.mean((observed - simulated)**2))
+        metadata = {
+            'generation_method': 'simplified',
+            'true_runoff_coefficient': runoff_coefficient,
+            'noise_level': 0.05,
+            'systematic_bias': 1.05,
+        }
 
-    # 偏差
-    bias = np.mean(simulated - observed)
-    rel_bias = (np.sum(simulated) - np.sum(observed)) / np.sum(observed) * 100
+        print(f"    真实径流系数: {runoff_coefficient:.4f}")
+        print(f"    观测径流系数: {observed.sum() / rainfall.sum():.4f}")
 
-    # 相关系数
-    corr = np.corrcoef(observed, simulated)[0, 1]
-
-    # KGE
-    mean_sim = np.mean(simulated)
-    std_obs = np.std(observed)
-    std_sim = np.std(simulated)
-
-    r = corr
-    alpha = std_sim / std_obs if std_obs > 0 else 0
-    beta_kge = mean_sim / mean_obs if mean_obs > 0 else 0
-
-    kge = 1 - np.sqrt((r-1)**2 + (alpha-1)**2 + (beta_kge-1)**2)
-
-    return {
-        'NSE': nse,
-        'RMSE': rmse_val,
-        'Bias': bias,
-        'Relative_Bias_%': rel_bias,
-        'Correlation': corr,
-        'KGE': kge,
-    }
+    return observed, runoff_true, metadata
 
 
 def main():
-    """主函数"""
+    """主函数：真实场景的参数率定"""
     print("=" * 80)
     print("真实场景的参数率定测试")
     print("=" * 80)
     print("\n策略:")
     print("  1. 用增强模型生成'观测数据'（不同结构）")
-    print("  2. 添加观测噪声（5%随机误差 + 3%系统偏差）")
+    print("  2. 添加观测噪声（模拟真实测量误差）")
     print("  3. 用HBV模型率定（结构不匹配）")
     print("  4. 评估模型性能和局限性")
 
     # ========================================================================
     # 第1步：加载降雨数据
     # ========================================================================
-    print("\n[1/6] 加载60天降雨数据...")
+    print("\n[1/5] 加载60天降雨数据...")
 
     data_file = Path('results/extended_timeseries_60days/timeseries_60days.csv')
+    if not data_file.exists():
+        print(f"❌ 错误: 数据文件不存在: {data_file}")
+        print("   请先运行生成60天时间序列的脚本")
+        return
+
     df = pd.read_csv(data_file)
     rainfall = df['precipitation_mm_per_hour'].values
-    timestamps = pd.to_datetime(df['timestamp'])
 
     print(f"  ✓ 已加载 {len(rainfall)} 个时间步")
     print(f"  ✓ 总降雨量: {rainfall.sum():.2f} mm")
@@ -204,11 +141,9 @@ def main():
     # ========================================================================
     # 第2步：生成真实的"观测数据"
     # ========================================================================
-    print("\n[2/6] 生成真实的观测数据...")
+    print("\n[2/5] 生成真实的观测数据...")
 
-    obs_data = generate_realistic_observations(rainfall)
-    observed = obs_data['observed']
-    true_runoff = obs_data['true']
+    observed, true_runoff, metadata = load_or_generate_observations(rainfall)
 
     print(f"\n  ✓ 观测数据统计:")
     print(f"    总径流量: {observed.sum():.2f} mm")
@@ -216,226 +151,98 @@ def main():
     print(f"    平均流量: {observed.mean():.4f} mm/h")
 
     # ========================================================================
-    # 第3步：定义HBV参数空间
+    # 第3步：准备校准数据
     # ========================================================================
-    print("\n[3/6] 定义HBV参数空间...")
+    print("\n[3/5] 准备校准数据...")
+
+    calibration_data = CalibrationData(
+        rainfall=rainfall,
+        observed_runoff=observed,
+        timestamps=pd.to_datetime(df['timestamp']) if 'timestamp' in df.columns else None,
+    )
+
+    print(f"  ✓ 校准数据已准备")
+    print(f"    降雨时间步: {len(rainfall)}")
+    print(f"    观测径流时间步: {len(observed)}")
+
+    # ========================================================================
+    # 第4步：配置校准参数
+    # ========================================================================
+    print("\n[4/5] 配置校准参数...")
 
     # HBV率定参数（尝试用HBV拟合增强模型生成的数据）
-    param_names = ['field_capacity', 'beta', 'k0', 'k1']
-    param_bounds = [
-        (50, 150),     # field_capacity
-        (0.5, 2.5),    # beta
-        (0.05, 0.30),  # k0
-        (0.03, 0.15),  # k1
-    ]
-
-    # 固定参数
-    fixed_params = {
-        'degree_day_factor': 3.0,
-        'snow_threshold': 0.0,
-        'k2': 0.02,
-        'percolation': 1.0,
-        'initial_snow': 0.0,
-        'initial_soil': 0.0,
-        'initial_upper': 0.0,
-        'initial_lower': 0.0,
+    param_bounds = {
+        'field_capacity': (50, 150),
+        'beta': (0.5, 2.5),
+        'k0': (0.05, 0.30),
+        'k1': (0.03, 0.15),
     }
 
-    print(f"  待率定参数: {param_names}")
+    calibration_config = CalibrationConfig(
+        param_bounds=param_bounds,
+        algorithm='differential_evolution',
+        max_iterations=150,
+        population_size=15,
+        objective='nse',
+        random_seed=42,
+    )
+
+    print(f"  待率定参数: {list(param_bounds.keys())}")
+    print(f"  优化算法: {calibration_config.algorithm}")
+    print(f"  最大迭代数: {calibration_config.max_iterations}")
 
     # ========================================================================
-    # 第4步：运行HBV参数率定
+    # 第5步：执行校准
     # ========================================================================
-    print("\n[4/6] 运行HBV参数率定...")
+    print("\n[5/5] 执行HBV参数率定...")
     print("  警告: HBV结构与观测数据的真实来源（增强模型）不同")
     print("  预期: NSE可能 < 0.9（结构误差）")
 
-    def objective_function(params_array):
-        params = fixed_params.copy()
-        params['field_capacity'] = params_array[0]
-        params['beta'] = params_array[1]
-        params['k0'] = params_array[2]
-        params['k1'] = params_array[3]
-
-        simulated = run_hbv_model(rainfall, params)
-        nse = 1 - np.sum((observed - simulated)**2) / np.sum((observed - np.mean(observed))**2)
-        return -nse  # 最小化负NSE
-
-    result = differential_evolution(
-        func=objective_function,
-        bounds=param_bounds,
-        maxiter=150,
-        popsize=15,
-        seed=42,
-        polish=True,
-        disp=True,
+    calibrator = HBVCalibrator(
+        data=calibration_data,
+        config=calibration_config,
     )
 
-    best_params_array = result.x
-    best_nse = -result.fun
+    result = calibrator.calibrate()
 
-    # 构建最优参数
-    best_params = fixed_params.copy()
-    best_params['field_capacity'] = best_params_array[0]
-    best_params['beta'] = best_params_array[1]
-    best_params['k0'] = best_params_array[2]
-    best_params['k1'] = best_params_array[3]
+    # 打印结果摘要
+    print("\n" + "=" * 80)
+    print("✓ 率定完成！")
+    print("=" * 80)
 
-    print(f"\n  ✓ 率定完成")
-    print(f"    迭代次数: {result.nit}")
-    print(f"    函数评估: {result.nfev}")
-    print(f"    最优NSE: {best_nse:.6f}")
-
-    # ========================================================================
-    # 第5步：评估率定结果
-    # ========================================================================
-    print("\n[5/6] 评估HBV模型性能...")
-
-    simulated = run_hbv_model(rainfall, best_params)
-
-    # 性能指标
-    metrics = calculate_metrics(observed, simulated)
-
-    print("\n  HBV vs 观测数据:")
-    for key, value in metrics.items():
-        print(f"    {key}: {value:.6f}")
+    print(f"\n性能指标（HBV vs 观测）:")
+    for key, value in result.metrics.items():
+        print(f"  {key}: {value:.6f}")
 
     # 与真实数据比较（诊断用）
-    print("\n  HBV vs 真实数据（无噪声）:")
-    true_metrics = calculate_metrics(true_runoff, simulated)
-    for key, value in true_metrics.items():
-        print(f"    {key}: {value:.6f}")
+    if true_runoff is not None:
+        print("\n性能指标（HBV vs 真实，无噪声）:")
+        true_metrics = calculate_metrics(true_runoff, result.simulated)
+        for key, value in true_metrics.items():
+            print(f"  {key}: {value:.6f}")
 
-    # 分析模型误差来源
-    print("\n  误差分析:")
-    total_error = np.sum((observed - simulated)**2)
-    noise_error = np.sum((observed - true_runoff)**2)
-    struct_error = np.sum((true_runoff - simulated)**2)
+        # 误差分析
+        total_error = np.sum((observed - result.simulated)**2)
+        noise_error = np.sum((observed - true_runoff)**2)
+        struct_error = np.sum((true_runoff - result.simulated)**2)
 
-    print(f"    总误差 (MSE): {total_error:.6f}")
-    print(f"    观测噪声导致: {noise_error:.6f} ({noise_error/total_error*100:.1f}%)")
-    print(f"    结构误差导致: {struct_error:.6f} ({struct_error/total_error*100:.1f}%)")
+        print(f"\n误差分析:")
+        print(f"  总误差 (MSE): {total_error:.6f}")
+        if total_error > 0:
+            print(f"  观测噪声导致: {noise_error:.6f} ({noise_error/total_error*100:.1f}%)")
+            print(f"  结构误差导致: {struct_error:.6f} ({struct_error/total_error*100:.1f}%)")
 
-    # ========================================================================
-    # 第6步：保存结果
-    # ========================================================================
-    print("\n[6/6] 保存结果...")
-
+    # 保存结果
     output_dir = Path('results/realistic_calibration')
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 保存参数
-    params_file = output_dir / 'hbv_calibrated_params.yaml'
-    with open(params_file, 'w') as f:
-        yaml.dump(best_params, f, default_flow_style=False)
-    print(f"  ✓ 参数: {params_file}")
+    # 保存扩展信息
+    result.metadata.update(metadata)
+    result.metadata['observation_generation'] = metadata['generation_method']
 
-    # 保存指标
-    all_metrics = {
-        'hbv_vs_observed': metrics,
-        'hbv_vs_true': true_metrics,
-        'observation_noise': obs_data['noise_level'],
-        'systematic_bias': obs_data['systematic_bias'],
-    }
-    metrics_file = output_dir / 'performance_metrics.yaml'
-    with open(metrics_file, 'w') as f:
-        yaml.dump(all_metrics, f, default_flow_style=False)
-    print(f"  ✓ 指标: {metrics_file}")
+    calibrator.save_results(result, output_dir)
 
-    # 保存时间序列
-    results_df = pd.DataFrame({
-        'timestamp': timestamps,
-        'rainfall': rainfall,
-        'observed': observed,
-        'true_runoff': true_runoff,
-        'hbv_simulated': simulated,
-        'observation_error': observed - true_runoff,
-        'model_error': simulated - true_runoff,
-        'total_residual': observed - simulated,
-    })
-    ts_file = output_dir / 'timeseries_comparison.csv'
-    results_df.to_csv(ts_file, index=False)
-    print(f"  ✓ 时间序列: {ts_file}")
-
-    # 生成可视化
-    fig, axes = plt.subplots(4, 1, figsize=(14, 12))
-    fig.suptitle(f'Realistic Calibration: HBV vs Enhanced Model (NSE={best_nse:.4f})',
-                 fontsize=14, fontweight='bold')
-
-    # 子图1: 降雨
-    ax = axes[0]
-    ax.fill_between(range(len(rainfall)), rainfall, alpha=0.5, color='blue')
-    ax.set_ylabel('Rainfall (mm/h)')
-    ax.set_title('Input Rainfall')
-    ax.grid(True, alpha=0.3)
-
-    # 子图2: 观测 vs 模拟
-    ax = axes[1]
-    ax.plot(observed, label='Observed (Enhanced + Noise)', linewidth=1.2, alpha=0.8, color='black')
-    ax.plot(true_runoff, label='True (Enhanced, No Noise)', linewidth=1.0, alpha=0.6, color='gray', linestyle='--')
-    ax.plot(simulated, label='HBV Simulated', linewidth=1.2, alpha=0.7, color='red')
-    ax.set_ylabel('Runoff (mm/h)')
-    ax.set_title(f'Runoff Comparison (NSE={best_nse:.4f})')
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-
-    # 子图3: 残差分解
-    ax = axes[2]
-    obs_error = observed - true_runoff
-    model_error = simulated - true_runoff
-    ax.plot(obs_error, label='Observation Error', linewidth=0.8, alpha=0.7, color='orange')
-    ax.plot(model_error, label='Model Structural Error', linewidth=0.8, alpha=0.7, color='purple')
-    ax.axhline(y=0, color='black', linestyle='--', linewidth=0.5)
-    ax.set_ylabel('Error (mm/h)')
-    ax.set_title('Error Decomposition')
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-
-    # 子图4: 总残差
-    ax = axes[3]
-    total_residual = observed - simulated
-    ax.plot(total_residual, linewidth=0.8, color='green', alpha=0.7)
-    ax.axhline(y=0, color='red', linestyle='--', linewidth=1)
-    ax.fill_between(range(len(total_residual)), total_residual, alpha=0.3, color='green')
-    ax.set_ylabel('Residual (mm/h)')
-    ax.set_xlabel('Time (hours)')
-    ax.set_title(f'Total Residuals (Mean={np.mean(total_residual):.6f}, Std={np.std(total_residual):.6f})')
-    ax.grid(True, alpha=0.3)
-
-    plt.tight_layout()
-    plot_file = output_dir / 'calibration_diagnostic.png'
-    plt.savefig(plot_file, dpi=150, bbox_inches='tight')
-    print(f"  ✓ 图表: {plot_file}")
-
-    # 散点图
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-
-    # HBV vs 观测
-    ax = axes[0]
-    ax.scatter(observed, simulated, alpha=0.5, s=20)
-    max_val = max(observed.max(), simulated.max())
-    ax.plot([0, max_val], [0, max_val], 'r--', linewidth=2)
-    ax.set_xlabel('Observed (mm/h)')
-    ax.set_ylabel('HBV Simulated (mm/h)')
-    ax.set_title(f'HBV vs Observed\nNSE={metrics["NSE"]:.4f}, R²={metrics["Correlation"]**2:.4f}')
-    ax.grid(True, alpha=0.3)
-    ax.set_aspect('equal')
-
-    # HBV vs 真实
-    ax = axes[1]
-    ax.scatter(true_runoff, simulated, alpha=0.5, s=20, color='orange')
-    max_val = max(true_runoff.max(), simulated.max())
-    ax.plot([0, max_val], [0, max_val], 'r--', linewidth=2)
-    ax.set_xlabel('True (Enhanced Model, mm/h)')
-    ax.set_ylabel('HBV Simulated (mm/h)')
-    ax.set_title(f'HBV vs True\nNSE={true_metrics["NSE"]:.4f}, R²={true_metrics["Correlation"]**2:.4f}')
-    ax.grid(True, alpha=0.3)
-    ax.set_aspect('equal')
-
-    plt.tight_layout()
-    scatter_file = output_dir / 'scatter_plots.png'
-    plt.savefig(scatter_file, dpi=150, bbox_inches='tight')
-    print(f"  ✓ 散点图: {scatter_file}")
+    print(f"\n输出目录: {output_dir}")
 
     # 生成报告
     report_file = output_dir / 'calibration_report.txt'
@@ -445,60 +252,44 @@ def main():
         f.write("=" * 80 + "\n\n")
 
         f.write("1. 测试设计\n")
-        f.write("   观测数据来源: 增强模型（不同结构）\n")
-        f.write("   观测噪声: 5% 随机误差 + 3% 系统偏差\n")
+        f.write(f"   观测数据来源: {metadata['generation_method']}\n")
+        f.write(f"   观测噪声: {metadata['noise_level']*100:.0f}%\n")
+        f.write(f"   系统偏差: {(metadata['systematic_bias']-1)*100:.0f}%\n")
         f.write("   率定模型: HBV（结构不匹配）\n\n")
 
         f.write("2. 数据概况\n")
         f.write(f"   时间长度: 60天\n")
         f.write(f"   总降雨量: {rainfall.sum():.2f} mm\n")
         f.write(f"   观测径流量: {observed.sum():.2f} mm\n")
-        f.write(f"   真实径流量: {true_runoff.sum():.2f} mm\n")
-        f.write(f"   HBV模拟径流量: {simulated.sum():.2f} mm\n\n")
+        f.write(f"   HBV模拟径流量: {result.simulated.sum():.2f} mm\n\n")
 
         f.write("3. HBV率定结果\n")
-        f.write(f"   迭代次数: {result.nit}\n")
-        f.write(f"   函数评估: {result.nfev}\n\n")
+        f.write(f"   迭代次数: {result.n_iterations}\n")
+        f.write(f"   函数评估: {result.n_evaluations}\n")
+        f.write(f"   计算时间: {result.computation_time:.1f}秒\n\n")
 
-        f.write("4. 性能指标（HBV vs 观测）\n")
-        for key, value in metrics.items():
+        f.write("4. 性能指标\n")
+        for key, value in result.metrics.items():
             f.write(f"   {key}: {value:.6f}\n")
         f.write("\n")
 
-        f.write("5. 性能指标（HBV vs 真实）\n")
-        for key, value in true_metrics.items():
+        f.write("5. 最优参数\n")
+        for key, value in result.best_params.items():
             f.write(f"   {key}: {value:.6f}\n")
         f.write("\n")
 
-        f.write("6. 误差分析\n")
-        f.write(f"   总误差: {total_error:.6f}\n")
-        f.write(f"   观测噪声: {noise_error:.6f} ({noise_error/total_error*100:.1f}%)\n")
-        f.write(f"   结构误差: {struct_error:.6f} ({struct_error/total_error*100:.1f}%)\n\n")
-
-        f.write("7. 结论\n")
-        if best_nse > 0.85:
+        f.write("6. 结论\n")
+        nse = result.metrics.get('NSE', result.metrics.get('nse', 0))
+        if nse > 0.85:
             f.write("   ✓ 优秀: 尽管结构不匹配，HBV仍能很好拟合观测数据\n")
-        elif best_nse > 0.7:
+        elif nse > 0.7:
             f.write("   ✓ 良好: HBV基本能拟合观测数据，但存在结构误差\n")
-        elif best_nse > 0.5:
+        elif nse > 0.5:
             f.write("   ⚠ 可接受: HBV拟合一般，结构差异明显\n")
         else:
             f.write("   ❌ 不佳: HBV难以拟合观测数据，结构不匹配严重\n")
 
-        f.write(f"\n   NSE差异（观测 vs 真实）: {metrics['NSE'] - true_metrics['NSE']:.4f}\n")
-        f.write(f"   此差异主要由观测噪声导致\n")
-
-    print(f"  ✓ 报告: {report_file}")
-
-    print("\n" + "=" * 80)
-    print("✓ 真实场景率定完成！")
-    print("=" * 80)
-    print(f"\n关键结果:")
-    print(f"  • NSE (HBV vs 观测): {metrics['NSE']:.4f}")
-    print(f"  • NSE (HBV vs 真实): {true_metrics['NSE']:.4f}")
-    print(f"  • 观测噪声影响: {noise_error/total_error*100:.1f}%")
-    print(f"  • 结构误差影响: {struct_error/total_error*100:.1f}%")
-    print(f"\n输出目录: {output_dir}")
+    print(f"  ✓ 报告已保存: {report_file}")
     print()
 
 

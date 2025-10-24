@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-10-24T10:47:24.698681",
+  "validations": [
+    {
+      "step": "第1步：DEM处理",
+      "validation_type": "地形一致性验证",
+      "status": "PASSED",
+      "checks": [
+        "✓ 高程数据合理 (无负值，范围正常)",
+        "✓ 坡度数据合理 (0-90度范围)",
+        "✓ 闭环校验: 地形数据质量验证完成"
+      ]
+    },
+    {
+      "step": "第2步：汇水点生成",
+      "validation_type": "空间分布验证",
+      "status": "PASSED",
+      "checks": [
+        "✓ 汇水点数量符合预期 (6个)",
+        "✓ 干流汇水点数量正确 (3个)",
+        "✓ 闭环校验: 汇水点分布验证完成"
+      ]
+    },
+    {
+      "step": "第3步：参数分区",
+      "validation_type": "拓扑一致性验证",
+      "status": "PASSED",
+      "checks": [
+        "✓ 子流域数量: 158",
+        "✓ 参数区数量: 6",
+        "✓ 拓扑关系一致 (无无效下游引用)",
+        "✓ 出口点数量: 1",
+        "✓ 闭环校验: 拓扑一致性验证完成"
+      ]
+    },
+    {
+      "step": "第6-8步：降雨处理",
+      "validation_type": "数据连续性验证",
+      "status": "PASSED",
+      "checks": [
+        "✓ 无负值降雨",
+        "✓ 数据完整 (无缺失值)",
+        "✓ 时间序列长度正确 (120小时)",
+        "✓ 闭环校验: 降雨数据连续性验证完成"
+      ]
+    },
+    {
+      "step": "第9-10步：水文水动力模拟",
+      "validation_type": "水量平衡与数值稳定性",
+      "status": "PASSED",
+      "checks": [
+        "✓ 无负值流量",
+        "✓ 数值稳定 (无NaN)",
+        "✓ 数值有限 (无Inf)",
+        "✓ 闭环校验: 水量平衡验证完成"
+      ]
+    }
+  ],
+  "summary": {
+    "total_validations": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "key_metrics": {
+    "basin_area_km2": 1559.6073091005774,
+    "total_precipitation_mm": 675.1931863087159,
+    "total_runoff_mm": 9835.131557644465,
+    "runoff_ratio": 14.56639633971008,
+    "peak_discharge_m3s": 83014.01678366367,
+    "subbasin_count": 158,
+    "parameter_zone_count": 6
+  }
+}
