@@ -25,6 +25,16 @@ from .precipitation import (
     identify_precipitation_outliers,
     suggest_precipitation_fixes,
 )
+from .spatial import (
+    SpatialCriteria,
+    validate_basin_geometry,
+    validate_network_topology,
+)
+from .timeseries import (
+    TimeSeriesCriteria,
+    validate_time_series,
+    validate_multiple_series,
+)
 
 # Import parameter validation utilities from legacy validation module
 # These are kept for backward compatibility with existing code
@@ -52,6 +62,14 @@ __all__ = [
     "validate_precipitation_data",
     "identify_precipitation_outliers",
     "suggest_precipitation_fixes",
+    # Spatial validation
+    "SpatialCriteria",
+    "validate_basin_geometry",
+    "validate_network_topology",
+    # Time series validation
+    "TimeSeriesCriteria",
+    "validate_time_series",
+    "validate_multiple_series",
     # Parameter validation (legacy)
     "ParameterValidationError",
     "validate_positive",
