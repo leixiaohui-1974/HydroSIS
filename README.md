@@ -13,6 +13,121 @@ HydroSIS 是一个面向多情景建模和调度分析的分布式水文模拟�
 - **精度评价与多模型对比**：内置 NSE、RMSE、MAE、百分比偏差等指标及模型对比器，可对多参数分区、多子流域情景的结果进行统一评价。
 - **结果可视化与报告生成**：提供指标柱状图、径流过程对比图、模板化 Markdown 报告生成，并支持接入大模型生成中文自然语言说明。
 
+## 🆕 最新功能 (v1.0)
+
+### ✅ 全面验证框架 (`hydrosis/validation/`)
+**零硬编码、配置驱动的数据质量检查系统**
+
+```python
+from hydrosis.validation import (
+    validate_precipitation_data,
+    validate_runoff_coefficient,
+    validate_water_balance,
+    validate_basin_geometry,
+    validate_time_series
+)
+
+# 降雨数据验证
+result = validate_precipitation_data(precip_df)
+if not result.is_valid:
+    print(f"发现问题: {result.errors}")
+print(f"空间变异系数: {result.metrics['spatial_cv']}")
+
+# 径流系数验证
+rc_result = validate_runoff_coefficient(runoff_coefficient=0.65)
+
+# 水量平衡验证
+wb_result = validate_water_balance(
+    precipitation_mm=500,
+    runoff_mm=325,
+    evapotranspiration_mm=150,
+    storage_change_mm=20
+)
+```
+
+**验证模块**:
+- `precipitation.py` - 降雨数据质量检查（空间CV、站点相关性、缺测率）
+- `spatial.py` - 空间数据验证（流域几何、河网拓扑）
+- `timeseries.py` - 时间序列验证（缺失值、趋势、变化率）
+- `hydrologic.py` - 水文过程验证（水量平衡、径流系数）
+
+### 🚀 HBV模型并行化 (`hydrosis/runoff/parallel_hbv.py`)
+**多核并行径流模拟，4核加速3-4倍**
+
+```python
+from hydrosis.runoff.parallel_hbv import run_hbv_parallel, ParallelHBVConfig
+
+# 配置并行参数
+config = ParallelHBVConfig(
+    max_workers=4,      # 4核并行
+    show_progress=True  # 显示进度
+)
+
+# 并行执行HBV模拟
+results = run_hbv_parallel(
+    zones,              # 参数分区列表
+    precip_data,        # {zone_id: 降雨序列}
+    hbv_params,         # HBV参数字典
+    config
+)
+
+# 获取结果
+for zone_id, result in results.items():
+    print(f"分区{zone_id}: RC={result['runoff_coefficient']:.3f}")
+```
+
+**性能提升**:
+- 10个分区: 1.68x 加速
+- 50个分区: 2.98x 加速
+- 100个分区: 3.38x 加速
+
+### 🎯 雨量站分布优化
+**配置驱动的站点网络优化工具**
+
+```bash
+# 运行雨量站优化
+python optimize_rain_gauges_refactored.py \
+    --config config/workflow_config.yaml
+```
+
+```yaml
+# config/workflow_config.yaml
+rain_gauge:
+  target_density: 0.01       # 1站点/100km² (良好质量)
+  min_distance_m: 1000       # 最小站间距
+  random_seed: 42            # 可复现
+```
+
+**特性**:
+- 零硬编码，所有参数从YAML加载
+- 自动计算每个参数分区的目标站点数
+- 空间约束（最小距离、缓冲区）
+- 集成验证框架检查站点密度
+
+### 🔍 诊断工具
+**降雨数据质量诊断**
+
+```bash
+# 诊断Zone 2降雨异常
+python diagnose_zone2_precipitation.py
+```
+
+输出诊断报告：
+- 空间变异系数 (CV)
+- 降雨空间分布图
+- 子流域降雨统计
+- 质量评价和修复建议
+
+### 📚 完整中文文档
+**3200+行中文文档，包含完整示例和API参考**
+
+- [文档中心](docs/README.md) - 导航和快速查找
+- [用户手册](docs/用户手册.md) - 快速开始、工作流、FAQ
+- [开发指南](docs/开发指南.md) - 设计原则、开发规范
+- [验证框架API](docs/api/validation_framework.md)
+- [HBV并行化API](docs/api/parallel_hbv.md)
+- [雨量站优化API](docs/api/rain_gauge_optimization.md)
+
 ## 目录结构
 
 ```
