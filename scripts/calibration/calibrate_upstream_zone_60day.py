@@ -8,71 +8,74 @@
 策略：
 1. 使用60天高质量降雨数据
 2. 生成"真实"观测数据（使用已知参数）
-3. 基于敏感性分析聚焦关键参数（Beta, Field_Capacity）
+3. 基于敏感性分析聚焦关键参数（Beta, Field_Capacity, k0）
 4. 使用Differential Evolution全局优化
-5. 多目标评估（NSE, KGE, log-NSE, PBIAS）
-6. 验证率定结果
+5. 多目标评估（NSE, KGE, RMSE, PBIAS）
+6. 验证参数恢复精度
 
-遵循 .claude/AI_DEVELOPMENT_GUIDE.md 中的开发规范
+重构特点：
+- 使用 HBVCalibrator 统一校准框架
+- 使用标准化的数据和配置接口
+- 自动参数恢复验证
 """
 
 import sys
 from pathlib import Path
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 import numpy as np
 import pandas as pd
-import yaml
-import matplotlib.pyplot as plt
-from datetime import datetime
 
-# ✅ 使用基础库的功能模块
-try:
-    from hydrosis.calibration import (
-        calibrate_parameters,
-        morris_sensitivity,
-        adaptive_bounds_from_sensitivity,
-        print_sensitivity_report,
-    )
-    from hydrosis.evaluation.metrics import (
-        nash_sutcliffe_efficiency,
-        log_nash_sutcliffe_efficiency,
-        kling_gupta_efficiency,
-        rmse,
-        mae,
-        percent_bias,
-    )
-    HYDROSIS_AVAILABLE = True
-except ImportError:
-    print("⚠ hydrosis.calibration模块不可用，将使用简化实现")
-    HYDROSIS_AVAILABLE = False
+from hydrosis.calibration.base_calibrator import CalibrationData, CalibrationConfig
+from hydrosis.calibration.hbv_calibrator import HBVCalibrator
+from hydrosis.evaluation.metrics import calculate_metrics
 
 
-def run_hbv_model(rainfall: np.ndarray, params: dict) -> np.ndarray:
-    """运行HBV模型
+def generate_synthetic_observations(rainfall: np.ndarray, true_params: dict) -> np.ndarray:
+    """
+    使用已知参数生成合成观测数据
 
     Parameters
     ----------
     rainfall : np.ndarray
         降雨时间序列 (mm/h)
-    params : dict
-        HBV参数字典
+    true_params : dict
+        真实HBV参数
 
     Returns
     -------
     np.ndarray
-        径流时间序列 (mm/h)
+        合成的观测径流数据
     """
-    # 初始化状态
+    # 使用HBV模型生成"真实"径流
+    from hydrosis.runoff.hbv import HBVRunoff
+
+    # 创建一个模拟的子流域
+    class MockSubbasin:
+        def __init__(self):
+            self.area_km2 = 10.0  # 假设面积
+
+    subbasin = MockSubbasin()
+
+    try:
+        model = HBVRunoff(parameters=true_params)
+        observed = np.array(model.simulate(subbasin, rainfall.tolist()))
+    except Exception as e:
+        print(f"  ⚠ 使用HBVRunoff失败: {e}")
+        print("  使用简化的HBV模型")
+        observed = run_simple_hbv(rainfall, true_params)
+
+    return observed
+
+
+def run_simple_hbv(rainfall: np.ndarray, params: dict) -> np.ndarray:
+    """简化的HBV模型实现（作为备用）"""
     snow = params.get('initial_snow', 0.0)
     soil = params.get('initial_soil', 0.0)
     upper = params.get('initial_upper', 0.0)
     lower = params.get('initial_lower', 0.0)
 
-    # 参数
-    degree_day_factor = params.get('degree_day_factor', 3.0)
-    snow_threshold = params.get('snow_threshold', 0.0)
     field_capacity = params.get('field_capacity', 80.0)
     beta = max(1e-6, params.get('beta', 1.0))
     k0 = params.get('k0', 0.12)
@@ -83,16 +86,7 @@ def run_hbv_model(rainfall: np.ndarray, params: dict) -> np.ndarray:
     runoff_list = []
 
     for p in rainfall:
-        # HBV计算
-        rainfall_step = max(0.0, p - snow_threshold)
-        snowfall = max(0.0, p - rainfall_step)
-        snow += snowfall
-
-        melt = degree_day_factor * max(0.0, rainfall_step - snow_threshold)
-        melt = min(melt, snow)
-        snow -= melt
-
-        effective_precip = rainfall_step + melt
+        effective_precip = p  # 简化：忽略融雪
         soil_deficit = max(0.0, field_capacity - soil)
 
         if soil > 0 and field_capacity > 0:
@@ -119,47 +113,6 @@ def run_hbv_model(rainfall: np.ndarray, params: dict) -> np.ndarray:
     return np.array(runoff_list)
 
 
-def calculate_nse(observed: np.ndarray, simulated: np.ndarray) -> float:
-    """计算Nash-Sutcliffe效率系数"""
-    if HYDROSIS_AVAILABLE:
-        return nash_sutcliffe_efficiency(simulated, observed)
-
-    mean_obs = np.mean(observed)
-    numerator = np.sum((observed - simulated)**2)
-    denominator = np.sum((observed - mean_obs)**2)
-    if denominator == 0:
-        return float('nan')
-    return 1 - (numerator / denominator)
-
-
-def calculate_all_metrics(observed: np.ndarray, simulated: np.ndarray) -> dict:
-    """计算所有性能指标"""
-    if HYDROSIS_AVAILABLE:
-        return {
-            'NSE': nash_sutcliffe_efficiency(simulated, observed),
-            'log_NSE': log_nash_sutcliffe_efficiency(simulated, observed),
-            'KGE': kling_gupta_efficiency(simulated, observed),
-            'RMSE': rmse(simulated, observed),
-            'MAE': mae(simulated, observed),
-            'PBIAS': percent_bias(simulated, observed),
-        }
-    else:
-        # 简化实现
-        nse = calculate_nse(observed, simulated)
-        rmse_val = np.sqrt(np.mean((observed - simulated)**2))
-        bias = np.mean(simulated - observed)
-        rel_bias = (np.sum(simulated) - np.sum(observed)) / np.sum(observed) * 100
-        corr = np.corrcoef(observed, simulated)[0, 1]
-
-        return {
-            'NSE': nse,
-            'RMSE': rmse_val,
-            'Bias': bias,
-            'Relative_Bias_%': rel_bias,
-            'Correlation': corr,
-        }
-
-
 def main():
     """主函数：高精度参数率定"""
     print("=" * 80)
@@ -169,26 +122,25 @@ def main():
     # ========================================================================
     # 第1步：加载60天降雨数据
     # ========================================================================
-    print("\n[1/7] 加载60天降雨数据...")
+    print("\n[1/5] 加载60天降雨数据...")
 
     data_file = Path('results/extended_timeseries_60days/timeseries_60days.csv')
     if not data_file.exists():
         print(f"❌ 错误: 数据文件不存在: {data_file}")
-        print("   请先运行: python generate_extended_timeseries.py")
+        print("   请先运行生成60天时间序列的脚本")
         return
 
     df = pd.read_csv(data_file)
     rainfall = df['precipitation_mm_per_hour'].values
-    timestamps = pd.to_datetime(df['timestamp'])
+    timestamps = pd.to_datetime(df['timestamp']) if 'timestamp' in df.columns else None
 
     print(f"  ✓ 已加载 {len(rainfall)} 个时间步")
-    print(f"  ✓ 时间范围: {timestamps.iloc[0]} 至 {timestamps.iloc[-1]}")
     print(f"  ✓ 总降雨量: {rainfall.sum():.2f} mm")
 
     # ========================================================================
     # 第2步：生成"真实"观测数据
     # ========================================================================
-    print("\n[2/7] 生成观测数据（使用已知真实参数）...")
+    print("\n[2/5] 生成观测数据（使用已知真实参数）...")
 
     # 真实参数（我们将尝试恢复这些参数）
     true_params = {
@@ -210,253 +162,104 @@ def main():
     for key in ['field_capacity', 'beta', 'k0']:
         print(f"    {key}: {true_params[key]}")
 
-    observed = run_hbv_model(rainfall, true_params)
+    observed = generate_synthetic_observations(rainfall, true_params)
+
     print(f"  ✓ 生成观测径流: {len(observed)} 个时间步")
     print(f"  ✓ 总径流量: {observed.sum():.2f} mm")
     print(f"  ✓ 径流系数: {observed.sum() / rainfall.sum():.4f}")
 
     # ========================================================================
-    # 第3步：定义参数空间（基于敏感性分析）
+    # 第3步：准备校准数据
     # ========================================================================
-    print("\n[3/7] 定义参数空间...")
+    print("\n[3/5] 准备校准数据...")
+
+    calibration_data = CalibrationData(
+        rainfall=rainfall,
+        observed_runoff=observed,
+        timestamps=timestamps,
+    )
+
+    print(f"  ✓ 校准数据已准备")
+
+    # ========================================================================
+    # 第4步：配置校准参数
+    # ========================================================================
+    print("\n[4/5] 配置校准参数...")
 
     # 重点率定最敏感的参数
-    param_names = ['field_capacity', 'beta', 'k0']
-    param_bounds = [
-        (60, 120),    # field_capacity: 真实值90在中间
-        (0.8, 1.8),   # beta: 真实值1.3在中间
-        (0.09, 0.20), # k0: 真实值0.15在中间
-    ]
-
-    # 固定的参数
-    fixed_params = {
-        'degree_day_factor': 3.0,
-        'snow_threshold': 0.0,
-        'k1': 0.08,
-        'k2': 0.02,
-        'percolation': 1.0,
-        'initial_snow': 0.0,
-        'initial_soil': 0.0,
-        'initial_upper': 0.0,
-        'initial_lower': 0.0,
+    param_bounds = {
+        'field_capacity': (60, 120),   # 真实值90在中间
+        'beta': (0.8, 1.8),            # 真实值1.3在中间
+        'k0': (0.09, 0.20),            # 真实值0.15在中间
     }
 
-    print(f"  待率定参数: {param_names}")
-    print(f"  参数范围:")
-    for name, bounds in zip(param_names, param_bounds):
-        print(f"    {name}: [{bounds[0]}, {bounds[1]}]")
+    calibration_config = CalibrationConfig(
+        param_bounds=param_bounds,
+        algorithm='differential_evolution',
+        max_iterations=200,
+        population_size=20,
+        objective='nse',
+        random_seed=42,
+    )
+
+    print(f"  待率定参数: {list(param_bounds.keys())}")
+    for name, bounds in param_bounds.items():
+        true_val = true_params[name]
+        print(f"    {name}: [{bounds[0]}, {bounds[1]}], 真实值={true_val}")
 
     # ========================================================================
-    # 第4步：定义目标函数
+    # 第5步：执行校准
     # ========================================================================
-    print("\n[4/7] 定义目标函数...")
+    print("\n[5/5] 执行参数率定...")
 
-    def objective_function(params_array):
-        """
-        目标函数：最大化NSE
+    calibrator = HBVCalibrator(
+        data=calibration_data,
+        config=calibration_config,
+    )
 
-        Parameters
-        ----------
-        params_array : array-like
-            [field_capacity, beta, k0]
+    result = calibrator.calibrate()
 
-        Returns
-        -------
-        float
-            NSE (越大越好)
-        """
-        # 构建完整参数字典
-        params = fixed_params.copy()
-        params['field_capacity'] = params_array[0]
-        params['beta'] = params_array[1]
-        params['k0'] = params_array[2]
+    # 打印结果摘要
+    print("\n" + "=" * 80)
+    print("✓ 率定完成！")
+    print("=" * 80)
 
-        # 运行模型
-        simulated = run_hbv_model(rainfall, params)
+    print(f"\n性能指标:")
+    for key, value in result.metrics.items():
+        print(f"  {key}: {value:.6f}")
 
-        # 计算NSE
-        nse = calculate_nse(observed, simulated)
+    # 参数恢复精度分析
+    print("\n参数恢复精度:")
+    print(f"  {'参数':<20} {'真实值':<12} {'率定值':<12} {'误差%':<10}")
+    print(f"  {'-'*54}")
 
-        return nse
-
-    print("  ✓ 目标函数: 最大化NSE")
-
-    # ========================================================================
-    # 第5步：运行参数率定
-    # ========================================================================
-    print("\n[5/7] 运行参数率定...")
-    print("  算法: Differential Evolution")
-    print("  参数: maxiter=200, popsize=20, seed=42")
-
-    if HYDROSIS_AVAILABLE:
-        from scipy.optimize import differential_evolution
-
-        result = differential_evolution(
-            func=lambda x: -objective_function(x),  # 最小化负NSE = 最大化NSE
-            bounds=param_bounds,
-            maxiter=200,
-            popsize=20,
-            seed=42,
-            polish=True,
-            disp=True,
-        )
-
-        best_params_array = result.x
-        best_nse = -result.fun
-        success = result.success
-        n_iterations = result.nit
-        n_evaluations = result.nfev
-
-    else:
-        # 简化网格搜索（如果没有基础库）
-        print("  ⚠ 使用简化网格搜索...")
-        best_nse = -np.inf
-        best_params_array = None
-
-        n_grid = 10
-        for fc in np.linspace(param_bounds[0][0], param_bounds[0][1], n_grid):
-            for beta in np.linspace(param_bounds[1][0], param_bounds[1][1], n_grid):
-                for k0 in np.linspace(param_bounds[2][0], param_bounds[2][1], n_grid):
-                    nse = objective_function([fc, beta, k0])
-                    if nse > best_nse:
-                        best_nse = nse
-                        best_params_array = [fc, beta, k0]
-
-        success = True
-        n_iterations = n_grid**3
-        n_evaluations = n_grid**3
-
-    # 构建最优参数字典
-    best_params = fixed_params.copy()
-    best_params['field_capacity'] = best_params_array[0]
-    best_params['beta'] = best_params_array[1]
-    best_params['k0'] = best_params_array[2]
-
-    print(f"\n  ✓ 率定完成!")
-    print(f"    状态: {'成功' if success else '失败'}")
-    print(f"    迭代次数: {n_iterations}")
-    print(f"    函数评估: {n_evaluations}")
-    print(f"    最优NSE: {best_nse:.6f}")
-
-    # ========================================================================
-    # 第6步：评估率定结果
-    # ========================================================================
-    print("\n[6/7] 评估率定结果...")
-
-    # 使用最优参数模拟
-    simulated = run_hbv_model(rainfall, best_params)
-
-    # 计算所有指标
-    metrics = calculate_all_metrics(observed, simulated)
-
-    print("\n  性能指标:")
-    for key, value in metrics.items():
-        print(f"    {key}: {value:.6f}")
-
-    # 参数恢复精度
-    print("\n  参数恢复精度:")
-    print(f"    {'参数':<20} {'真实值':<12} {'率定值':<12} {'误差%':<10}")
-    print(f"    {'-'*54}")
-
-    for param_name in param_names:
+    param_errors = []
+    for param_name in param_bounds.keys():
         true_val = true_params[param_name]
-        calib_val = best_params[param_name]
+        calib_val = result.best_params[param_name]
         error_pct = abs(calib_val - true_val) / true_val * 100
-        print(f"    {param_name:<20} {true_val:<12.4f} {calib_val:<12.4f} {error_pct:<10.2f}")
+        param_errors.append(error_pct)
+        print(f"  {param_name:<20} {true_val:<12.4f} {calib_val:<12.4f} {error_pct:<10.2f}")
 
-    # ========================================================================
-    # 第7步：保存结果和可视化
-    # ========================================================================
-    print("\n[7/7] 保存结果...")
+    avg_error = np.mean(param_errors)
+    print(f"\n  平均参数误差: {avg_error:.2f}%")
 
+    # 保存结果
     output_dir = Path('results/calibration_60day')
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 保存参数
-    params_file = output_dir / 'calibrated_parameters.yaml'
-    with open(params_file, 'w') as f:
-        yaml.dump(best_params, f, default_flow_style=False)
-    print(f"  ✓ 参数已保存: {params_file}")
+    # 添加真实参数到元数据
+    result.metadata['true_params'] = {k: true_params[k] for k in param_bounds.keys()}
+    result.metadata['parameter_recovery_errors'] = {
+        k: abs(result.best_params[k] - true_params[k]) / true_params[k] * 100
+        for k in param_bounds.keys()
+    }
 
-    # 保存指标
-    metrics_file = output_dir / 'performance_metrics.yaml'
-    with open(metrics_file, 'w') as f:
-        yaml.dump(metrics, f, default_flow_style=False)
-    print(f"  ✓ 指标已保存: {metrics_file}")
+    calibrator.save_results(result, output_dir)
 
-    # 保存时间序列
-    results_df = pd.DataFrame({
-        'timestamp': timestamps,
-        'rainfall': rainfall,
-        'observed': observed,
-        'simulated': simulated,
-        'residual': observed - simulated,
-    })
-    ts_file = output_dir / 'calibration_timeseries.csv'
-    results_df.to_csv(ts_file, index=False)
-    print(f"  ✓ 时间序列已保存: {ts_file}")
+    print(f"\n输出目录: {output_dir}")
 
-    # 生成可视化
-    fig, axes = plt.subplots(3, 1, figsize=(14, 10))
-    fig.suptitle(f'High-Precision Calibration Results (NSE={best_nse:.4f})',
-                 fontsize=14, fontweight='bold')
-
-    # 子图1: 降雨
-    ax = axes[0]
-    ax.fill_between(range(len(rainfall)), rainfall, alpha=0.5, color='blue')
-    ax.set_ylabel('Rainfall (mm/h)')
-    ax.set_title('Input: 60-Day Rainfall')
-    ax.grid(True, alpha=0.3)
-    ax.set_xlim(0, len(rainfall))
-
-    # 子图2: 观测vs模拟
-    ax = axes[1]
-    ax.plot(observed, label='Observed', linewidth=1.5, alpha=0.8, color='black')
-    ax.plot(simulated, label='Simulated', linewidth=1.2, alpha=0.7, color='red', linestyle='--')
-    ax.set_ylabel('Runoff (mm/h)')
-    ax.set_title(f'Observed vs Simulated (NSE={best_nse:.4f}, RMSE={metrics.get("RMSE", 0):.4f})')
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-    ax.set_xlim(0, len(observed))
-
-    # 子图3: 残差
-    ax = axes[2]
-    residuals = observed - simulated
-    ax.plot(residuals, linewidth=0.8, color='green', alpha=0.7)
-    ax.axhline(y=0, color='red', linestyle='--', linewidth=1)
-    ax.set_ylabel('Residual (mm/h)')
-    ax.set_xlabel('Time (hours)')
-    ax.set_title(f'Residuals (Mean={np.mean(residuals):.6f}, Std={np.std(residuals):.6f})')
-    ax.grid(True, alpha=0.3)
-    ax.set_xlim(0, len(residuals))
-
-    plt.tight_layout()
-
-    plot_file = output_dir / 'calibration_results.png'
-    plt.savefig(plot_file, dpi=150, bbox_inches='tight')
-    print(f"  ✓ 图表已保存: {plot_file}")
-
-    # 散点图
-    fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-    ax.scatter(observed, simulated, alpha=0.5, s=20)
-
-    # 1:1线
-    max_val = max(observed.max(), simulated.max())
-    ax.plot([0, max_val], [0, max_val], 'r--', linewidth=2, label='1:1 Line')
-
-    ax.set_xlabel('Observed Runoff (mm/h)', fontsize=12)
-    ax.set_ylabel('Simulated Runoff (mm/h)', fontsize=12)
-    ax.set_title(f'Observed vs Simulated Scatter Plot\nNSE={best_nse:.4f}, R²={metrics.get("Correlation", 0)**2:.4f}',
-                 fontsize=14, fontweight='bold')
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-    ax.set_aspect('equal')
-
-    scatter_file = output_dir / 'scatter_plot.png'
-    plt.savefig(scatter_file, dpi=150, bbox_inches='tight')
-    print(f"  ✓ 散点图已保存: {scatter_file}")
-
-    # 生成报告
+    # 生成详细报告
     report_file = output_dir / 'calibration_report.txt'
     with open(report_file, 'w') as f:
         f.write("=" * 80 + "\n")
@@ -464,59 +267,50 @@ def main():
         f.write("=" * 80 + "\n\n")
 
         f.write("1. 数据概况\n")
-        f.write(f"   时间长度: 60天 (1440小时)\n")
+        f.write(f"   时间长度: 60天 ({len(rainfall)}小时)\n")
         f.write(f"   总降雨量: {rainfall.sum():.2f} mm\n")
         f.write(f"   总径流量: {observed.sum():.2f} mm\n")
         f.write(f"   径流系数: {observed.sum() / rainfall.sum():.4f}\n\n")
 
         f.write("2. 率定设置\n")
-        f.write(f"   算法: Differential Evolution\n")
-        f.write(f"   目标函数: NSE (Nash-Sutcliffe Efficiency)\n")
-        f.write(f"   率定参数: {param_names}\n")
-        f.write(f"   迭代次数: {n_iterations}\n")
-        f.write(f"   函数评估: {n_evaluations}\n\n")
+        f.write(f"   算法: {calibration_config.algorithm}\n")
+        f.write(f"   目标函数: {calibration_config.objective}\n")
+        f.write(f"   率定参数: {list(param_bounds.keys())}\n")
+        f.write(f"   最大迭代数: {calibration_config.max_iterations}\n")
+        f.write(f"   种群大小: {calibration_config.population_size}\n\n")
 
         f.write("3. 率定结果\n")
-        f.write(f"   状态: {'成功' if success else '失败'}\n")
-        f.write(f"   最优NSE: {best_nse:.6f}\n\n")
+        f.write(f"   迭代次数: {result.n_iterations}\n")
+        f.write(f"   函数评估: {result.n_evaluations}\n")
+        f.write(f"   计算时间: {result.computation_time:.1f}秒\n\n")
 
         f.write("4. 性能指标\n")
-        for key, value in metrics.items():
+        for key, value in result.metrics.items():
             f.write(f"   {key}: {value:.6f}\n")
         f.write("\n")
 
         f.write("5. 参数恢复精度\n")
         f.write(f"   {'参数':<20} {'真实值':<12} {'率定值':<12} {'误差%':<10}\n")
         f.write(f"   {'-'*54}\n")
-        for param_name in param_names:
+        for param_name in param_bounds.keys():
             true_val = true_params[param_name]
-            calib_val = best_params[param_name]
+            calib_val = result.best_params[param_name]
             error_pct = abs(calib_val - true_val) / true_val * 100
             f.write(f"   {param_name:<20} {true_val:<12.4f} {calib_val:<12.4f} {error_pct:<10.2f}\n")
-        f.write("\n")
+        f.write(f"\n   平均误差: {avg_error:.2f}%\n\n")
 
         f.write("6. 结论\n")
-        if best_nse > 0.9:
-            f.write("   ✓ 优秀: NSE > 0.9, 率定精度极高\n")
-        elif best_nse > 0.75:
-            f.write("   ✓ 良好: NSE > 0.75, 率定精度较高\n")
-        elif best_nse > 0.5:
-            f.write("   ⚠ 可接受: NSE > 0.5, 率定精度一般\n")
+        nse = result.metrics.get('NSE', result.metrics.get('nse', 0))
+        if nse > 0.9 and avg_error < 5:
+            f.write("   ✓ 优秀: NSE > 0.9 且参数恢复误差 < 5%\n")
+        elif nse > 0.75 and avg_error < 10:
+            f.write("   ✓ 良好: NSE > 0.75 且参数恢复误差 < 10%\n")
+        elif nse > 0.5:
+            f.write("   ⚠ 可接受: NSE > 0.5 但参数恢复精度一般\n")
         else:
-            f.write("   ❌ 不佳: NSE < 0.5, 需要改进\n")
+            f.write("   ❌ 不佳: NSE < 0.5 或参数恢复精度较低\n")
 
     print(f"  ✓ 报告已保存: {report_file}")
-
-    # 打印最终总结
-    print("\n" + "=" * 80)
-    print("✓ 高精度参数率定完成！")
-    print("=" * 80)
-    print(f"\n关键结果:")
-    print(f"  • NSE: {best_nse:.6f}")
-    print(f"  • 参数误差: ", end="")
-    errors = [abs(best_params[p] - true_params[p])/true_params[p]*100 for p in param_names]
-    print(f"{np.mean(errors):.2f}% (平均)")
-    print(f"\n输出目录: {output_dir}")
     print()
 
 
