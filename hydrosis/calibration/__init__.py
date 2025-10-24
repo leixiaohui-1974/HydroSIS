@@ -9,12 +9,21 @@
 - GenericRunoffCalibrator: 通用产流模型校准器（简化版本）
 - HBVCalibrator: HBV模型专用校准器（向后兼容）
 - XinAnJiangCalibrator: 新安江模型专用校准器（向后兼容）
+
+敏感性分析：
+- HydrologicSensitivityAnalyzer: 水文模型敏感性分析器
+- analyze_model_sensitivity: 便捷函数
 """
 from .base import BaseCalibrator, CalibrationData, CalibrationConfig, CalibrationResult
 from .hbv_calibrator import HBVCalibrator
 from .xinanjiang_calibrator import XinAnJiangCalibrator
 from .generic_runoff_calibrator import GenericRunoffCalibrator, calibrate_runoff_model
 from .generic_calibrator import GenericHydrologicCalibrator, ModelMode
+from .sensitivity_analyzer import (
+    HydrologicSensitivityAnalyzer,
+    ModelSensitivityResult,
+    analyze_model_sensitivity
+)
 
 __all__ = [
     # 核心类
@@ -34,4 +43,9 @@ __all__ = [
     # 模型特定校准器（向后兼容）
     "HBVCalibrator",
     "XinAnJiangCalibrator",
+
+    # 敏感性分析
+    "HydrologicSensitivityAnalyzer",
+    "ModelSensitivityResult",
+    "analyze_model_sensitivity",
 ]
