@@ -8,6 +8,7 @@ import datetime as _dt
 import json
 import logging
 import math
+import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence, Set, Tuple
 from types import SimpleNamespace

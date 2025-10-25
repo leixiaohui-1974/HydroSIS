@@ -42,6 +42,7 @@ from .core import (
     load_base_precipitation_series,
     compute_basic_stats,
 )
+from .step02_pour_points import _extract_cross_sections
 from hydrosis.reporting.markdown import MarkdownReportBuilder, TableData
 
 
@@ -441,6 +442,139 @@ def run_step04_channel_profile(config_path: Path | str) -> Dict[str, Path]:
     for idx, path in enumerate(created_files):
         outputs[f"cross_section_file_{idx:02d}"] = path
     return outputs
+
+
+def _resolve_main_path(zone_df: "pd.DataFrame") -> "list[str]":
+    import pandas as pd
+
+    def _parse_upstream(value: object, valid_segments: set[str]) -> list[str]:
+        if value is None or (isinstance(value, float) and pd.isna(value)):
+            return []
+        text = str(value)
+        if not text:
+            return []
+        candidates = [item.strip() for item in text.replace(";", ",").split(",") if item.strip()]
+        return [item for item in candidates if item in valid_segments]
+
+    segments = set(zone_df["segment_id"])
+    length_map = {row["segment_id"]: float(row["length_m"]) for _, row in zone_df.iterrows()}
+    downstream_map = {
+        row["segment_id"]: row["downstream_id"] if row["downstream_id"] in segments else None
+        for _, row in zone_df.iterrows()
+    }
+    upstream_map = {
+        row["segment_id"]: _parse_upstream(row.get("upstream_ids"), segments)
+        for _, row in zone_df.iterrows()
+    }
+
+    outlet_candidates = [seg for seg, downstream in downstream_map.items() if downstream is None]
+    if not outlet_candidates:
+        outlet_candidates = [
+            row["segment_id"]
+            for _, row in zone_df.iterrows()
+            if not row.get("downstream_id") or str(row.get("downstream_id")).startswith("P") is False
+        ]
+    if not outlet_candidates:
+        outlet_candidates = [zone_df.iloc[0]["segment_id"]]
+    outlet = outlet_candidates[0]
+
+    memo: Dict[str, Tuple[float, List[str]]] = {}
+
+    def longest_path(seg: str) -> Tuple[float, List[str]]:
+        if seg in memo:
+            return memo[seg]
+        ups = upstream_map.get(seg, [])
+        if not ups:
+            result = (length_map.get(seg, 0.0), [seg])
+        else:
+            best_length = -1.0
+            best_path: List[str] = []
+            for upstream in ups:
+                total, path = longest_path(upstream)
+                if total > best_length:
+                    best_length = total
+                    best_path = path
+            result = (best_length + length_map.get(seg, 0.0), best_path + [seg])
+        memo[seg] = result
+        return result
+
+    _, path = longest_path(outlet)
+    return path
+
+
+def _summarise_main_channels(
+    channel_csv: Path,
+    zones: Sequence[str],
+    cross_sections: "pd.DataFrame",
+    output_dir: Path,
+) -> "tuple[Path, Path, 'pd.DataFrame', 'pd.DataFrame', Dict[str, float]]":
+    import pandas as pd
+
+    channel_df = pd.read_csv(channel_csv)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    summary_rows: list[Dict[str, object]] = []
+    aggregated_frames: list[pd.DataFrame] = []
+    zone_lengths: Dict[str, float] = {}
+
+    for zone in zones:
+        zone_df = channel_df[channel_df["zone_id"] == zone].copy()
+        if zone_df.empty:
+            continue
+        path_segments = _resolve_main_path(zone_df)
+        cumulative = 0.0
+        for seg in path_segments:
+            row = zone_df[zone_df["segment_id"] == seg].iloc[0]
+            length = float(row["length_m"])
+            start_offset = cumulative
+            cumulative += length
+            summary_rows.append(
+                {
+                    "zone_id": zone,
+                    "segment_id": seg,
+                    "subzone_id": row["subzone_id"],
+                    "length_m": length,
+                    "slope": float(row.get("slope", 0.0)),
+                    "drop_m": float(row.get("drop_m", 0.0)),
+                    "downstream_id": row.get("downstream_id"),
+                    "upstream_ids": row.get("upstream_ids"),
+                    "segment_start_m": start_offset,
+                    "cumulative_length_m": cumulative,
+                }
+            )
+
+            seg_sections = cross_sections[cross_sections["segment_id"] == seg].copy()
+            if not seg_sections.empty:
+                seg_sections["zone_id"] = zone
+                seg_sections["segment_id"] = seg
+                seg_sections["station_global_m"] = seg_sections["station_m"].astype(float) + start_offset
+                aggregated_frames.append(seg_sections)
+        zone_lengths[zone] = cumulative
+
+    summary_df = pd.DataFrame(summary_rows)
+    segments_path = output_dir / "main_channel_segments.csv"
+    summary_df.to_csv(segments_path, index=False)
+
+    if aggregated_frames:
+        cross_df = pd.concat(aggregated_frames, ignore_index=True)
+    else:
+        cross_df = pd.DataFrame(
+            columns=[
+                "zone_id",
+                "segment_id",
+                "subzone_id",
+                "station_m",
+                "distance_from_center_m",
+                "elevation_m",
+                "x",
+                "y",
+                "station_global_m",
+            ]
+        )
+    aggregated_path = output_dir / "main_channel_cross_sections.csv"
+    cross_df.to_csv(aggregated_path, index=False)
+
+    return segments_path, aggregated_path, summary_df, cross_df, zone_lengths
 
 
 def run_step05_rain_gauge_layout(config_path: Path | str) -> Dict[str, Path]:

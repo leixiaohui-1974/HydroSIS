@@ -289,6 +289,29 @@ def run_step05_rain_gauge_layout(config_path: Path | str) -> Dict[str, Path]:
     }
 
 
+def _generate_rain_gauge_inputs(
+    base_series: "pd.Series",
+    subbasin_geometries: Mapping[str, "BaseGeometry"],
+    *,
+    station_count: int,
+    seed: Optional[int],
+    heterogeneity: float,
+    min_burst_events: int,
+    max_burst_events: int,
+) -> "RainGaugeInputs":
+    from hydrosis.precipitation import generate_rain_gauge_inputs
+
+    return generate_rain_gauge_inputs(
+        base_series,
+        subbasin_geometries,
+        station_count=station_count,
+        rng_seed=seed,
+        heterogeneity_strength=heterogeneity,
+        min_burst_events=min_burst_events,
+        max_burst_events=max_burst_events,
+    )
+
+
 def run_step06_rain_sequence(config_path: Path | str) -> Dict[str, Path]:
     """Placeholder - implemented in step06_rain_sequence.py module."""
     raise NotImplementedError("See step06_rain_sequence.py")

@@ -4,6 +4,7 @@ Run 1D hydraulic channel routing.
 """
 from __future__ import annotations
 
+import copy
 import datetime as _dt
 import json
 import logging
@@ -42,13 +43,28 @@ from .core import (
     load_base_precipitation_series,
     compute_basic_stats,
 )
+from .step09_hydrologic_run import (
+    _expand_hydrodynamic_routing_targets,
+    _calibrate_dynamic_wave_parameters,
+)
 from hydrosis.reporting.markdown import MarkdownReportBuilder, TableData
+from hydrosis.io.outputs import write_simulation_results
 
 
 # Step-specific imports
 from hydrosis.hydrodynamics import build_zone_geometry, CrossSectionSolver
 from hydrosis.model import Subbasin
-from hydrosis.workflow.orchestration import _instantiate_model, ScenarioRun
+from hydrosis.workflow.orchestration import (
+    _instantiate_model,
+    _run_model,
+    _flatten_zone_discharge,
+    ScenarioRun,
+)
+from .ten_step_pipeline import (
+    _plot_flow_stage_comparison,
+    _create_mainstem_animation,
+    _run_cross_section_solver_branch,
+)
 
 def run_step10_hydrodynamic_run(config_path: Path | str) -> Dict[str, Path]:
     """Execute hydrodynamic routing scenarios and compare against the baseline."""

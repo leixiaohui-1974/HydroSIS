@@ -42,6 +42,7 @@ from .core import (
     load_base_precipitation_series,
     compute_basic_stats,
 )
+from .step05_rain_gauge_layout import _generate_rain_gauge_inputs
 from hydrosis.reporting.markdown import MarkdownReportBuilder, TableData
 
 

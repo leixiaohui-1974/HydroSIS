@@ -34,18 +34,18 @@ project:
     areal_precip_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/08_areal_precipitation/parameter_subbasin_areal_precipitation.csv
     timeseries_plot: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/06_rain_sequence/rainfall_timeseries.png
     timeseries_animation: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/06_rain_sequence/rainfall_animation.gif
-  last_step01_run: '2025-10-12T23:17:45.327357+00:00'
-  last_step02_run: '2025-10-12T23:17:57.963535+00:00'
-  last_step03_run: '2025-10-12T23:18:06.383556+00:00'
-  last_step04_run: '2025-10-13T10:34:28.055689+00:00'
-  last_step05_run: '2025-10-12T23:18:27.261030+00:00'
-  last_step06_run: '2025-10-12T23:18:45.518731+00:00'
-  last_step07_run: '2025-10-12T23:20:07.570147+00:00'
-  last_step08_run: '2025-10-12T23:20:17.686418+00:00'
-  last_step09_run: '2025-10-13T01:47:57.508098+00:00'
-  last_step10_run: '2025-10-13T15:33:32.880733+00:00'
+  last_step01_run: '2025-10-25T00:04:57.378056+00:00'
+  last_step02_run: '2025-10-25T00:05:16.910160+00:00'
+  last_step03_run: '2025-10-25T00:06:16.897640+00:00'
+  last_step04_run: '2025-10-25T00:08:41.402890+00:00'
+  last_step05_run: '2025-10-25T00:10:14.371706+00:00'
+  last_step06_run: '2025-10-25T00:11:06.534207+00:00'
+  last_step07_run: '2025-10-25T00:12:28.282641+00:00'
+  last_step08_run: '2025-10-25T00:12:45.785340+00:00'
+  last_step09_run: '2025-10-25T00:14:25.918864+00:00'
+  last_step10_run: '2025-10-25T00:19:23.605791+00:00'
   final_report_path: E:/OneDrive/Documents/GitHub/HydroSIS/results/upper_truckee_project/reports/final_pipeline_report.md
-  last_final_report: '2025-10-12T09:25:29.156237+00:00'
+  last_final_report: '2025-10-25T00:20:52.527357+00:00'
 channel_dynamics:
   enable_cross_section_solver: true
   flow_source: subbasin

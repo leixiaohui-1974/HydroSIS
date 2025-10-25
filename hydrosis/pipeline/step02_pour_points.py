@@ -376,3 +376,116 @@ def run_step02_pour_points(config_path: Path | str) -> Dict[str, Path]:
 
 
 def _extract_cross_sections(
+    geojson_path: Path,
+    dem_path: Path,
+    zones: Sequence[str],
+    *,
+    spacing_m: float,
+    half_width_m: float,
+    n_points: int,
+    output_dir: Path,
+    logger: logging.Logger,
+) -> "tuple[list[Path], 'pd.DataFrame']":
+    import json
+    from typing import List
+
+    import numpy as np
+    import pandas as pd
+    import rasterio
+    from shapely.geometry import LineString, shape
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    with geojson_path.open("r", encoding="utf-8") as handle:
+        data = json.load(handle)
+
+    created: List[Path] = []
+    frames: List[pd.DataFrame] = []
+    zone_filter = set(zones)
+
+    logger.info(
+        "Extracting cross sections from %s (zones=%s, spacing=%.1f m, half_width=%.1f m, samples=%d).",
+        geojson_path,
+        ", ".join(zones),
+        spacing_m,
+        half_width_m,
+        n_points,
+    )
+
+    with rasterio.open(dem_path) as dem:
+        for feature in data.get("features", []):
+            props = feature.get("properties") or {}
+            zone_id = str(props.get("zone_id") or props.get("ZoneID") or "").strip()
+            if zones and zone_id not in zone_filter:
+                continue
+            segment_id = props.get("segment_id") or props.get("subzone_id")
+            if not segment_id:
+                continue
+            segment_id = str(segment_id)
+
+            geom = shape(feature.get("geometry"))
+            if not isinstance(geom, LineString):
+                continue
+            coords = list(geom.coords)
+            if len(coords) < 2:
+                continue
+
+            cumulative = np.concatenate(
+                ([0.0], np.cumsum(np.linalg.norm(np.diff(coords, axis=0), axis=1)))
+            )
+            total_length = cumulative[-1]
+            if total_length <= 0.0:
+                continue
+
+            n_sections = max(1, int(total_length // max(spacing_m, 1.0)))
+            distances = np.linspace(0.0, total_length, n_sections)
+            section_frames: List[pd.DataFrame] = []
+            for dist in distances:
+                idx = np.searchsorted(cumulative, dist, side="right") - 1
+                idx = max(0, min(idx, len(coords) - 2))
+                start = np.array(coords[idx])
+                end = np.array(coords[idx + 1])
+                segment_length = max(cumulative[idx + 1] - cumulative[idx], 1e-6)
+                fraction = (dist - cumulative[idx]) / segment_length
+                centre = start + (end - start) * fraction
+
+                direction = end - start
+                norm = np.linalg.norm(direction)
+                if norm == 0.0:
+                    continue
+                tangent = direction / norm
+                normal = np.array([-tangent[1], tangent[0]])
+
+                start_pt = centre - normal * half_width_m
+                end_pt = centre + normal * half_width_m
+
+                xs = np.linspace(start_pt[0], end_pt[0], n_points)
+                ys = np.linspace(start_pt[1], end_pt[1], n_points)
+                elevations = []
+                for x, y in zip(xs, ys):
+                    sample = next(dem.sample([(float(x), float(y))]), [math.nan])
+                    elevations.append(float(sample[0]))
+                offsets = np.linspace(-half_width_m, half_width_m, n_points)
+
+                df = pd.DataFrame(
+                    {
+                        "zone_id": zone_id,
+                        "segment_id": segment_id,
+                        "subzone_id": props.get("subzone_id"),
+                        "station_m": dist,
+                        "distance_from_center_m": offsets,
+                        "elevation_m": elevations,
+                        "x": xs,
+                        "y": ys,
+                    }
+                )
+                section_frames.append(df)
+
+            if section_frames:
+                profile_df = pd.concat(section_frames, ignore_index=True)
+                file_path = output_dir / f"{segment_id}_cross_sections.csv"
+                profile_df.to_csv(file_path, index=False)
+                created.append(file_path)
+                frames.append(profile_df)
+
+    combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    return created, combined
