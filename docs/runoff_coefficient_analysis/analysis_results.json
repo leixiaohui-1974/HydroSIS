@@ -1,0 +1,170 @@
+{
+  "Zone1": {
+    "observed_rc": 0.41903238508092516,
+    "simulated_rc": {
+      "HBV": 0.5866932542134928,
+      "SCS-CN": 0.011123084722840994,
+      "Green-Ampt": 0.19945425821523804,
+      "HBV+Muskingum": 0.5781726274837561,
+      "HBV+Kinematic": 0.5800780227919721,
+      "SCS-CN+Muskingum": 0.011123084717545874,
+      "SCS-CN+Kinematic": 0.012017139566402366,
+      "Green-Ampt+Muskingum": 0.1994542581183915,
+      "Green-Ampt+Kinematic": 0.19945573777181072
+    },
+    "precipitation_mm": 1149.4151614492348,
+    "observed_runoff_mm": 481.64217655024953,
+    "simulated_runoff_mm": {
+      "HBV": 674.3541215129788,
+      "SCS-CN": 12.785042222517799,
+      "Green-Ampt": 229.2557484082052,
+      "HBV+Muskingum": 664.5603839647698,
+      "HBV+Kinematic": 666.7504742205874,
+      "SCS-CN+Muskingum": 12.785042216431506,
+      "SCS-CN+Kinematic": 13.812682414874363,
+      "Green-Ampt+Muskingum": 229.2557482968883,
+      "Green-Ampt+Kinematic": 229.25744903296206
+    },
+    "area_km2": 100.0
+  },
+  "Zone2": {
+    "observed_rc": 0.5108274644431396,
+    "simulated_rc": {
+      "HBV": 0.6247011529310199,
+      "SCS-CN": 0.011120798104039148,
+      "Green-Ampt": 0.16989511658162426,
+      "HBV+Muskingum": 0.6173375916071868,
+      "HBV+Kinematic": 0.6187419012536066,
+      "SCS-CN+Muskingum": 0.01112079810223947,
+      "SCS-CN+Kinematic": 0.012128838547696556,
+      "Green-Ampt+Muskingum": 0.16984673708565154,
+      "Green-Ampt+Kinematic": 0.17100578426522736
+    },
+    "precipitation_mm": 1256.0787112432668,
+    "observed_runoff_mm": 641.6395032054045,
+    "simulated_runoff_mm": {
+      "HBV": 784.6738190857784,
+      "SCS-CN": 13.968597750518057,
+      "Green-Ampt": 213.40163908237116,
+      "HBV+Muskingum": 775.4246064679774,
+      "HBV+Kinematic": 777.1885299188389,
+      "SCS-CN+Muskingum": 13.96859774825752,
+      "SCS-CN+Kinematic": 15.234775891868345,
+      "Green-Ampt+Muskingum": 213.34087062741915,
+      "Green-Ampt+Kinematic": 214.79672511501087
+    },
+    "area_km2": 100.0
+  },
+  "Zone3": {
+    "observed_rc": 0.5773145104312093,
+    "simulated_rc": {
+      "HBV": 0.6477500749929653,
+      "SCS-CN": 0.02021289918880786,
+      "Green-Ampt": 0.2561650339281887,
+      "HBV+Muskingum": 0.6388481052686774,
+      "HBV+Kinematic": 0.634995987169047,
+      "SCS-CN+Muskingum": 0.020212899161218587,
+      "SCS-CN+Kinematic": 0.020885260440263915,
+      "Green-Ampt+Muskingum": 0.2561650294425789,
+      "Green-Ampt+Kinematic": 0.25715570334376964
+    },
+    "precipitation_mm": 1407.0857572539112,
+    "observed_runoff_mm": 812.3310250837691,
+    "simulated_runoff_mm": {
+      "HBV": 911.4399047827544,
+      "SCS-CN": 28.441282561380675,
+      "Green-Ampt": 360.44617074681923,
+      "HBV+Muskingum": 898.9140699722033,
+      "HBV+Kinematic": 893.4938094589534,
+      "SCS-CN+Muskingum": 28.4412825225602,
+      "SCS-CN+Kinematic": 29.387352502033906,
+      "Green-Ampt+Muskingum": 360.44616443518163,
+      "Green-Ampt+Kinematic": 361.8401275716302
+    },
+    "area_km2": 100.0
+  },
+  "Zone4": {
+    "observed_rc": 0.43685947045219975,
+    "simulated_rc": {
+      "HBV": 0.6478296275976824,
+      "SCS-CN": 0.010454697872726062,
+      "Green-Ampt": 0.16771487884227532,
+      "HBV+Muskingum": 0.6401898816972967,
+      "HBV+Kinematic": 0.6400325906801145,
+      "SCS-CN+Muskingum": 0.010454697872597663,
+      "SCS-CN+Kinematic": 0.011209435763225199,
+      "Green-Ampt+Muskingum": 0.16765578456050637,
+      "Green-Ampt+Kinematic": 0.16958490861343664
+    },
+    "precipitation_mm": 1373.4228763611497,
+    "observed_runoff_mm": 599.9927904740689,
+    "simulated_runoff_mm": {
+      "HBV": 889.7440305271814,
+      "SCS-CN": 14.358721223846223,
+      "Green-Ampt": 230.34345130811948,
+      "HBV+Muskingum": 879.2514287380055,
+      "HBV+Kinematic": 879.0354016567613,
+      "SCS-CN+Muskingum": 14.358721223669875,
+      "SCS-CN+Kinematic": 15.395295508314291,
+      "Green-Ampt+Muskingum": 230.2622898696759,
+      "Green-Ampt+Kinematic": 232.91179297530886
+    },
+    "area_km2": 100.0
+  },
+  "Zone5": {
+    "observed_rc": 0.5258761622753568,
+    "simulated_rc": {
+      "HBV": 0.6493676779063661,
+      "SCS-CN": 0.010678777670784258,
+      "Green-Ampt": 0.2049417020349987,
+      "HBV+Muskingum": 0.6403377060242429,
+      "HBV+Kinematic": 0.6389039678306969,
+      "SCS-CN+Muskingum": 0.010678777670780942,
+      "SCS-CN+Kinematic": 0.011258938681170274,
+      "Green-Ampt+Muskingum": 0.2020077360791759,
+      "Green-Ampt+Kinematic": 0.20560566712991385
+    },
+    "precipitation_mm": 1449.7476847619457,
+    "observed_runoff_mm": 762.3877487301958,
+    "simulated_runoff_mm": {
+      "HBV": 941.4192876039951,
+      "SCS-CN": 15.481533204307041,
+      "Green-Ampt": 297.1137580364119,
+      "HBV+Muskingum": 928.3281067744215,
+      "HBV+Kinematic": 926.2495481477736,
+      "SCS-CN+Muskingum": 15.481533204302233,
+      "SCS-CN+Kinematic": 16.32262028590332,
+      "Green-Ampt+Muskingum": 292.86024768478745,
+      "Green-Ampt+Kinematic": 298.0763398955279
+    },
+    "area_km2": 100.0
+  },
+  "Zone6": {
+    "observed_rc": 0.46919845760856155,
+    "simulated_rc": {
+      "HBV": 0.643804393099811,
+      "SCS-CN": 0.012003119820602337,
+      "Green-Ampt": 0.22781952777425551,
+      "HBV+Muskingum": 0.632074604415368,
+      "HBV+Kinematic": 0.622398521655609,
+      "SCS-CN+Muskingum": 0.01200311963675523,
+      "SCS-CN+Kinematic": 0.012530548194205224,
+      "Green-Ampt+Muskingum": 0.22690208359284528,
+      "Green-Ampt+Kinematic": 0.22938120011541888
+    },
+    "precipitation_mm": 1521.5388248345707,
+    "observed_runoff_mm": 713.9036698039239,
+    "simulated_runoff_mm": {
+      "HBV": 979.5733797004204,
+      "SCS-CN": 18.263212826187825,
+      "Green-Ampt": 346.63625656400757,
+      "HBV+Muskingum": 961.7260508099351,
+      "HBV+Kinematic": 947.0035152186495,
+      "SCS-CN+Muskingum": 18.26321254645731,
+      "SCS-CN+Kinematic": 19.06571557394397,
+      "Green-Ampt+Muskingum": 345.24032962237334,
+      "Green-Ampt+Kinematic": 349.01240166275795
+    },
+    "area_km2": 100.0
+  }
+}

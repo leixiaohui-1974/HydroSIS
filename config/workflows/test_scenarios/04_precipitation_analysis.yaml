@@ -15,7 +15,7 @@ workflow:
       module: "rain_gauge_layout"
       inputs:
         watershed: "${parameters.watershed_file}"
-        target_density: 0.01
+        target_density: 0.05  # 提高密度以生成约50个
         output_dir: "${parameters.output_dir}/rain_gauges"
     
     - id: "precipitation"

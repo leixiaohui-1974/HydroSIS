@@ -24,7 +24,7 @@ workflow:
       inputs:
         flow_accumulation: "${steps.terrain.outputs.flow_accumulation}"
         method: "auto"
-        threshold: "${parameters.threshold}"
+        threshold: 5000.0
         output_dir: "${parameters.output_dir}/pour_points"
     
     - id: "watershed"

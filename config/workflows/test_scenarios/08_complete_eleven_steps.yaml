@@ -22,14 +22,14 @@ workflow:
         compute_slope: true
         output_dir: "${parameters.output_dir}/01_terrain"
     
-    # 步骤2: 汇水点生成
+    # 步骤2: 汇水点生成（6个：3干流+3支流）
     - id: "step02_pour_points"
       module: "pour_points"
       depends_on: ["step01_terrain"]
       inputs:
         flow_accumulation: "${steps.step01_terrain.outputs.flow_accumulation}"
         method: "auto"
-        threshold: 1000.0
+        threshold: 5000.0  # 调整阈值以生成约6个汇水点
         output_dir: "${parameters.output_dir}/02_pour_points"
     
     # 步骤3: 流域划分
@@ -52,13 +52,13 @@ workflow:
         threshold: 500.0
         output_dir: "${parameters.output_dir}/04_channels"
     
-    # 步骤5: 雨量站布局
+    # 步骤5: 雨量站布局（50个）
     - id: "step05_rain_gauge"
       module: "rain_gauge_layout"
       depends_on: ["step03_watershed"]
       inputs:
         watershed: "${steps.step03_watershed.outputs.watersheds}"
-        target_density: 0.01
+        target_density: 0.05  # 提高密度以生成约50个
         output_dir: "${parameters.output_dir}/05_rain_gauges"
     
     # 步骤6: 降雨序列生成
