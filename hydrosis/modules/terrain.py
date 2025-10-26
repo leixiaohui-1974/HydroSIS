@@ -154,9 +154,12 @@ class TerrainModule(Module[TerrainOutput]):
                 "height": src.height,
                 "resolution": src.res,
             }
+            # 获取geotransform用于RichDEM
+            geotransform = src.transform.to_gdal()
         
-        # 转换为RichDEM数组
+        # 转换为RichDEM数组并设置geotransform
         rd_dem = rd.rdarray(dem_array, no_data=-9999)
+        rd_dem.geotransform = geotransform
         
         # 填充坑洼
         filled_dem_path = None

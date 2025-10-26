@@ -15,6 +15,9 @@ class WatershedInput(ModuleInput):
     output_format: str = "geojson"
     compute_topology: bool = True
     output_dir: str = "results/watersheds"
+    flow_dir_path: str = None  # 兼容旧代码
+    pour_points_path: str = None  # 兼容旧代码  
+    dem_path: str = None  # 兼容旧代码
 
 
 @dataclass
@@ -68,14 +71,27 @@ class WatershedDelineationModule(Module[WatershedOutput]):
         
         self.logger.info("开始流域划分...")
         
+        # 兼容不同的输入参数名称
+        flow_path = getattr(inputs, 'flow_dir_path', None) or getattr(inputs, 'flow_direction', None)
+        pour_points = getattr(inputs, 'pour_points_path', None) or getattr(inputs, 'pour_points', None)
+        
+        if not flow_path:
+            # 如果没有流向，尝试使用DEM
+            flow_path = getattr(inputs, 'dem_path', None)
+        
+        if not flow_path:
+            raise ValueError("需要提供 flow_direction 或 dem_path")
+        if not pour_points:
+            raise ValueError("需要提供 pour_points")
+        
         # 读取地形数据
-        with rasterio.open(inputs.flow_dir_path) as src:
+        with rasterio.open(flow_path) as src:
             flow_dir = src.read(1)
             profile = src.profile.copy()
             bounds = src.bounds
             
         # 读取汇水点
-        pour_points_gdf = gpd.read_file(inputs.pour_points_path)
+        pour_points_gdf = gpd.read_file(pour_points)
         
         # 简化的流域划分：创建基于汇水点的流域边界
         watersheds = []

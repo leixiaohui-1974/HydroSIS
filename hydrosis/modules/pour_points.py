@@ -168,8 +168,11 @@ class PourPointsModule(Module[PourPointsOutput]):
             # 自动识别汇水点
             self.logger.info(f"自动识别汇水点，阈值: {inputs.threshold}")
             
+            # 确保threshold是数值类型
+            threshold_value = float(inputs.threshold) if inputs.threshold is not None else 1000.0
+            
             # 找到所有超过阈值的点
-            high_acc_mask = flow_acc >= inputs.threshold
+            high_acc_mask = flow_acc >= threshold_value
             
             # 使用形态学操作找到局部最大值
             local_max = ndimage.maximum_filter(flow_acc, size=5) == flow_acc

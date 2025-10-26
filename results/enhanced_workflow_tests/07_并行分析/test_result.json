@@ -1,0 +1,2230 @@
+{
+  "scenario_id": "07",
+  "scenario_name": "并行分析",
+  "config_file": "config/workflows/test_scenarios/07_parallel_analysis.yaml",
+  "test_dir": "results/enhanced_workflow_tests/07_并行分析",
+  "start_time": "2025-10-26T08:13:49.561296",
+  "status": "completed",
+  "outputs": {
+    "pour_points_1000": "results/workflow_tests/07_parallel/pour_points_1000/pour_points.geojson",
+    "pour_points_2000": "results/workflow_tests/07_parallel/pour_points_2000/pour_points.geojson",
+    "pour_points_500": "results/workflow_tests/07_parallel/pour_points_500/pour_points.geojson",
+    "channel_network": "results/workflow_tests/07_parallel/channels/channels.geojson"
+  },
+  "visualizations": {
+    "terrain_flow_direction": "results/enhanced_workflow_tests/07_并行分析/visualizations/terrain_flow_direction.png",
+    "terrain_flow_accumulation": "results/enhanced_workflow_tests/07_并行分析/visualizations/terrain_flow_accumulation.png",
+    "terrain_filled_dem": "results/enhanced_workflow_tests/07_并行分析/visualizations/terrain_filled_dem.png",
+    "terrain_slope": "results/enhanced_workflow_tests/07_并行分析/visualizations/terrain_slope.png",
+    "pour_points_1000_pour_points": "results/enhanced_workflow_tests/07_并行分析/visualizations/pour_points_1000_pour_points.png",
+    "pour_points_2000_pour_points": "results/enhanced_workflow_tests/07_并行分析/visualizations/pour_points_2000_pour_points.png",
+    "pour_points_500_pour_points": "results/enhanced_workflow_tests/07_并行分析/visualizations/pour_points_500_pour_points.png",
+    "summary": "results/enhanced_workflow_tests/07_并行分析/visualizations/test_summary.png"
+  },
+  "validation": {
+    "passed": true,
+    "errors": [],
+    "warnings": [
+      "输出文件缺失: channel_network.channel_network"
+    ],
+    "metrics": {
+      "total_duration": 0.539679,
+      "step_count": 5,
+      "completed_steps": 5
+    },
+    "timestamp": "2025-10-26T08:13:49.561296",
+    "duration": 0.5455775260925293
+  },
+  "duration": 0.5455775260925293,
+  "run_id": "aa719a36-41a7-4c3f-b87f-ef8c757c855f",
+  "step_count": 5,
+  "progress_log": [
+    {
+      "percent": 20.0,
+      "step": "terrain",
+      "status": "completed",
+      "duration": 0.402511
+    },
+    {
+      "percent": 40.0,
+      "step": "pour_points_500",
+      "status": "completed",
+      "duration": 0.050231
+    },
+    {
+      "percent": 60.0,
+      "step": "pour_points_2000",
+      "status": "completed",
+      "duration": 0.041659
+    },
+    {
+      "percent": 80.0,
+      "step": "channel_network",
+      "status": "completed",
+      "duration": 0.000417
+    },
+    {
+      "percent": 100.0,
+      "step": "pour_points_1000",
+      "status": "completed",
+      "duration": 0.044054
+    }
+  ],
+  "end_time": "2025-10-26T08:13:50.106843",
+  "step_results": {
+    "terrain": {
+      "status": "completed",
+      "duration": 0.402511,
+      "error": null,
+      "outputs": {
+        "flow_direction": "results/workflow_tests/07_parallel/terrain/flow_direction.tif",
+        "flow_accumulation": "results/workflow_tests/07_parallel/terrain/flow_accumulation.tif",
+        "filled_dem": "results/workflow_tests/07_parallel/terrain/filled_dem.tif",
+        "slope": "results/workflow_tests/07_parallel/terrain/slope.tif",
+        "metadata": {
+          "crs": "PROJCS[\"USA_Contiguous_Albers_Equal_Area_Conic_USGS_version\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.257222101004,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Albers_Conic_Equal_Area\"],PARAMETER[\"latitude_of_center\",23],PARAMETER[\"longitude_of_center\",-96],PARAMETER[\"standard_parallel_1\",29.5],PARAMETER[\"standard_parallel_2\",45.5],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"US survey foot\",0.304800609601219,AUTHORITY[\"EPSG\",\"9003\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+          "transform": [
+            112.62905210428792,
+            0.0,
+            -6739336.724995768,
+            0.0,
+            -112.62905210428829,
+            6655689.42187092,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "bounds": [
+            -6739336.724995768,
+            6556125.339810729,
+            -6672885.584254238,
+            6655689.42187092
+          ],
+          "width": 590,
+          "height": 884,
+          "resolution": [
+            112.62905210428792,
+            112.62905210428829
+          ],
+          "processing": {
+            "method": "d8",
+            "fill_depressions": true,
+            "compute_slope": true
+          }
+        }
+      }
+    },
+    "pour_points_1000": {
+      "status": "completed",
+      "duration": 0.044054,
+      "error": null,
+      "outputs": {
+        "pour_points_geojson": "results/workflow_tests/07_parallel/pour_points_1000/pour_points.geojson",
+        "points": [
+          {
+            "id": "P1",
+            "lon": -6705041.178630012,
+            "lat": 6650339.541895966,
+            "accumulation": 2285.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P2",
+            "lon": -6697269.774034816,
+            "lat": 6647749.073697568,
+            "accumulation": 1495.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P3",
+            "lon": -6681389.077688112,
+            "lat": 6646622.783176525,
+            "accumulation": 2032.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P4",
+            "lon": -6698846.580764276,
+            "lat": 6644144.94403023,
+            "accumulation": 1082.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P5",
+            "lon": -6683529.029678093,
+            "lat": 6641329.217727623,
+            "accumulation": 1064.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P6",
+            "lon": -6695017.19299273,
+            "lat": 6640878.701519206,
+            "accumulation": 1783.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P7",
+            "lon": -6727904.876207182,
+            "lat": 6635359.877966096,
+            "accumulation": 1013.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P8",
+            "lon": -6701549.678014779,
+            "lat": 6634346.216497158,
+            "accumulation": 1272.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P9",
+            "lon": -6718669.293934631,
+            "lat": 6633670.442184531,
+            "accumulation": 1575.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P10",
+            "lon": -6723850.230331428,
+            "lat": 6633445.184080323,
+            "accumulation": 1102.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P11",
+            "lon": -6718106.148674109,
+            "lat": 6632769.409767698,
+            "accumulation": 1370.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P12",
+            "lon": -6684767.94925124,
+            "lat": 6632431.522611384,
+            "accumulation": 1446.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P13",
+            "lon": -6706392.727255263,
+            "lat": 6632318.89355928,
+            "accumulation": 4137.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P14",
+            "lon": -6686682.643137014,
+            "lat": 6630967.344934029,
+            "accumulation": 1076.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P15",
+            "lon": -6702000.194223196,
+            "lat": 6628940.021996152,
+            "accumulation": 2444.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P16",
+            "lon": -6691300.434273289,
+            "lat": 6624209.601807771,
+            "accumulation": 2123.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P17",
+            "lon": -6700873.903702154,
+            "lat": 6623195.940338832,
+            "accumulation": 1598.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P18",
+            "lon": -6722611.310758281,
+            "lat": 6622520.166026207,
+            "accumulation": 2027.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P19",
+            "lon": -6707293.759672098,
+            "lat": 6622294.907921999,
+            "accumulation": 1744.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P20",
+            "lon": -6733536.328812397,
+            "lat": 6622069.64981779,
+            "accumulation": 1203.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P21",
+            "lon": -6695017.19299273,
+            "lat": 6621619.133609373,
+            "accumulation": 1635.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P22",
+            "lon": -6695355.080149043,
+            "lat": 6618465.520150453,
+            "accumulation": 3605.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P23",
+            "lon": -6704928.549577908,
+            "lat": 6613622.470909968,
+            "accumulation": 1430.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P24",
+            "lon": -6720020.842559882,
+            "lat": 6612721.4384931335,
+            "accumulation": 1161.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P25",
+            "lon": -6735788.909854483,
+            "lat": 6612496.180388926,
+            "accumulation": 4652.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P26",
+            "lon": -6714164.13185046,
+            "lat": 6612383.551336821,
+            "accumulation": 1165.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P27",
+            "lon": -6722160.794549864,
+            "lat": 6612270.922284717,
+            "accumulation": 1098.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P28",
+            "lon": -6695017.19299273,
+            "lat": 6611257.260815778,
+            "accumulation": 5924.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P29",
+            "lon": -6705266.436734221,
+            "lat": 6611144.631763674,
+            "accumulation": 1372.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P30",
+            "lon": -6725201.77895668,
+            "lat": 6611032.00271157,
+            "accumulation": 1116.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P31",
+            "lon": -6726891.214738244,
+            "lat": 6610468.857451048,
+            "accumulation": 1207.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P32",
+            "lon": -6717430.374361483,
+            "lat": 6609905.712190527,
+            "accumulation": 1883.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P33",
+            "lon": -6732522.667343458,
+            "lat": 6609793.083138422,
+            "accumulation": 2875.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P34",
+            "lon": -6684092.1749386145,
+            "lat": 6608779.421669484,
+            "accumulation": 1055.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P35",
+            "lon": -6724188.117487741,
+            "lat": 6608328.905461066,
+            "accumulation": 1444.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P36",
+            "lon": -6706617.985359472,
+            "lat": 6605625.808210564,
+            "accumulation": 1220.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P37",
+            "lon": -6684430.062094928,
+            "lat": 6605175.292002146,
+            "accumulation": 1296.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P38",
+            "lon": -6711348.405547852,
+            "lat": 6603035.340012165,
+            "accumulation": 1628.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P39",
+            "lon": -6729031.166728226,
+            "lat": 6601233.275178497,
+            "accumulation": 3027.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P40",
+            "lon": -6729031.166728226,
+            "lat": 6600782.758970079,
+            "accumulation": 1812.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P41",
+            "lon": -6695467.709201148,
+            "lat": 6600444.871813767,
+            "accumulation": 1507.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P42",
+            "lon": -6708645.308297349,
+            "lat": 6599881.726553245,
+            "accumulation": 4953.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P43",
+            "lon": -6704703.291473699,
+            "lat": 6598980.694136411,
+            "accumulation": 1675.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P44",
+            "lon": -6706392.727255263,
+            "lat": 6597967.032667472,
+            "accumulation": 7977.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P45",
+            "lon": -6705716.952942638,
+            "lat": 6597967.032667472,
+            "accumulation": 1118.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P46",
+            "lon": -6692088.837638019,
+            "lat": 6594700.790156447,
+            "accumulation": 1838.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P47",
+            "lon": -6676658.6574997315,
+            "lat": 6594250.273948031,
+            "accumulation": 2768.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P48",
+            "lon": -6723850.230331428,
+            "lat": 6593236.612479092,
+            "accumulation": 1830.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P49",
+            "lon": -6713263.099433625,
+            "lat": 6591885.06385384,
+            "accumulation": 1117.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P50",
+            "lon": -6731509.005874519,
+            "lat": 6591321.918593319,
+            "accumulation": 3691.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P51",
+            "lon": -6680150.158114964,
+            "lat": 6590984.031437006,
+            "accumulation": 2871.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P52",
+            "lon": -6714502.019006772,
+            "lat": 6589407.224707547,
+            "accumulation": 1710.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P53",
+            "lon": -6715290.422371502,
+            "lat": 6588393.563238608,
+            "accumulation": 2779.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P54",
+            "lon": -6685668.981668075,
+            "lat": 6588055.676082294,
+            "accumulation": 1114.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P55",
+            "lon": -6681726.964844424,
+            "lat": 6586253.611248626,
+            "accumulation": 4315.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P56",
+            "lon": -6732747.925447667,
+            "lat": 6585465.207883896,
+            "accumulation": 1969.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P57",
+            "lon": -6688597.337022786,
+            "lat": 6585465.207883896,
+            "accumulation": 1933.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P58",
+            "lon": -6689948.885648037,
+            "lat": 6579721.126226577,
+            "accumulation": 5118.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P59",
+            "lon": -6710672.631235226,
+            "lat": 6578820.093809743,
+            "accumulation": 2040.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P60",
+            "lon": -6727341.730946661,
+            "lat": 6577243.287080283,
+            "accumulation": 1331.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P61",
+            "lon": -6692426.724794332,
+            "lat": 6577130.658028179,
+            "accumulation": 1135.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P62",
+            "lon": -6694454.047732209,
+            "lat": 6576229.625611344,
+            "accumulation": 1427.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P63",
+            "lon": -6714614.648058876,
+            "lat": 6576116.99655924,
+            "accumulation": 3926.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P64",
+            "lon": -6727116.472842452,
+            "lat": 6575215.964142406,
+            "accumulation": 2290.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P65",
+            "lon": -6695580.338253252,
+            "lat": 6570936.060162443,
+            "accumulation": 2476.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P66",
+            "lon": -6697607.661191129,
+            "lat": 6566994.043338792,
+            "accumulation": 2221.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P67",
+            "lon": -6719232.439195152,
+            "lat": 6564741.462296707,
+            "accumulation": 4116.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P68",
+            "lon": -6715177.793319398,
+            "lat": 6562376.252202517,
+            "accumulation": 1557.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          }
+        ],
+        "metadata": {
+          "method": "auto",
+          "count": 68,
+          "crs": "PROJCS[\"USA_Contiguous_Albers_Equal_Area_Conic_USGS_version\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.257222101004,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Albers_Conic_Equal_Area\"],PARAMETER[\"latitude_of_center\",23],PARAMETER[\"longitude_of_center\",-96],PARAMETER[\"standard_parallel_1\",29.5],PARAMETER[\"standard_parallel_2\",45.5],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"US survey foot\",0.304800609601219,AUTHORITY[\"EPSG\",\"9003\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+          "threshold": 1000.0,
+          "snap_distance": null
+        }
+      }
+    },
+    "pour_points_2000": {
+      "status": "completed",
+      "duration": 0.041659,
+      "error": null,
+      "outputs": {
+        "pour_points_geojson": "results/workflow_tests/07_parallel/pour_points_2000/pour_points.geojson",
+        "points": [
+          {
+            "id": "P1",
+            "lon": -6705041.178630012,
+            "lat": 6650339.541895966,
+            "accumulation": 2285.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P2",
+            "lon": -6681389.077688112,
+            "lat": 6646622.783176525,
+            "accumulation": 2032.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P3",
+            "lon": -6706392.727255263,
+            "lat": 6632318.89355928,
+            "accumulation": 4137.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P4",
+            "lon": -6702000.194223196,
+            "lat": 6628940.021996152,
+            "accumulation": 2444.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P5",
+            "lon": -6691300.434273289,
+            "lat": 6624209.601807771,
+            "accumulation": 2123.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P6",
+            "lon": -6722611.310758281,
+            "lat": 6622520.166026207,
+            "accumulation": 2027.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P7",
+            "lon": -6695355.080149043,
+            "lat": 6618465.520150453,
+            "accumulation": 3605.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P8",
+            "lon": -6735788.909854483,
+            "lat": 6612496.180388926,
+            "accumulation": 4652.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P9",
+            "lon": -6695017.19299273,
+            "lat": 6611257.260815778,
+            "accumulation": 5924.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P10",
+            "lon": -6732522.667343458,
+            "lat": 6609793.083138422,
+            "accumulation": 2875.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P11",
+            "lon": -6729031.166728226,
+            "lat": 6601233.275178497,
+            "accumulation": 3027.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P12",
+            "lon": -6708645.308297349,
+            "lat": 6599881.726553245,
+            "accumulation": 4953.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P13",
+            "lon": -6706392.727255263,
+            "lat": 6597967.032667472,
+            "accumulation": 7977.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P14",
+            "lon": -6676658.6574997315,
+            "lat": 6594250.273948031,
+            "accumulation": 2768.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P15",
+            "lon": -6731509.005874519,
+            "lat": 6591321.918593319,
+            "accumulation": 3691.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P16",
+            "lon": -6680150.158114964,
+            "lat": 6590984.031437006,
+            "accumulation": 2871.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P17",
+            "lon": -6715290.422371502,
+            "lat": 6588393.563238608,
+            "accumulation": 2779.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P18",
+            "lon": -6681726.964844424,
+            "lat": 6586253.611248626,
+            "accumulation": 4315.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P19",
+            "lon": -6689948.885648037,
+            "lat": 6579721.126226577,
+            "accumulation": 5118.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P20",
+            "lon": -6710672.631235226,
+            "lat": 6578820.093809743,
+            "accumulation": 2040.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P21",
+            "lon": -6714614.648058876,
+            "lat": 6576116.99655924,
+            "accumulation": 3926.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P22",
+            "lon": -6727116.472842452,
+            "lat": 6575215.964142406,
+            "accumulation": 2290.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P23",
+            "lon": -6695580.338253252,
+            "lat": 6570936.060162443,
+            "accumulation": 2476.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P24",
+            "lon": -6697607.661191129,
+            "lat": 6566994.043338792,
+            "accumulation": 2221.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P25",
+            "lon": -6719232.439195152,
+            "lat": 6564741.462296707,
+            "accumulation": 4116.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          }
+        ],
+        "metadata": {
+          "method": "auto",
+          "count": 25,
+          "crs": "PROJCS[\"USA_Contiguous_Albers_Equal_Area_Conic_USGS_version\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.257222101004,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Albers_Conic_Equal_Area\"],PARAMETER[\"latitude_of_center\",23],PARAMETER[\"longitude_of_center\",-96],PARAMETER[\"standard_parallel_1\",29.5],PARAMETER[\"standard_parallel_2\",45.5],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"US survey foot\",0.304800609601219,AUTHORITY[\"EPSG\",\"9003\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+          "threshold": 2000.0,
+          "snap_distance": null
+        }
+      }
+    },
+    "pour_points_500": {
+      "status": "completed",
+      "duration": 0.050231,
+      "error": null,
+      "outputs": {
+        "pour_points_geojson": "results/workflow_tests/07_parallel/pour_points_500/pour_points.geojson",
+        "points": [
+          {
+            "id": "P1",
+            "lon": -6699972.871285319,
+            "lat": 6651127.945260696,
+            "accumulation": 509.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P2",
+            "lon": -6705041.178630012,
+            "lat": 6650339.541895966,
+            "accumulation": 2285.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P3",
+            "lon": -6697269.774034816,
+            "lat": 6647749.073697568,
+            "accumulation": 1495.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P4",
+            "lon": -6681389.077688112,
+            "lat": 6646622.783176525,
+            "accumulation": 2032.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P5",
+            "lon": -6678122.835177087,
+            "lat": 6646510.15412442,
+            "accumulation": 518.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P6",
+            "lon": -6698846.580764276,
+            "lat": 6644144.94403023,
+            "accumulation": 1082.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P7",
+            "lon": -6683529.029678093,
+            "lat": 6641329.217727623,
+            "accumulation": 1064.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P8",
+            "lon": -6695017.19299273,
+            "lat": 6640878.701519206,
+            "accumulation": 1783.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P9",
+            "lon": -6713037.841329416,
+            "lat": 6640428.185310788,
+            "accumulation": 721.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P10",
+            "lon": -6693778.273419583,
+            "lat": 6639752.410998163,
+            "accumulation": 793.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P11",
+            "lon": -6704365.404317386,
+            "lat": 6638626.12047712,
+            "accumulation": 513.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P12",
+            "lon": -6690849.918064872,
+            "lat": 6636486.168487139,
+            "accumulation": 701.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P13",
+            "lon": -6681614.33579232,
+            "lat": 6635585.136070305,
+            "accumulation": 757.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P14",
+            "lon": -6727904.876207182,
+            "lat": 6635359.877966096,
+            "accumulation": 1013.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P15",
+            "lon": -6701549.678014779,
+            "lat": 6634346.216497158,
+            "accumulation": 1272.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P16",
+            "lon": -6718669.293934631,
+            "lat": 6633670.442184531,
+            "accumulation": 1575.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P17",
+            "lon": -6723850.230331428,
+            "lat": 6633445.184080323,
+            "accumulation": 1102.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P18",
+            "lon": -6724863.891800366,
+            "lat": 6632769.409767698,
+            "accumulation": 678.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P19",
+            "lon": -6718106.148674109,
+            "lat": 6632769.409767698,
+            "accumulation": 1370.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P20",
+            "lon": -6687921.56271016,
+            "lat": 6632544.151663489,
+            "accumulation": 503.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P21",
+            "lon": -6722273.423601968,
+            "lat": 6632431.522611384,
+            "accumulation": 592.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P22",
+            "lon": -6684767.94925124,
+            "lat": 6632431.522611384,
+            "accumulation": 1446.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P23",
+            "lon": -6706392.727255263,
+            "lat": 6632318.89355928,
+            "accumulation": 4137.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P24",
+            "lon": -6703351.7428484475,
+            "lat": 6631981.0064029675,
+            "accumulation": 605.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P25",
+            "lon": -6685218.465459657,
+            "lat": 6631755.748298759,
+            "accumulation": 703.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P26",
+            "lon": -6703577.000952656,
+            "lat": 6630967.344934029,
+            "accumulation": 896.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P27",
+            "lon": -6686682.643137014,
+            "lat": 6630967.344934029,
+            "accumulation": 1076.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P28",
+            "lon": -6702000.194223196,
+            "lat": 6628940.021996152,
+            "accumulation": 2444.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P29",
+            "lon": -6689047.853231203,
+            "lat": 6628827.392944047,
+            "accumulation": 810.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P30",
+            "lon": -6736352.055115004,
+            "lat": 6625110.634224606,
+            "accumulation": 584.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P31",
+            "lon": -6736577.313219213,
+            "lat": 6624772.747068292,
+            "accumulation": 501.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P32",
+            "lon": -6687808.933658056,
+            "lat": 6624772.747068292,
+            "accumulation": 776.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P33",
+            "lon": -6725990.18232141,
+            "lat": 6624660.118016188,
+            "accumulation": 575.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P34",
+            "lon": -6713375.72848573,
+            "lat": 6624322.230859876,
+            "accumulation": 731.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P35",
+            "lon": -6691300.434273289,
+            "lat": 6624209.601807771,
+            "accumulation": 2123.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P36",
+            "lon": -6700873.903702154,
+            "lat": 6623195.940338832,
+            "accumulation": 1598.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P37",
+            "lon": -6720020.842559882,
+            "lat": 6622632.795078311,
+            "accumulation": 669.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P38",
+            "lon": -6722611.310758281,
+            "lat": 6622520.166026207,
+            "accumulation": 2027.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P39",
+            "lon": -6707293.759672098,
+            "lat": 6622294.907921999,
+            "accumulation": 1744.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P40",
+            "lon": -6733536.328812397,
+            "lat": 6622069.64981779,
+            "accumulation": 1203.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P41",
+            "lon": -6720921.874976717,
+            "lat": 6621844.391713581,
+            "accumulation": 758.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P42",
+            "lon": -6695017.19299273,
+            "lat": 6621619.133609373,
+            "accumulation": 1635.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P43",
+            "lon": -6704478.033369491,
+            "lat": 6621281.24645306,
+            "accumulation": 581.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P44",
+            "lon": -6685668.981668075,
+            "lat": 6620492.84308833,
+            "accumulation": 603.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P45",
+            "lon": -6693890.902471688,
+            "lat": 6619704.4397236,
+            "accumulation": 986.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P46",
+            "lon": -6694566.676784313,
+            "lat": 6619366.552567287,
+            "accumulation": 601.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P47",
+            "lon": -6695355.080149043,
+            "lat": 6618465.520150453,
+            "accumulation": 3605.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P48",
+            "lon": -6704252.775265282,
+            "lat": 6614072.987118386,
+            "accumulation": 891.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P49",
+            "lon": -6704928.549577908,
+            "lat": 6613622.470909968,
+            "accumulation": 1430.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P50",
+            "lon": -6686006.868824387,
+            "lat": 6612834.067545238,
+            "accumulation": 921.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P51",
+            "lon": -6720020.842559882,
+            "lat": 6612721.4384931335,
+            "accumulation": 1161.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P52",
+            "lon": -6735788.909854483,
+            "lat": 6612496.180388926,
+            "accumulation": 4652.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P53",
+            "lon": -6714164.13185046,
+            "lat": 6612383.551336821,
+            "accumulation": 1165.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P54",
+            "lon": -6722160.794549864,
+            "lat": 6612270.922284717,
+            "accumulation": 1098.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P55",
+            "lon": -6719570.326351465,
+            "lat": 6612045.664180508,
+            "accumulation": 514.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P56",
+            "lon": -6721710.278341447,
+            "lat": 6611707.7770241955,
+            "accumulation": 850.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P57",
+            "lon": -6683416.400625989,
+            "lat": 6611369.889867882,
+            "accumulation": 553.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P58",
+            "lon": -6695017.19299273,
+            "lat": 6611257.260815778,
+            "accumulation": 5924.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P59",
+            "lon": -6705266.436734221,
+            "lat": 6611144.631763674,
+            "accumulation": 1372.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P60",
+            "lon": -6725201.77895668,
+            "lat": 6611032.00271157,
+            "accumulation": 1116.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P61",
+            "lon": -6726891.214738244,
+            "lat": 6610468.857451048,
+            "accumulation": 1207.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P62",
+            "lon": -6706280.098203159,
+            "lat": 6610243.59934684,
+            "accumulation": 529.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P63",
+            "lon": -6717430.374361483,
+            "lat": 6609905.712190527,
+            "accumulation": 1883.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P64",
+            "lon": -6732522.667343458,
+            "lat": 6609793.083138422,
+            "accumulation": 2875.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P65",
+            "lon": -6712587.3251209995,
+            "lat": 6609793.083138422,
+            "accumulation": 622.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P66",
+            "lon": -6684092.1749386145,
+            "lat": 6608779.421669484,
+            "accumulation": 1055.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P67",
+            "lon": -6682740.626313363,
+            "lat": 6608666.79261738,
+            "accumulation": 508.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P68",
+            "lon": -6724188.117487741,
+            "lat": 6608328.905461066,
+            "accumulation": 1444.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P69",
+            "lon": -6685105.836407553,
+            "lat": 6606752.098731606,
+            "accumulation": 573.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P70",
+            "lon": -6724751.262748263,
+            "lat": 6606076.324418981,
+            "accumulation": 987.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P71",
+            "lon": -6685556.35261597,
+            "lat": 6605851.066314773,
+            "accumulation": 790.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P72",
+            "lon": -6706617.985359472,
+            "lat": 6605625.808210564,
+            "accumulation": 1220.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P73",
+            "lon": -6684430.062094928,
+            "lat": 6605175.292002146,
+            "accumulation": 1296.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P74",
+            "lon": -6673955.560249229,
+            "lat": 6604837.404845834,
+            "accumulation": 528.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P75",
+            "lon": -6706730.614411577,
+            "lat": 6604724.775793729,
+            "accumulation": 517.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P76",
+            "lon": -6711348.405547852,
+            "lat": 6603035.340012165,
+            "accumulation": 1628.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P77",
+            "lon": -6707519.017776307,
+            "lat": 6602472.194751644,
+            "accumulation": 555.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P78",
+            "lon": -6729031.166728226,
+            "lat": 6601233.275178497,
+            "accumulation": 3027.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P79",
+            "lon": -6729031.166728226,
+            "lat": 6600782.758970079,
+            "accumulation": 1812.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P80",
+            "lon": -6695467.709201148,
+            "lat": 6600444.871813767,
+            "accumulation": 1507.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P81",
+            "lon": -6708645.308297349,
+            "lat": 6599881.726553245,
+            "accumulation": 4953.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P82",
+            "lon": -6704703.291473699,
+            "lat": 6598980.694136411,
+            "accumulation": 1675.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P83",
+            "lon": -6699297.096972694,
+            "lat": 6598079.661719576,
+            "accumulation": 960.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P84",
+            "lon": -6720471.358768299,
+            "lat": 6597967.032667472,
+            "accumulation": 633.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P85",
+            "lon": -6706392.727255263,
+            "lat": 6597967.032667472,
+            "accumulation": 7977.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P86",
+            "lon": -6705716.952942638,
+            "lat": 6597967.032667472,
+            "accumulation": 1118.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P87",
+            "lon": -6679361.754750234,
+            "lat": 6597516.516459055,
+            "accumulation": 651.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P88",
+            "lon": -6695355.080149043,
+            "lat": 6597178.629302742,
+            "accumulation": 948.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P89",
+            "lon": -6692651.982898541,
+            "lat": 6595263.9354169695,
+            "accumulation": 580.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P90",
+            "lon": -6726215.440425619,
+            "lat": 6594926.048260656,
+            "accumulation": 996.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P91",
+            "lon": -6692088.837638019,
+            "lat": 6594700.790156447,
+            "accumulation": 1838.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P92",
+            "lon": -6714389.389954668,
+            "lat": 6594250.273948031,
+            "accumulation": 658.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P93",
+            "lon": -6676658.6574997315,
+            "lat": 6594250.273948031,
+            "accumulation": 2768.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P94",
+            "lon": -6723624.9722272195,
+            "lat": 6593912.386791718,
+            "accumulation": 539.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P95",
+            "lon": -6691300.434273289,
+            "lat": 6593574.499635405,
+            "accumulation": 557.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P96",
+            "lon": -6723850.230331428,
+            "lat": 6593236.612479092,
+            "accumulation": 1830.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P97",
+            "lon": -6713263.099433625,
+            "lat": 6591885.06385384,
+            "accumulation": 1117.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P98",
+            "lon": -6731509.005874519,
+            "lat": 6591321.918593319,
+            "accumulation": 3691.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P99",
+            "lon": -6680150.158114964,
+            "lat": 6590984.031437006,
+            "accumulation": 2871.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P100",
+            "lon": -6723737.601279324,
+            "lat": 6590082.999020172,
+            "accumulation": 698.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P101",
+            "lon": -6714502.019006772,
+            "lat": 6589407.224707547,
+            "accumulation": 1710.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P102",
+            "lon": -6715290.422371502,
+            "lat": 6588393.563238608,
+            "accumulation": 2779.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P103",
+            "lon": -6685668.981668075,
+            "lat": 6588055.676082294,
+            "accumulation": 1114.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P104",
+            "lon": -6681726.964844424,
+            "lat": 6586253.611248626,
+            "accumulation": 4315.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P105",
+            "lon": -6687358.417449639,
+            "lat": 6586140.982196522,
+            "accumulation": 667.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P106",
+            "lon": -6732747.925447667,
+            "lat": 6585465.207883896,
+            "accumulation": 1969.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P107",
+            "lon": -6688597.337022786,
+            "lat": 6585465.207883896,
+            "accumulation": 1933.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P108",
+            "lon": -6709771.5988183925,
+            "lat": 6582311.594424976,
+            "accumulation": 991.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P109",
+            "lon": -6714839.906163085,
+            "lat": 6582086.336320767,
+            "accumulation": 659.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P110",
+            "lon": -6689273.111335412,
+            "lat": 6581748.449164455,
+            "accumulation": 548.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P111",
+            "lon": -6714727.277110981,
+            "lat": 6580171.642434995,
+            "accumulation": 654.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P112",
+            "lon": -6689948.885648037,
+            "lat": 6579721.126226577,
+            "accumulation": 5118.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P113",
+            "lon": -6710672.631235226,
+            "lat": 6578820.093809743,
+            "accumulation": 2040.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P114",
+            "lon": -6731509.005874519,
+            "lat": 6577243.287080283,
+            "accumulation": 975.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P115",
+            "lon": -6727341.730946661,
+            "lat": 6577243.287080283,
+            "accumulation": 1331.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P116",
+            "lon": -6692426.724794332,
+            "lat": 6577130.658028179,
+            "accumulation": 1135.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P117",
+            "lon": -6694454.047732209,
+            "lat": 6576229.625611344,
+            "accumulation": 1427.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P118",
+            "lon": -6714614.648058876,
+            "lat": 6576116.99655924,
+            "accumulation": 3926.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P119",
+            "lon": -6711798.921756269,
+            "lat": 6575666.480350823,
+            "accumulation": 526.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P120",
+            "lon": -6727116.472842452,
+            "lat": 6575215.964142406,
+            "accumulation": 2290.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P121",
+            "lon": -6727341.730946661,
+            "lat": 6572512.866891903,
+            "accumulation": 575.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P122",
+            "lon": -6725990.18232141,
+            "lat": 6571949.721631382,
+            "accumulation": 717.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P123",
+            "lon": -6703689.630004761,
+            "lat": 6571499.205422964,
+            "accumulation": 631.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P124",
+            "lon": -6695580.338253252,
+            "lat": 6570936.060162443,
+            "accumulation": 2476.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P125",
+            "lon": -6723624.9722272195,
+            "lat": 6569809.7696414,
+            "accumulation": 618.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P126",
+            "lon": -6722386.052654073,
+            "lat": 6568345.591964045,
+            "accumulation": 546.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P127",
+            "lon": -6697607.661191129,
+            "lat": 6566994.043338792,
+            "accumulation": 2221.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P128",
+            "lon": -6721597.649289343,
+            "lat": 6566318.269026167,
+            "accumulation": 766.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P129",
+            "lon": -6719232.439195152,
+            "lat": 6564741.462296707,
+            "accumulation": 4116.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P130",
+            "lon": -6700085.500337424,
+            "lat": 6564741.462296707,
+            "accumulation": 881.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P131",
+            "lon": -6706392.727255263,
+            "lat": 6562826.768410934,
+            "accumulation": 788.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P132",
+            "lon": -6715177.793319398,
+            "lat": 6562376.252202517,
+            "accumulation": 1557.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P133",
+            "lon": -6705379.065786324,
+            "lat": 6562376.252202517,
+            "accumulation": 678.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P134",
+            "lon": -6706730.614411577,
+            "lat": 6562150.9940983085,
+            "accumulation": 645.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P135",
+            "lon": -6715740.93857992,
+            "lat": 6558997.380639388,
+            "accumulation": 645.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          }
+        ],
+        "metadata": {
+          "method": "auto",
+          "count": 135,
+          "crs": "PROJCS[\"USA_Contiguous_Albers_Equal_Area_Conic_USGS_version\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.257222101004,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Albers_Conic_Equal_Area\"],PARAMETER[\"latitude_of_center\",23],PARAMETER[\"longitude_of_center\",-96],PARAMETER[\"standard_parallel_1\",29.5],PARAMETER[\"standard_parallel_2\",45.5],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"US survey foot\",0.304800609601219,AUTHORITY[\"EPSG\",\"9003\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+          "threshold": 500.0,
+          "snap_distance": null
+        }
+      }
+    },
+    "channel_network": {
+      "status": "completed",
+      "duration": 0.000417,
+      "error": null,
+      "outputs": {
+        "channel_network": "results/workflow_tests/07_parallel/channels/channels.geojson",
+        "metadata": {}
+      }
+    }
+  }
+}
