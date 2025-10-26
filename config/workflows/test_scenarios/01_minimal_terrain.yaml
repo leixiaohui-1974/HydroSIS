@@ -6,7 +6,7 @@ workflow:
   
   parameters:
     dem_path: "data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif"
-    output_dir: "results/workflow_tests/01_minimal"
+    output_dir: "results/enhanced_workflow_tests/01_最小测试-仅地形/outputs"
   
   steps:
     - id: "terrain"

@@ -6,7 +6,7 @@ workflow:
   
   parameters:
     dem_path: "data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif"
-    output_dir: "results/workflow_tests/02_two_step"
+    output_dir: "results/enhanced_workflow_tests/02_两步基础测试/outputs"
     threshold: 1000.0
   
   steps:
