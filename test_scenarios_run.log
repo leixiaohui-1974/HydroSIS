@@ -1,0 +1,374 @@
+2025-10-26 07:37:20,295 - INFO - 
+################################################################################
+2025-10-26 07:37:20,295 - INFO - HydroSIS 增强工作流测试套件
+2025-10-26 07:37:20,295 - INFO - ################################################################################
+2025-10-26 07:37:20,295 - INFO - 
+================================================================================
+2025-10-26 07:37:20,295 - INFO - 测试场景 01: 最小测试-仅地形
+2025-10-26 07:37:20,295 - INFO - ================================================================================
+2025-10-26 07:37:20,764 - ERROR - ✗ 测试执行异常: No module named 'shapely'
+2025-10-26 07:37:20,766 - ERROR - Traceback (most recent call last):
+  File "/workspace/run_enhanced_workflow_tests.py", line 76, in run_test_scenario
+    from hydrosis.workflow_engine import WorkflowDefinition, WorkflowEngine
+  File "/workspace/hydrosis/__init__.py", line 3, in <module>
+    from .config import ModelConfig
+  File "/workspace/hydrosis/config/__init__.py", line 8, in <module>
+    from .models import (
+    ...<14 lines>...
+    )
+  File "/workspace/hydrosis/config/models.py", line 14, in <module>
+    from ..model import Subbasin
+  File "/workspace/hydrosis/model.py", line 9, in <module>
+    from .runoff.base import RunoffModel
+  File "/workspace/hydrosis/runoff/__init__.py", line 4, in <module>
+    from .linear_reservoir import LinearReservoirRunoff
+  File "/workspace/hydrosis/runoff/linear_reservoir.py", line 7, in <module>
+    from ..validation import validate_positive, validate_probability
+  File "/workspace/hydrosis/validation/__init__.py", line 28, in <module>
+    from .spatial import (
+    ...<3 lines>...
+    )
+  File "/workspace/hydrosis/validation/spatial.py", line 11, in <module>
+    from shapely.geometry import shape
+ModuleNotFoundError: No module named 'shapely'
+
+2025-10-26 07:37:20,767 - INFO - 
+================================================================================
+2025-10-26 07:37:20,767 - INFO - 测试场景 02: 两步基础测试
+2025-10-26 07:37:20,767 - INFO - ================================================================================
+2025-10-26 07:37:20,769 - ERROR - ✗ 测试执行异常: No module named 'shapely'
+2025-10-26 07:37:20,770 - ERROR - Traceback (most recent call last):
+  File "/workspace/run_enhanced_workflow_tests.py", line 76, in run_test_scenario
+    from hydrosis.workflow_engine import WorkflowDefinition, WorkflowEngine
+  File "/workspace/hydrosis/__init__.py", line 3, in <module>
+    from .config import ModelConfig
+  File "/workspace/hydrosis/config/__init__.py", line 8, in <module>
+    from .models import (
+    ...<14 lines>...
+    )
+  File "/workspace/hydrosis/config/models.py", line 14, in <module>
+    from ..model import Subbasin
+  File "/workspace/hydrosis/model.py", line 10, in <module>
+    from .routing.base import RoutingModel
+  File "/workspace/hydrosis/routing/__init__.py", line 4, in <module>
+    from .lag import LagRouting
+  File "/workspace/hydrosis/routing/lag.py", line 7, in <module>
+    from ..validation import validate_integer
+  File "/workspace/hydrosis/validation/__init__.py", line 28, in <module>
+    from .spatial import (
+    ...<3 lines>...
+    )
+  File "/workspace/hydrosis/validation/spatial.py", line 11, in <module>
+    from shapely.geometry import shape
+ModuleNotFoundError: No module named 'shapely'
+
+2025-10-26 07:37:20,770 - INFO - 
+================================================================================
+2025-10-26 07:37:20,770 - INFO - 测试场景 03: 三步流域划分
+2025-10-26 07:37:20,770 - INFO - ================================================================================
+2025-10-26 07:37:21,400 - INFO - Failed to extract font properties from /usr/share/fonts/truetype/noto/NotoColorEmoji.ttf: Can not load face (unknown file format; error code 0x2)
+2025-10-26 07:37:21,407 - INFO - generated new fontManager
+2025-10-26 07:37:21,687 - INFO - 注册模块: terrain
+2025-10-26 07:37:21,691 - INFO - 注册模块: pour_points
+2025-10-26 07:37:21,694 - INFO - 注册模块: watershed_delineation
+2025-10-26 07:37:21,700 - INFO - 注册模块: channel_network
+2025-10-26 07:37:21,702 - INFO - 注册模块: rain_gauge_layout
+2025-10-26 07:37:21,704 - INFO - 注册模块: precipitation_generation
+2025-10-26 07:37:21,706 - INFO - 注册模块: areal_precipitation
+2025-10-26 07:37:21,708 - INFO - 注册模块: runoff_generation
+2025-10-26 07:37:21,710 - INFO - 注册模块: routing
+2025-10-26 07:37:21,712 - INFO - 注册模块: calibration
+2025-10-26 07:37:21,714 - INFO - 注册模块: evaluation
+2025-10-26 07:37:21,719 - INFO - 📝 加载工作流配置: config/workflows/test_scenarios/03_three_step_delineation.yaml
+2025-10-26 07:37:21,722 - INFO -    工作流: 三步流域划分测试
+2025-10-26 07:37:21,722 - INFO -    步骤数: 3
+2025-10-26 07:37:21,722 - INFO -    1. terrain: terrain
+2025-10-26 07:37:21,722 - INFO -    2. pour_points: pour_points (依赖: terrain)
+2025-10-26 07:37:21,722 - INFO -    3. watershed: watershed_delineation (依赖: terrain, pour_points)
+2025-10-26 07:37:21,723 - INFO - 
+🚀 开始执行工作流...
+2025-10-26 07:37:21,723 - INFO - [e43fa68f-c7d6-4e85-9466-c930a2f2c31b] 开始执行工作流: 三步流域划分测试
+2025-10-26 07:37:21,723 - INFO - [e43fa68f-c7d6-4e85-9466-c930a2f2c31b] 执行步骤: terrain (terrain)
+2025-10-26 07:37:21,723 - INFO - [e43fa68f-c7d6-4e85-9466-c930a2f2c31b:terrain] 开始验证输入...
+2025-10-26 07:37:21,723 - INFO - [e43fa68f-c7d6-4e85-9466-c930a2f2c31b:terrain] 开始执行模块 terrain...
+2025-10-26 07:37:21,723 - INFO - 开始处理DEM: data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif
+2025-10-26 07:37:21,723 - INFO - 方法: d8, 填充坑洼: True
+2025-10-26 07:37:21,723 - ERROR - [e43fa68f-c7d6-4e85-9466-c930a2f2c31b:terrain] 模块执行失败: No module named 'rasterio'
+2025-10-26 07:37:21,724 - ERROR - [e43fa68f-c7d6-4e85-9466-c930a2f2c31b] 步骤 terrain 失败: No module named 'rasterio'
+2025-10-26 07:37:21,724 - ERROR - [e43fa68f-c7d6-4e85-9466-c930a2f2c31b] 工作流执行出错: No module named 'rasterio'
+2025-10-26 07:37:21,724 - ERROR - ✗ 测试执行异常: No module named 'rasterio'
+2025-10-26 07:37:21,725 - ERROR - Traceback (most recent call last):
+  File "/workspace/run_enhanced_workflow_tests.py", line 106, in run_test_scenario
+    run = engine.execute(workflow, progress_callback=progress_callback)
+  File "/workspace/hydrosis/workflow_engine/engine.py", line 223, in execute
+    self._execute_step(step, run, context, progress_callback)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/hydrosis/workflow_engine/engine.py", line 275, in _execute_step
+    output = module.run(resolved_inputs, task_id=f"{run.run_id}:{step.id}")
+  File "/workspace/hydrosis/modules/base.py", line 249, in run
+    output = self.execute(inputs, context)
+  File "/workspace/hydrosis/modules/terrain.py", line 142, in execute
+    import rasterio
+ModuleNotFoundError: No module named 'rasterio'
+
+2025-10-26 07:37:21,725 - INFO - 
+================================================================================
+2025-10-26 07:37:21,725 - INFO - 测试场景 04: 降雨分析
+2025-10-26 07:37:21,725 - INFO - ================================================================================
+2025-10-26 07:37:21,725 - INFO - 📝 加载工作流配置: config/workflows/test_scenarios/04_precipitation_analysis.yaml
+2025-10-26 07:37:21,729 - INFO -    工作流: 降雨分析工作流
+2025-10-26 07:37:21,729 - INFO -    步骤数: 3
+2025-10-26 07:37:21,729 - INFO -    1. rain_gauge: rain_gauge_layout
+2025-10-26 07:37:21,729 - INFO -    2. precipitation: precipitation_generation
+2025-10-26 07:37:21,729 - INFO -    3. areal_precip: areal_precipitation (依赖: precipitation, rain_gauge)
+2025-10-26 07:37:21,729 - INFO - 
+🚀 开始执行工作流...
+2025-10-26 07:37:21,729 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d] 开始执行工作流: 降雨分析工作流
+2025-10-26 07:37:21,729 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d] 执行步骤: rain_gauge (rain_gauge_layout)
+2025-10-26 07:37:21,729 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d:rain_gauge] 开始验证输入...
+2025-10-26 07:37:21,729 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d:rain_gauge] 开始执行模块 rain_gauge_layout...
+2025-10-26 07:37:21,729 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d:rain_gauge] 模块执行成功，耗时 0.00 秒
+2025-10-26 07:37:21,729 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d] 步骤 rain_gauge 完成，耗时 0.00 秒
+2025-10-26 07:37:21,729 - INFO - [ 33.3%] ✓ rain_gauge
+2025-10-26 07:37:21,729 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d] 执行步骤: precipitation (precipitation_generation)
+2025-10-26 07:37:21,729 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d:precipitation] 开始验证输入...
+2025-10-26 07:37:21,729 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d:precipitation] 开始执行模块 precipitation_generation...
+2025-10-26 07:37:21,730 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d:precipitation] 模块执行成功，耗时 0.00 秒
+2025-10-26 07:37:21,730 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d] 步骤 precipitation 完成，耗时 0.00 秒
+2025-10-26 07:37:21,730 - INFO - [ 66.7%] ✓ precipitation
+2025-10-26 07:37:21,730 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d] 执行步骤: areal_precip (areal_precipitation)
+2025-10-26 07:37:21,730 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d:areal_precip] 开始验证输入...
+2025-10-26 07:37:21,730 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d:areal_precip] 开始执行模块 areal_precipitation...
+2025-10-26 07:37:21,730 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d:areal_precip] 模块执行成功，耗时 0.00 秒
+2025-10-26 07:37:21,730 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d] 步骤 areal_precip 完成，耗时 0.00 秒
+2025-10-26 07:37:21,730 - INFO - [100.0%] ✓ areal_precip
+2025-10-26 07:37:21,730 - INFO - [7fcf9aba-32ef-4001-a0f8-78ab7b8af88d] 工作流执行成功
+2025-10-26 07:37:21,730 - INFO - 
+✨ 工作流执行completed
+2025-10-26 07:37:21,730 - INFO -    运行ID: 7fcf9aba-32ef-4001-a0f8-78ab7b8af88d
+2025-10-26 07:37:21,730 - INFO -    耗时: 0.00秒
+2025-10-26 07:37:21,730 - INFO -    进度: 100.0%
+2025-10-26 07:37:21,730 - INFO - 
+🎨 生成可视化...
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 38477 (\N{CJK UNIFIED IDEOGRAPH-964D}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 38632 (\N{CJK UNIFIED IDEOGRAPH-96E8}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 20998 (\N{CJK UNIFIED IDEOGRAPH-5206}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 26512 (\N{CJK UNIFIED IDEOGRAPH-6790}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 24037 (\N{CJK UNIFIED IDEOGRAPH-5DE5}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 20316 (\N{CJK UNIFIED IDEOGRAPH-4F5C}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 27969 (\N{CJK UNIFIED IDEOGRAPH-6D41}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+2025-10-26 07:37:22,315 - INFO - 总结图已保存: results/enhanced_workflow_tests/04_降雨分析/visualizations/test_summary.png
+2025-10-26 07:37:22,315 - INFO -    生成了 1 个可视化文件
+2025-10-26 07:37:22,315 - INFO - 
+✓ 验证结果...
+2025-10-26 07:37:22,316 - INFO - 
+📄 生成测试报告...
+2025-10-26 07:37:22,317 - INFO - 测试报告已生成: results/enhanced_workflow_tests/04_降雨分析/TEST_REPORT.md
+2025-10-26 07:37:22,317 - INFO -    报告已保存: results/enhanced_workflow_tests/04_降雨分析/TEST_REPORT.md
+2025-10-26 07:37:22,317 - INFO -    结果已保存: results/enhanced_workflow_tests/04_降雨分析/test_result.json
+2025-10-26 07:37:22,317 - INFO - 
+✅ 测试通过: 降雨分析
+2025-10-26 07:37:22,317 - INFO - 
+================================================================================
+2025-10-26 07:37:22,317 - INFO - 测试场景 05: 水文模拟
+2025-10-26 07:37:22,317 - INFO - ================================================================================
+2025-10-26 07:37:22,317 - INFO - 📝 加载工作流配置: config/workflows/test_scenarios/05_hydrologic_simulation.yaml
+2025-10-26 07:37:22,321 - INFO -    工作流: 水文模拟工作流
+2025-10-26 07:37:22,321 - INFO -    步骤数: 2
+2025-10-26 07:37:22,321 - INFO -    1. runoff: runoff_generation
+2025-10-26 07:37:22,321 - INFO -    2. routing: routing (依赖: runoff)
+2025-10-26 07:37:22,321 - INFO - 
+🚀 开始执行工作流...
+2025-10-26 07:37:22,321 - INFO - [8640db70-430a-4930-b997-e60948d66955] 开始执行工作流: 水文模拟工作流
+2025-10-26 07:37:22,321 - INFO - [8640db70-430a-4930-b997-e60948d66955] 执行步骤: runoff (runoff_generation)
+2025-10-26 07:37:22,321 - INFO - [8640db70-430a-4930-b997-e60948d66955:runoff] 开始验证输入...
+2025-10-26 07:37:22,321 - INFO - [8640db70-430a-4930-b997-e60948d66955:runoff] 开始执行模块 runoff_generation...
+2025-10-26 07:37:22,322 - INFO - [8640db70-430a-4930-b997-e60948d66955:runoff] 模块执行成功，耗时 0.00 秒
+2025-10-26 07:37:22,322 - INFO - [8640db70-430a-4930-b997-e60948d66955] 步骤 runoff 完成，耗时 0.00 秒
+2025-10-26 07:37:22,322 - INFO - [ 50.0%] ✓ runoff
+2025-10-26 07:37:22,322 - INFO - [8640db70-430a-4930-b997-e60948d66955] 执行步骤: routing (routing)
+2025-10-26 07:37:22,322 - INFO - [8640db70-430a-4930-b997-e60948d66955:routing] 开始验证输入...
+2025-10-26 07:37:22,322 - INFO - [8640db70-430a-4930-b997-e60948d66955:routing] 开始执行模块 routing...
+2025-10-26 07:37:22,322 - INFO - [8640db70-430a-4930-b997-e60948d66955:routing] 模块执行成功，耗时 0.00 秒
+2025-10-26 07:37:22,322 - INFO - [8640db70-430a-4930-b997-e60948d66955] 步骤 routing 完成，耗时 0.00 秒
+2025-10-26 07:37:22,322 - INFO - [100.0%] ✓ routing
+2025-10-26 07:37:22,322 - INFO - [8640db70-430a-4930-b997-e60948d66955] 工作流执行成功
+2025-10-26 07:37:22,322 - INFO - 
+✨ 工作流执行completed
+2025-10-26 07:37:22,322 - INFO -    运行ID: 8640db70-430a-4930-b997-e60948d66955
+2025-10-26 07:37:22,322 - INFO -    耗时: 0.00秒
+2025-10-26 07:37:22,322 - INFO -    进度: 100.0%
+2025-10-26 07:37:22,322 - INFO - 
+🎨 生成可视化...
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 27700 (\N{CJK UNIFIED IDEOGRAPH-6C34}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 25991 (\N{CJK UNIFIED IDEOGRAPH-6587}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 27169 (\N{CJK UNIFIED IDEOGRAPH-6A21}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 25311 (\N{CJK UNIFIED IDEOGRAPH-62DF}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+2025-10-26 07:37:22,869 - INFO - 总结图已保存: results/enhanced_workflow_tests/05_水文模拟/visualizations/test_summary.png
+2025-10-26 07:37:22,870 - INFO -    生成了 1 个可视化文件
+2025-10-26 07:37:22,870 - INFO - 
+✓ 验证结果...
+2025-10-26 07:37:22,870 - INFO - 
+📄 生成测试报告...
+2025-10-26 07:37:22,871 - INFO - 测试报告已生成: results/enhanced_workflow_tests/05_水文模拟/TEST_REPORT.md
+2025-10-26 07:37:22,871 - INFO -    报告已保存: results/enhanced_workflow_tests/05_水文模拟/TEST_REPORT.md
+2025-10-26 07:37:22,871 - INFO -    结果已保存: results/enhanced_workflow_tests/05_水文模拟/test_result.json
+2025-10-26 07:37:22,871 - INFO - 
+✅ 测试通过: 水文模拟
+2025-10-26 07:37:22,871 - INFO - 
+================================================================================
+2025-10-26 07:37:22,871 - INFO - 测试场景 06: 参数率定
+2025-10-26 07:37:22,871 - INFO - ================================================================================
+2025-10-26 07:37:22,871 - INFO - 📝 加载工作流配置: config/workflows/test_scenarios/06_calibration_workflow.yaml
+2025-10-26 07:37:22,875 - INFO -    工作流: 参数率定工作流
+2025-10-26 07:37:22,875 - INFO -    步骤数: 2
+2025-10-26 07:37:22,875 - INFO -    1. evaluation: evaluation
+2025-10-26 07:37:22,875 - INFO -    2. calibration: calibration (依赖: evaluation)
+2025-10-26 07:37:22,875 - INFO - 
+🚀 开始执行工作流...
+2025-10-26 07:37:22,875 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f] 开始执行工作流: 参数率定工作流
+2025-10-26 07:37:22,875 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f] 执行步骤: evaluation (evaluation)
+2025-10-26 07:37:22,875 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f:evaluation] 开始验证输入...
+2025-10-26 07:37:22,875 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f:evaluation] 开始执行模块 evaluation...
+2025-10-26 07:37:22,876 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f:evaluation] 模块执行成功，耗时 0.00 秒
+2025-10-26 07:37:22,876 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f] 步骤 evaluation 完成，耗时 0.00 秒
+2025-10-26 07:37:22,876 - INFO - [ 50.0%] ✓ evaluation
+2025-10-26 07:37:22,876 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f] 执行步骤: calibration (calibration)
+2025-10-26 07:37:22,876 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f:calibration] 开始验证输入...
+2025-10-26 07:37:22,876 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f:calibration] 开始执行模块 calibration...
+2025-10-26 07:37:22,876 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f:calibration] 模块执行成功，耗时 0.00 秒
+2025-10-26 07:37:22,876 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f] 步骤 calibration 完成，耗时 0.00 秒
+2025-10-26 07:37:22,876 - INFO - [100.0%] ✓ calibration
+2025-10-26 07:37:22,876 - INFO - [e5a9d081-6e42-4516-aa15-b2700c56ce8f] 工作流执行成功
+2025-10-26 07:37:22,876 - INFO - 
+✨ 工作流执行completed
+2025-10-26 07:37:22,876 - INFO -    运行ID: e5a9d081-6e42-4516-aa15-b2700c56ce8f
+2025-10-26 07:37:22,876 - INFO -    耗时: 0.00秒
+2025-10-26 07:37:22,876 - INFO -    进度: 100.0%
+2025-10-26 07:37:22,876 - INFO - 
+🎨 生成可视化...
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 21442 (\N{CJK UNIFIED IDEOGRAPH-53C2}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 25968 (\N{CJK UNIFIED IDEOGRAPH-6570}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 29575 (\N{CJK UNIFIED IDEOGRAPH-7387}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+/workspace/hydrosis/utils/visualization.py:388: UserWarning: Glyph 23450 (\N{CJK UNIFIED IDEOGRAPH-5B9A}) missing from font(s) DejaVu Sans.
+  plt.savefig(output_path, dpi=150, bbox_inches='tight')
+2025-10-26 07:37:23,413 - INFO - 总结图已保存: results/enhanced_workflow_tests/06_参数率定/visualizations/test_summary.png
+2025-10-26 07:37:23,414 - INFO -    生成了 1 个可视化文件
+2025-10-26 07:37:23,414 - INFO - 
+✓ 验证结果...
+2025-10-26 07:37:23,414 - INFO - 
+📄 生成测试报告...
+2025-10-26 07:37:23,414 - INFO - 测试报告已生成: results/enhanced_workflow_tests/06_参数率定/TEST_REPORT.md
+2025-10-26 07:37:23,415 - INFO -    报告已保存: results/enhanced_workflow_tests/06_参数率定/TEST_REPORT.md
+2025-10-26 07:37:23,415 - INFO -    结果已保存: results/enhanced_workflow_tests/06_参数率定/test_result.json
+2025-10-26 07:37:23,415 - INFO - 
+✅ 测试通过: 参数率定
+2025-10-26 07:37:23,415 - INFO - 
+================================================================================
+2025-10-26 07:37:23,415 - INFO - 测试场景 07: 并行分析
+2025-10-26 07:37:23,415 - INFO - ================================================================================
+2025-10-26 07:37:23,415 - INFO - 📝 加载工作流配置: config/workflows/test_scenarios/07_parallel_analysis.yaml
+2025-10-26 07:37:23,420 - INFO -    工作流: 并行分析工作流
+2025-10-26 07:37:23,420 - INFO -    步骤数: 5
+2025-10-26 07:37:23,420 - INFO -    1. terrain: terrain
+2025-10-26 07:37:23,420 - INFO -    2. pour_points_1000: pour_points (依赖: terrain)
+2025-10-26 07:37:23,420 - INFO -    3. pour_points_2000: pour_points (依赖: terrain)
+2025-10-26 07:37:23,420 - INFO -    4. pour_points_500: pour_points (依赖: terrain)
+2025-10-26 07:37:23,420 - INFO -    5. channel_network: channel_network (依赖: terrain)
+2025-10-26 07:37:23,420 - INFO - 
+🚀 开始执行工作流...
+2025-10-26 07:37:23,420 - INFO - [587023f0-113b-4a62-bbea-cfca4c0065a1] 开始执行工作流: 并行分析工作流
+2025-10-26 07:37:23,420 - INFO - [587023f0-113b-4a62-bbea-cfca4c0065a1] 执行步骤: terrain (terrain)
+2025-10-26 07:37:23,421 - INFO - [587023f0-113b-4a62-bbea-cfca4c0065a1:terrain] 开始验证输入...
+2025-10-26 07:37:23,421 - INFO - [587023f0-113b-4a62-bbea-cfca4c0065a1:terrain] 开始执行模块 terrain...
+2025-10-26 07:37:23,421 - INFO - 开始处理DEM: data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif
+2025-10-26 07:37:23,421 - INFO - 方法: d8, 填充坑洼: True
+2025-10-26 07:37:23,421 - ERROR - [587023f0-113b-4a62-bbea-cfca4c0065a1:terrain] 模块执行失败: No module named 'rasterio'
+2025-10-26 07:37:23,421 - ERROR - [587023f0-113b-4a62-bbea-cfca4c0065a1] 步骤 terrain 失败: No module named 'rasterio'
+2025-10-26 07:37:23,421 - ERROR - [587023f0-113b-4a62-bbea-cfca4c0065a1] 工作流执行出错: No module named 'rasterio'
+2025-10-26 07:37:23,421 - ERROR - ✗ 测试执行异常: No module named 'rasterio'
+2025-10-26 07:37:23,422 - ERROR - Traceback (most recent call last):
+  File "/workspace/run_enhanced_workflow_tests.py", line 106, in run_test_scenario
+    run = engine.execute(workflow, progress_callback=progress_callback)
+  File "/workspace/hydrosis/workflow_engine/engine.py", line 223, in execute
+    self._execute_step(step, run, context, progress_callback)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/hydrosis/workflow_engine/engine.py", line 275, in _execute_step
+    output = module.run(resolved_inputs, task_id=f"{run.run_id}:{step.id}")
+  File "/workspace/hydrosis/modules/base.py", line 249, in run
+    output = self.execute(inputs, context)
+  File "/workspace/hydrosis/modules/terrain.py", line 142, in execute
+    import rasterio
+ModuleNotFoundError: No module named 'rasterio'
+
+2025-10-26 07:37:23,422 - INFO - 
+================================================================================
+2025-10-26 07:37:23,422 - INFO - 测试场景 08: 完整十一步
+2025-10-26 07:37:23,422 - INFO - ================================================================================
+2025-10-26 07:37:23,423 - INFO - 📝 加载工作流配置: config/workflows/test_scenarios/08_complete_eleven_steps.yaml
+2025-10-26 07:37:23,432 - INFO -    工作流: 完整十一步工作流
+2025-10-26 07:37:23,432 - INFO -    步骤数: 10
+2025-10-26 07:37:23,432 - INFO -    1. step01_terrain: terrain
+2025-10-26 07:37:23,432 - INFO -    2. step02_pour_points: pour_points (依赖: step01_terrain)
+2025-10-26 07:37:23,432 - INFO -    3. step03_watershed: watershed_delineation (依赖: step01_terrain, step02_pour_points)
+2025-10-26 07:37:23,432 - INFO -    4. step04_channel: channel_network (依赖: step01_terrain)
+2025-10-26 07:37:23,432 - INFO -    5. step05_rain_gauge: rain_gauge_layout (依赖: step03_watershed)
+2025-10-26 07:37:23,432 - INFO -    6. step06_precipitation: precipitation_generation
+2025-10-26 07:37:23,432 - INFO -    7. step08_areal_precip: areal_precipitation (依赖: step06_precipitation, step05_rain_gauge)
+2025-10-26 07:37:23,432 - INFO -    8. step09_runoff: runoff_generation (依赖: step08_areal_precip, step03_watershed)
+2025-10-26 07:37:23,432 - INFO -    9. step10_routing: routing (依赖: step09_runoff, step03_watershed)
+2025-10-26 07:37:23,432 - INFO -    10. step11_evaluation: evaluation (依赖: step10_routing)
+2025-10-26 07:37:23,432 - INFO - 
+🚀 开始执行工作流...
+2025-10-26 07:37:23,432 - INFO - [0d8116ad-e347-4bb3-b032-d6c39825bc8f] 开始执行工作流: 完整十一步工作流
+2025-10-26 07:37:23,433 - INFO - [0d8116ad-e347-4bb3-b032-d6c39825bc8f] 执行步骤: step01_terrain (terrain)
+2025-10-26 07:37:23,433 - INFO - [0d8116ad-e347-4bb3-b032-d6c39825bc8f:step01_terrain] 开始验证输入...
+2025-10-26 07:37:23,433 - INFO - [0d8116ad-e347-4bb3-b032-d6c39825bc8f:step01_terrain] 开始执行模块 terrain...
+2025-10-26 07:37:23,433 - INFO - 开始处理DEM: data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif
+2025-10-26 07:37:23,433 - INFO - 方法: d8, 填充坑洼: True
+2025-10-26 07:37:23,433 - ERROR - [0d8116ad-e347-4bb3-b032-d6c39825bc8f:step01_terrain] 模块执行失败: No module named 'rasterio'
+2025-10-26 07:37:23,433 - ERROR - [0d8116ad-e347-4bb3-b032-d6c39825bc8f] 步骤 step01_terrain 失败: No module named 'rasterio'
+2025-10-26 07:37:23,433 - ERROR - [0d8116ad-e347-4bb3-b032-d6c39825bc8f] 工作流执行出错: No module named 'rasterio'
+2025-10-26 07:37:23,433 - ERROR - ✗ 测试执行异常: No module named 'rasterio'
+2025-10-26 07:37:23,434 - ERROR - Traceback (most recent call last):
+  File "/workspace/run_enhanced_workflow_tests.py", line 106, in run_test_scenario
+    run = engine.execute(workflow, progress_callback=progress_callback)
+  File "/workspace/hydrosis/workflow_engine/engine.py", line 223, in execute
+    self._execute_step(step, run, context, progress_callback)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/hydrosis/workflow_engine/engine.py", line 275, in _execute_step
+    output = module.run(resolved_inputs, task_id=f"{run.run_id}:{step.id}")
+  File "/workspace/hydrosis/modules/base.py", line 249, in run
+    output = self.execute(inputs, context)
+  File "/workspace/hydrosis/modules/terrain.py", line 142, in execute
+    import rasterio
+ModuleNotFoundError: No module named 'rasterio'
+
+2025-10-26 07:37:23,434 - INFO - 
+📊 生成总结报告...
+2025-10-26 07:37:23,436 - INFO -    总结报告已保存: results/enhanced_workflow_tests/TEST_SUMMARY.md
+2025-10-26 07:37:23,436 - INFO -    JSON结果已保存: results/enhanced_workflow_tests/test_summary.json
+2025-10-26 07:37:23,436 - INFO - 
+################################################################################
+2025-10-26 07:37:23,436 - INFO - 测试总结
+2025-10-26 07:37:23,436 - INFO - ################################################################################
+2025-10-26 07:37:23,436 - INFO - 总耗时: 3.14秒
+2025-10-26 07:37:23,436 - INFO - 测试总数: 8
+2025-10-26 07:37:23,436 - INFO - 通过: 3
+2025-10-26 07:37:23,436 - INFO - 失败: 5
+2025-10-26 07:37:23,436 - INFO - 通过率: 37.5%
+COULD NOT LOAD RichDEM ENGINE! NOTHING WILL WORK!

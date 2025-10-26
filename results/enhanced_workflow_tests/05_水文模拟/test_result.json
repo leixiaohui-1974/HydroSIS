@@ -1,0 +1,64 @@
+{
+  "scenario_id": "05",
+  "scenario_name": "水文模拟",
+  "config_file": "config/workflows/test_scenarios/05_hydrologic_simulation.yaml",
+  "test_dir": "results/enhanced_workflow_tests/05_水文模拟",
+  "start_time": "2025-10-26T07:37:22.317877",
+  "status": "completed",
+  "outputs": {
+    "discharge": "results/workflow_tests/05_hydro_sim/routing/discharge.csv"
+  },
+  "visualizations": {
+    "summary": "results/enhanced_workflow_tests/05_水文模拟/visualizations/test_summary.png"
+  },
+  "validation": {
+    "passed": true,
+    "errors": [],
+    "warnings": [
+      "输出文件缺失: runoff.runoff_timeseries, routing.discharge_timeseries"
+    ],
+    "metrics": {
+      "total_duration": 0.000942,
+      "step_count": 2,
+      "completed_steps": 2
+    },
+    "timestamp": "2025-10-26T07:37:22.317877",
+    "duration": 0.0046329498291015625
+  },
+  "duration": 0.0046329498291015625,
+  "run_id": "8640db70-430a-4930-b997-e60948d66955",
+  "step_count": 2,
+  "progress_log": [
+    {
+      "percent": 50.0,
+      "step": "runoff",
+      "status": "completed",
+      "duration": 0.000452
+    },
+    {
+      "percent": 100.0,
+      "step": "routing",
+      "status": "completed",
+      "duration": 0.000261
+    }
+  ],
+  "end_time": "2025-10-26T07:37:22.322501",
+  "step_results": {
+    "runoff": {
+      "status": "completed",
+      "duration": 0.000452,
+      "error": null,
+      "outputs": {
+        "runoff_timeseries": "results/workflow_tests/05_hydro_sim/runoff/runoff.csv"
+      }
+    },
+    "routing": {
+      "status": "completed",
+      "duration": 0.000261,
+      "error": null,
+      "outputs": {
+        "discharge_timeseries": "results/workflow_tests/05_hydro_sim/routing/discharge.csv"
+      }
+    }
+  }
+}

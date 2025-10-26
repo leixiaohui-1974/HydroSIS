@@ -1,0 +1,288 @@
+{
+  "test_date": "2025-10-26T07:37:23.434759",
+  "total_time_seconds": 3.139463186264038,
+  "total_tests": 8,
+  "passed": 3,
+  "failed": 5,
+  "test_results": {
+    "01": {
+      "scenario_id": "01",
+      "scenario_name": "最小测试-仅地形",
+      "config_file": "config/workflows/test_scenarios/01_minimal_terrain.yaml",
+      "test_dir": "results/enhanced_workflow_tests/01_最小测试-仅地形",
+      "start_time": "2025-10-26T07:37:20.295422",
+      "status": "error",
+      "outputs": {},
+      "visualizations": {},
+      "validation": {},
+      "duration": 0.4695413112640381,
+      "error": "No module named 'shapely'",
+      "end_time": "2025-10-26T07:37:20.764943"
+    },
+    "02": {
+      "scenario_id": "02",
+      "scenario_name": "两步基础测试",
+      "config_file": "config/workflows/test_scenarios/02_two_step_basic.yaml",
+      "test_dir": "results/enhanced_workflow_tests/02_两步基础测试",
+      "start_time": "2025-10-26T07:37:20.767351",
+      "status": "error",
+      "outputs": {},
+      "visualizations": {},
+      "validation": {},
+      "duration": 0.002426624298095703,
+      "error": "No module named 'shapely'",
+      "end_time": "2025-10-26T07:37:20.769769"
+    },
+    "03": {
+      "scenario_id": "03",
+      "scenario_name": "三步流域划分",
+      "config_file": "config/workflows/test_scenarios/03_three_step_delineation.yaml",
+      "test_dir": "results/enhanced_workflow_tests/03_三步流域划分",
+      "start_time": "2025-10-26T07:37:20.771060",
+      "status": "error",
+      "outputs": {},
+      "visualizations": {},
+      "validation": {},
+      "duration": 0.9530162811279297,
+      "error": "No module named 'rasterio'",
+      "end_time": "2025-10-26T07:37:21.724069"
+    },
+    "04": {
+      "scenario_id": "04",
+      "scenario_name": "降雨分析",
+      "config_file": "config/workflows/test_scenarios/04_precipitation_analysis.yaml",
+      "test_dir": "results/enhanced_workflow_tests/04_降雨分析",
+      "start_time": "2025-10-26T07:37:21.725833",
+      "status": "completed",
+      "outputs": {
+        "areal_precipitation": "results/workflow_tests/04_precipitation/areal_precip/areal_precip.csv"
+      },
+      "visualizations": {
+        "summary": "results/enhanced_workflow_tests/04_降雨分析/visualizations/test_summary.png"
+      },
+      "validation": {
+        "passed": true,
+        "errors": [],
+        "warnings": [
+          "输出文件缺失: rain_gauge.gauge_layout, rain_gauge.thiessen_polygons, precipitation.precipitation_timeseries, areal_precip.areal_precipitation"
+        ],
+        "metrics": {
+          "total_duration": 0.001256,
+          "step_count": 3,
+          "completed_steps": 3
+        },
+        "timestamp": "2025-10-26T07:37:21.725833",
+        "duration": 0.00470280647277832
+      },
+      "duration": 0.00470280647277832,
+      "run_id": "7fcf9aba-32ef-4001-a0f8-78ab7b8af88d",
+      "step_count": 3,
+      "progress_log": [
+        {
+          "percent": 33.33333333333333,
+          "step": "rain_gauge",
+          "status": "completed",
+          "duration": 0.000463
+        },
+        {
+          "percent": 66.66666666666666,
+          "step": "precipitation",
+          "status": "completed",
+          "duration": 0.000259
+        },
+        {
+          "percent": 100.0,
+          "step": "areal_precip",
+          "status": "completed",
+          "duration": 0.000246
+        }
+      ],
+      "end_time": "2025-10-26T07:37:21.730529",
+      "step_results": {
+        "rain_gauge": {
+          "status": "completed",
+          "duration": 0.000463,
+          "error": null,
+          "outputs": {
+            "gauge_layout": "results/workflow_tests/04_precipitation/rain_gauges/gauges.geojson",
+            "thiessen_polygons": "results/workflow_tests/04_precipitation/rain_gauges/thiessen.geojson"
+          }
+        },
+        "precipitation": {
+          "status": "completed",
+          "duration": 0.000259,
+          "error": null,
+          "outputs": {
+            "precipitation_timeseries": "results/workflow_tests/04_precipitation/precipitation/precip.csv"
+          }
+        },
+        "areal_precip": {
+          "status": "completed",
+          "duration": 0.000246,
+          "error": null,
+          "outputs": {
+            "areal_precipitation": "results/workflow_tests/04_precipitation/areal_precip/areal_precip.csv"
+          }
+        }
+      }
+    },
+    "05": {
+      "scenario_id": "05",
+      "scenario_name": "水文模拟",
+      "config_file": "config/workflows/test_scenarios/05_hydrologic_simulation.yaml",
+      "test_dir": "results/enhanced_workflow_tests/05_水文模拟",
+      "start_time": "2025-10-26T07:37:22.317877",
+      "status": "completed",
+      "outputs": {
+        "discharge": "results/workflow_tests/05_hydro_sim/routing/discharge.csv"
+      },
+      "visualizations": {
+        "summary": "results/enhanced_workflow_tests/05_水文模拟/visualizations/test_summary.png"
+      },
+      "validation": {
+        "passed": true,
+        "errors": [],
+        "warnings": [
+          "输出文件缺失: runoff.runoff_timeseries, routing.discharge_timeseries"
+        ],
+        "metrics": {
+          "total_duration": 0.000942,
+          "step_count": 2,
+          "completed_steps": 2
+        },
+        "timestamp": "2025-10-26T07:37:22.317877",
+        "duration": 0.0046329498291015625
+      },
+      "duration": 0.0046329498291015625,
+      "run_id": "8640db70-430a-4930-b997-e60948d66955",
+      "step_count": 2,
+      "progress_log": [
+        {
+          "percent": 50.0,
+          "step": "runoff",
+          "status": "completed",
+          "duration": 0.000452
+        },
+        {
+          "percent": 100.0,
+          "step": "routing",
+          "status": "completed",
+          "duration": 0.000261
+        }
+      ],
+      "end_time": "2025-10-26T07:37:22.322501",
+      "step_results": {
+        "runoff": {
+          "status": "completed",
+          "duration": 0.000452,
+          "error": null,
+          "outputs": {
+            "runoff_timeseries": "results/workflow_tests/05_hydro_sim/runoff/runoff.csv"
+          }
+        },
+        "routing": {
+          "status": "completed",
+          "duration": 0.000261,
+          "error": null,
+          "outputs": {
+            "discharge_timeseries": "results/workflow_tests/05_hydro_sim/routing/discharge.csv"
+          }
+        }
+      }
+    },
+    "06": {
+      "scenario_id": "06",
+      "scenario_name": "参数率定",
+      "config_file": "config/workflows/test_scenarios/06_calibration_workflow.yaml",
+      "test_dir": "results/enhanced_workflow_tests/06_参数率定",
+      "start_time": "2025-10-26T07:37:22.871736",
+      "status": "completed",
+      "outputs": {
+        "metrics": "{}",
+        "calibrated_parameters": "{}"
+      },
+      "visualizations": {
+        "summary": "results/enhanced_workflow_tests/06_参数率定/visualizations/test_summary.png"
+      },
+      "validation": {
+        "passed": true,
+        "errors": [],
+        "warnings": [
+          "输出文件缺失: evaluation.report"
+        ],
+        "metrics": {
+          "total_duration": 0.000901,
+          "step_count": 2,
+          "completed_steps": 2
+        },
+        "timestamp": "2025-10-26T07:37:22.871736",
+        "duration": 0.004934072494506836
+      },
+      "duration": 0.004934072494506836,
+      "run_id": "e5a9d081-6e42-4516-aa15-b2700c56ce8f",
+      "step_count": 2,
+      "progress_log": [
+        {
+          "percent": 50.0,
+          "step": "evaluation",
+          "status": "completed",
+          "duration": 0.000502
+        },
+        {
+          "percent": 100.0,
+          "step": "calibration",
+          "status": "completed",
+          "duration": 0.000169
+        }
+      ],
+      "end_time": "2025-10-26T07:37:22.876661",
+      "step_results": {
+        "evaluation": {
+          "status": "completed",
+          "duration": 0.000502,
+          "error": null,
+          "outputs": {
+            "metrics": {},
+            "report": "results/workflow_tests/06_calibration/evaluation/report.md"
+          }
+        },
+        "calibration": {
+          "status": "completed",
+          "duration": 0.000169,
+          "error": null,
+          "outputs": {
+            "calibrated_parameters": {}
+          }
+        }
+      }
+    },
+    "07": {
+      "scenario_id": "07",
+      "scenario_name": "并行分析",
+      "config_file": "config/workflows/test_scenarios/07_parallel_analysis.yaml",
+      "test_dir": "results/enhanced_workflow_tests/07_并行分析",
+      "start_time": "2025-10-26T07:37:23.415609",
+      "status": "error",
+      "outputs": {},
+      "visualizations": {},
+      "validation": {},
+      "duration": 0.0061495304107666016,
+      "error": "No module named 'rasterio'",
+      "end_time": "2025-10-26T07:37:23.421749"
+    },
+    "08": {
+      "scenario_id": "08",
+      "scenario_name": "完整十一步",
+      "config_file": "config/workflows/test_scenarios/08_complete_eleven_steps.yaml",
+      "test_dir": "results/enhanced_workflow_tests/08_完整十一步",
+      "start_time": "2025-10-26T07:37:23.423045",
+      "status": "error",
+      "outputs": {},
+      "visualizations": {},
+      "validation": {},
+      "duration": 0.010661840438842773,
+      "error": "No module named 'rasterio'",
+      "end_time": "2025-10-26T07:37:23.433696"
+    }
+  }
+}

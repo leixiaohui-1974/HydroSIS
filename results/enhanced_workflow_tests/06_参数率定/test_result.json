@@ -1,0 +1,66 @@
+{
+  "scenario_id": "06",
+  "scenario_name": "参数率定",
+  "config_file": "config/workflows/test_scenarios/06_calibration_workflow.yaml",
+  "test_dir": "results/enhanced_workflow_tests/06_参数率定",
+  "start_time": "2025-10-26T07:37:22.871736",
+  "status": "completed",
+  "outputs": {
+    "metrics": "{}",
+    "calibrated_parameters": "{}"
+  },
+  "visualizations": {
+    "summary": "results/enhanced_workflow_tests/06_参数率定/visualizations/test_summary.png"
+  },
+  "validation": {
+    "passed": true,
+    "errors": [],
+    "warnings": [
+      "输出文件缺失: evaluation.report"
+    ],
+    "metrics": {
+      "total_duration": 0.000901,
+      "step_count": 2,
+      "completed_steps": 2
+    },
+    "timestamp": "2025-10-26T07:37:22.871736",
+    "duration": 0.004934072494506836
+  },
+  "duration": 0.004934072494506836,
+  "run_id": "e5a9d081-6e42-4516-aa15-b2700c56ce8f",
+  "step_count": 2,
+  "progress_log": [
+    {
+      "percent": 50.0,
+      "step": "evaluation",
+      "status": "completed",
+      "duration": 0.000502
+    },
+    {
+      "percent": 100.0,
+      "step": "calibration",
+      "status": "completed",
+      "duration": 0.000169
+    }
+  ],
+  "end_time": "2025-10-26T07:37:22.876661",
+  "step_results": {
+    "evaluation": {
+      "status": "completed",
+      "duration": 0.000502,
+      "error": null,
+      "outputs": {
+        "metrics": {},
+        "report": "results/workflow_tests/06_calibration/evaluation/report.md"
+      }
+    },
+    "calibration": {
+      "status": "completed",
+      "duration": 0.000169,
+      "error": null,
+      "outputs": {
+        "calibrated_parameters": {}
+      }
+    }
+  }
+}
