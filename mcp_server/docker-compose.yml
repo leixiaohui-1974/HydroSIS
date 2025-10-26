@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # MCP服务器
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: mcp_server/Dockerfile
+    container_name: hydrosis-mcp-server
+    ports:
+      - "8080:8080"
+    environment:
+      - DATA_ROOT=/data
+      - HOST=0.0.0.0
+      - PORT=8080
+      - WORKERS=4
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - hydrosis-network
+    depends_on:
+      - redis
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+  
+  # Redis（用于缓存和任务队列）
+  redis:
+    image: redis:7-alpine
+    container_name: hydrosis-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - hydrosis-network
+    command: redis-server --appendonly yes
+  
+  # PostgreSQL（用于持久化存储）
+  postgres:
+    image: postgres:15-alpine
+    container_name: hydrosis-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=hydrosis
+      - POSTGRES_USER=hydrosis
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-hydrosis_password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    restart: unless-stopped
+    networks:
+      - hydrosis-network
+  
+  # MinIO（对象存储）
+  minio:
+    image: minio/minio:latest
+    container_name: hydrosis-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+    networks:
+      - hydrosis-network
+    command: server /data --console-address ":9001"
+  
+  # Celery Worker（异步任务处理）
+  celery-worker:
+    build:
+      context: ..
+      dockerfile: mcp_server/Dockerfile
+    container_name: hydrosis-celery-worker
+    environment:
+      - DATA_ROOT=/data
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    networks:
+      - hydrosis-network
+    depends_on:
+      - redis
+      - postgres
+    command: celery -A mcp_server.tasks worker --loglevel=info --concurrency=2
+
+networks:
+  hydrosis-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  postgres-data:
+  minio-data:
