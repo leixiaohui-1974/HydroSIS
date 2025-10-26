@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""综合测试场景运行器 - 包含所有可视化和验证功能
+"""Comprehensive Test Scenario Runner - With All Visualization and Validation
 
-此脚本运行所有测试场景，并生成：
-1. 流向图（正确区分流向和累积数）
-2. 汇水点分布图（3个干流+3个支流=6个）
-3. 雨量站分布图（50个）
-4. 子流域面雨量动态GIF
-5. 各雨量站时间序列图
-6. 各汇水点径流时间序列图
-7. 径流系数自动计算
-8. 降雨径流对比图
+This script runs all test scenarios and generates:
+1. Flow direction maps (correctly differentiated from accumulation)
+2. Pour points distribution map (3 mainstream + 3 tributary = 6 points)
+3. Rain gauge distribution map (50 gauges)
+4. Subbasin areal precipitation animated GIF
+5. Time series plots for each rain gauge
+6. Time series plots for each pour point discharge
+7. Automatic runoff coefficient calculation
+8. Precipitation-runoff comparison plots
 """
 import json
 import logging
@@ -20,7 +20,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 import numpy as np
 
-# 设置日志
+# Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -29,13 +29,13 @@ logger = logging.getLogger(__name__)
 
 
 class ComprehensiveVisualizer:
-    """综合可视化器 - 生成所有需要的图表"""
+    """Comprehensive Visualizer - Generate all required charts"""
     
     def __init__(self, output_dir: Path):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
-        # 导入必要的库
+        # Import necessary libraries
         try:
             import matplotlib
             matplotlib.use('Agg')
@@ -49,9 +49,9 @@ class ComprehensiveVisualizer:
             self.plt = None
     
     def plot_flow_direction_correct(self, flow_dir_path: Path, output_path: Path):
-        """正确绘制流向图（不同于累积数）
+        """Plot flow direction correctly (different from accumulation)
         
-        使用D8编码的8个方向，用不同颜色和箭头表示
+        Uses D8 encoding with 8 directions, each with different color
         """
         if not self.plt:
             return None
@@ -62,8 +62,8 @@ class ComprehensiveVisualizer:
             with rasterio.open(flow_dir_path) as src:
                 flow_dir = src.read(1)
                 
-                # D8方向编码: 1=E, 2=NE, 3=N, 4=NW, 5=W, 6=SW, 7=S, 8=SE
-                # 使用不同颜色表示不同方向
+                # D8 direction encoding: 1=E, 2=NE, 3=N, 4=NW, 5=W, 6=SW, 7=S, 8=SE
+                # Use different colors for different directions
                 colors = ['#808080', '#ff0000', '#ff7f00', '#ffff00', '#7fff00', 
                          '#00ff00', '#00ff7f', '#00ffff', '#007fff']
                 cmap = self.ListedColormap(colors)
@@ -76,12 +76,12 @@ class ComprehensiveVisualizer:
                 ax.set_xlabel('Column Index', fontsize=12)
                 ax.set_ylabel('Row Index', fontsize=12)
                 
-                # 添加colorbar with labels
+                # Add colorbar with labels
                 cbar = self.plt.colorbar(im, ax=ax, ticks=range(9))
                 cbar.ax.set_yticklabels(['NoData', 'E', 'NE', 'N', 'NW', 'W', 'SW', 'S', 'SE'])
                 cbar.set_label('Flow Direction', fontsize=12)
                 
-                # 添加统计信息
+                # Add statistics
                 valid_data = flow_dir[(flow_dir >= 1) & (flow_dir <= 8)]
                 stats_text = (
                     f"Valid cells: {len(valid_data)}\n"
@@ -111,7 +111,7 @@ class ComprehensiveVisualizer:
         mainstream_count: int = 3,
         tributary_count: int = 3
     ):
-        """绘制汇水点分布图（区分干流和支流）"""
+        """Plot pour points distribution (distinguish mainstream and tributary)"""
         if not self.plt:
             return None
         
@@ -120,10 +120,10 @@ class ComprehensiveVisualizer:
             import rasterio
             from rasterio.plot import show
             
-            # 读取汇水点
+            # Read pour points
             gdf = gpd.read_file(pour_points_path)
             
-            # 根据累积数排序，前N个为干流
+            # Sort by accumulation, first N are mainstream
             if 'accumulation' in gdf.columns:
                 gdf = gdf.sort_values('accumulation', ascending=False)
             
@@ -133,11 +133,11 @@ class ComprehensiveVisualizer:
             
             fig, ax = self.plt.subplots(figsize=(14, 12))
             
-            # 绘制DEM底图
+            # Draw DEM basemap
             with rasterio.open(dem_path) as src:
                 show(src, ax=ax, cmap='terrain', alpha=0.6)
             
-            # 绘制干流汇水点（大红点）
+            # Plot mainstream pour points (large red dots)
             if len(mainstream_points) > 0:
                 mainstream_points.plot(
                     ax=ax, color='red', markersize=200, 
@@ -155,7 +155,7 @@ class ComprehensiveVisualizer:
                                bbox=dict(boxstyle='round', facecolor='red', alpha=0.7),
                                color='white', fontweight='bold')
             
-            # 绘制支流汇水点（蓝色三角）
+            # Plot tributary pour points (blue triangles)
             if len(tributary_points) > 0:
                 tributary_points.plot(
                     ax=ax, color='blue', markersize=150,
@@ -198,14 +198,14 @@ class ComprehensiveVisualizer:
         output_path: Path,
         expected_count: int = 50
     ):
-        """绘制雨量站分布图"""
+        """Plot rain gauge distribution"""
         if not self.plt:
             return None
         
         try:
             import geopandas as gpd
             
-            # 读取雨量站和流域
+            # Read rain gauges and watersheds
             gauges_gdf = gpd.read_file(gauges_path)
             watershed_gdf = gpd.read_file(watershed_path)
             
@@ -643,7 +643,7 @@ class ComprehensiveVisualizer:
 
 
 class ComprehensiveTestRunner:
-    """综合测试运行器"""
+    """Comprehensive Test Runner"""
     
     def __init__(self, output_root: Path):
         self.output_root = Path(output_root)
