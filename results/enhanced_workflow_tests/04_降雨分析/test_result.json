@@ -3,7 +3,7 @@
   "scenario_name": "降雨分析",
   "config_file": "config/workflows/test_scenarios/04_precipitation_analysis.yaml",
   "test_dir": "results/enhanced_workflow_tests/04_降雨分析",
-  "start_time": "2025-10-26T07:37:21.725833",
+  "start_time": "2025-10-26T08:01:56.833265",
   "status": "completed",
   "outputs": {
     "areal_precipitation": "results/workflow_tests/04_precipitation/areal_precip/areal_precip.csv"
@@ -18,28 +18,28 @@
       "输出文件缺失: rain_gauge.gauge_layout, rain_gauge.thiessen_polygons, precipitation.precipitation_timeseries, areal_precip.areal_precipitation"
     ],
     "metrics": {
-      "total_duration": 0.001256,
+      "total_duration": 0.0012,
       "step_count": 3,
       "completed_steps": 3
     },
-    "timestamp": "2025-10-26T07:37:21.725833",
-    "duration": 0.00470280647277832
+    "timestamp": "2025-10-26T08:01:56.833265",
+    "duration": 0.004593849182128906
   },
-  "duration": 0.00470280647277832,
-  "run_id": "7fcf9aba-32ef-4001-a0f8-78ab7b8af88d",
+  "duration": 0.004593849182128906,
+  "run_id": "d9e66f91-9e2d-4fd2-addf-593441e4fd12",
   "step_count": 3,
   "progress_log": [
     {
       "percent": 33.33333333333333,
       "step": "rain_gauge",
       "status": "completed",
-      "duration": 0.000463
+      "duration": 0.000375
     },
     {
       "percent": 66.66666666666666,
       "step": "precipitation",
       "status": "completed",
-      "duration": 0.000259
+      "duration": 0.000258
     },
     {
       "percent": 100.0,
@@ -48,11 +48,11 @@
       "duration": 0.000246
     }
   ],
-  "end_time": "2025-10-26T07:37:21.730529",
+  "end_time": "2025-10-26T08:01:56.837852",
   "step_results": {
     "rain_gauge": {
       "status": "completed",
-      "duration": 0.000463,
+      "duration": 0.000375,
       "error": null,
       "outputs": {
         "gauge_layout": "results/workflow_tests/04_precipitation/rain_gauges/gauges.geojson",
@@ -61,7 +61,7 @@
     },
     "precipitation": {
       "status": "completed",
-      "duration": 0.000259,
+      "duration": 0.000258,
       "error": null,
       "outputs": {
         "precipitation_timeseries": "results/workflow_tests/04_precipitation/precipitation/precip.csv"
