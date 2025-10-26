@@ -156,9 +156,16 @@ class TerrainModule(Module[TerrainOutput]):
             }
             # 获取geotransform用于RichDEM
             geotransform = src.transform.to_gdal()
+            nodata_val = src.nodata
+        
+        # 清理异常NoData值
+        if nodata_val and abs(nodata_val) > 1e10:
+            self.logger.info(f"清理异常NoData值: {nodata_val}")
+            dem_array = np.where(np.abs(dem_array) > 1e10, np.nan, dem_array)
+            nodata_val = -9999
         
         # 转换为RichDEM数组并设置geotransform
-        rd_dem = rd.rdarray(dem_array, no_data=-9999)
+        rd_dem = rd.rdarray(dem_array, no_data=nodata_val if nodata_val else -9999)
         rd_dem.geotransform = geotransform
         
         # 填充坑洼
@@ -166,6 +173,15 @@ class TerrainModule(Module[TerrainOutput]):
         if inputs.fill_depressions:
             self.logger.info("填充坑洼...")
             rd.FillDepressions(rd_dem, in_place=True)
+            
+            # 关键：处理平坦区域以改善流量累积
+            self.logger.info("处理平坦区域（BreachDepressions）...")
+            try:
+                rd.BreachDepressions(rd_dem, in_place=True)
+                self.logger.info("✅ 平坦区域处理完成")
+            except Exception as e:
+                self.logger.warning(f"平坦区域处理失败: {e}")
+            
             filled_dem_path = str(output_dir / "filled_dem.tif")
             with rasterio.open(filled_dem_path, 'w', **profile) as dst:
                 dst.write(rd_dem, 1)

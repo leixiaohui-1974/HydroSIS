@@ -3,7 +3,7 @@
   "scenario_name": "并行分析",
   "config_file": "config/workflows/test_scenarios/07_parallel_analysis.yaml",
   "test_dir": "results/enhanced_workflow_tests/07_并行分析",
-  "start_time": "2025-10-26T08:28:05.173304",
+  "start_time": "2025-10-26T09:49:39.934959",
   "status": "completed",
   "outputs": {
     "pour_points_1000": "results/workflow_tests/07_parallel/pour_points_1000/pour_points.geojson",
@@ -28,53 +28,53 @@
       "输出文件缺失: channel_network.channel_network"
     ],
     "metrics": {
-      "total_duration": 0.519131,
+      "total_duration": 0.677505,
       "step_count": 5,
       "completed_steps": 5
     },
-    "timestamp": "2025-10-26T08:28:05.173304",
-    "duration": 0.5248112678527832
+    "timestamp": "2025-10-26T09:49:39.934959",
+    "duration": 0.6827743053436279
   },
-  "duration": 0.5248112678527832,
-  "run_id": "f768209d-0097-4af3-98dc-a751d87a596d",
+  "duration": 0.6827743053436279,
+  "run_id": "7b906e1f-3975-44d0-93b6-b8c7ca8a8819",
   "step_count": 5,
   "progress_log": [
     {
       "percent": 20.0,
       "step": "terrain",
       "status": "completed",
-      "duration": 0.385308
+      "duration": 0.54377
     },
     {
       "percent": 40.0,
-      "step": "pour_points_1000",
+      "step": "pour_points_500",
       "status": "completed",
-      "duration": 0.0445
+      "duration": 0.048381
     },
     {
       "percent": 60.0,
-      "step": "pour_points_2000",
+      "step": "channel_network",
       "status": "completed",
-      "duration": 0.040987
+      "duration": 0.000414
     },
     {
       "percent": 80.0,
-      "step": "channel_network",
+      "step": "pour_points_1000",
       "status": "completed",
-      "duration": 0.000401
+      "duration": 0.042917
     },
     {
       "percent": 100.0,
-      "step": "pour_points_500",
+      "step": "pour_points_2000",
       "status": "completed",
-      "duration": 0.047176
+      "duration": 0.041286
     }
   ],
-  "end_time": "2025-10-26T08:28:05.698111",
+  "end_time": "2025-10-26T09:49:40.617722",
   "step_results": {
     "terrain": {
       "status": "completed",
-      "duration": 0.385308,
+      "duration": 0.54377,
       "error": null,
       "outputs": {
         "flow_direction": "results/workflow_tests/07_parallel/terrain/flow_direction.tif",
@@ -116,7 +116,7 @@
     },
     "pour_points_1000": {
       "status": "completed",
-      "duration": 0.0445,
+      "duration": 0.042917,
       "error": null,
       "outputs": {
         "pour_points_geojson": "results/workflow_tests/07_parallel/pour_points_1000/pour_points.geojson",
@@ -186,15 +186,6 @@
           },
           {
             "id": "P8",
-            "lon": -6701549.678014779,
-            "lat": 6634346.216497158,
-            "accumulation": 1272.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P9",
             "lon": -6718669.293934631,
             "lat": 6633670.442184531,
             "accumulation": 1575.0,
@@ -203,7 +194,7 @@
             "original_lat": null
           },
           {
-            "id": "P10",
+            "id": "P9",
             "lon": -6723850.230331428,
             "lat": 6633445.184080323,
             "accumulation": 1102.0,
@@ -212,7 +203,7 @@
             "original_lat": null
           },
           {
-            "id": "P11",
+            "id": "P10",
             "lon": -6718106.148674109,
             "lat": 6632769.409767698,
             "accumulation": 1370.0,
@@ -221,7 +212,7 @@
             "original_lat": null
           },
           {
-            "id": "P12",
+            "id": "P11",
             "lon": -6684767.94925124,
             "lat": 6632431.522611384,
             "accumulation": 1446.0,
@@ -230,16 +221,7 @@
             "original_lat": null
           },
           {
-            "id": "P13",
-            "lon": -6706392.727255263,
-            "lat": 6632318.89355928,
-            "accumulation": 4137.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P14",
+            "id": "P12",
             "lon": -6686682.643137014,
             "lat": 6630967.344934029,
             "accumulation": 1076.0,
@@ -248,16 +230,25 @@
             "original_lat": null
           },
           {
-            "id": "P15",
-            "lon": -6702000.194223196,
-            "lat": 6628940.021996152,
-            "accumulation": 2444.0,
+            "id": "P13",
+            "lon": -6707744.275880515,
+            "lat": 6630629.457777715,
+            "accumulation": 3209.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P16",
+            "id": "P14",
+            "lon": -6700986.532754257,
+            "lat": 6627137.957162483,
+            "accumulation": 1428.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P15",
             "lon": -6691300.434273289,
             "lat": 6624209.601807771,
             "accumulation": 2123.0,
@@ -266,7 +257,7 @@
             "original_lat": null
           },
           {
-            "id": "P17",
+            "id": "P16",
             "lon": -6700873.903702154,
             "lat": 6623195.940338832,
             "accumulation": 1598.0,
@@ -275,7 +266,7 @@
             "original_lat": null
           },
           {
-            "id": "P18",
+            "id": "P17",
             "lon": -6722611.310758281,
             "lat": 6622520.166026207,
             "accumulation": 2027.0,
@@ -284,7 +275,7 @@
             "original_lat": null
           },
           {
-            "id": "P19",
+            "id": "P18",
             "lon": -6707293.759672098,
             "lat": 6622294.907921999,
             "accumulation": 1744.0,
@@ -293,7 +284,7 @@
             "original_lat": null
           },
           {
-            "id": "P20",
+            "id": "P19",
             "lon": -6733536.328812397,
             "lat": 6622069.64981779,
             "accumulation": 1203.0,
@@ -302,7 +293,7 @@
             "original_lat": null
           },
           {
-            "id": "P21",
+            "id": "P20",
             "lon": -6695017.19299273,
             "lat": 6621619.133609373,
             "accumulation": 1635.0,
@@ -311,10 +302,19 @@
             "original_lat": null
           },
           {
-            "id": "P22",
+            "id": "P21",
             "lon": -6695355.080149043,
             "lat": 6618465.520150453,
             "accumulation": 3605.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P22",
+            "lon": -6734212.103125023,
+            "lat": 6614185.616170489,
+            "accumulation": 3611.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
@@ -339,15 +339,6 @@
           },
           {
             "id": "P25",
-            "lon": -6735788.909854483,
-            "lat": 6612496.180388926,
-            "accumulation": 4652.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P26",
             "lon": -6714164.13185046,
             "lat": 6612383.551336821,
             "accumulation": 1165.0,
@@ -356,7 +347,7 @@
             "original_lat": null
           },
           {
-            "id": "P27",
+            "id": "P26",
             "lon": -6722160.794549864,
             "lat": 6612270.922284717,
             "accumulation": 1098.0,
@@ -365,7 +356,7 @@
             "original_lat": null
           },
           {
-            "id": "P28",
+            "id": "P27",
             "lon": -6695017.19299273,
             "lat": 6611257.260815778,
             "accumulation": 5924.0,
@@ -374,7 +365,7 @@
             "original_lat": null
           },
           {
-            "id": "P29",
+            "id": "P28",
             "lon": -6705266.436734221,
             "lat": 6611144.631763674,
             "accumulation": 1372.0,
@@ -383,7 +374,7 @@
             "original_lat": null
           },
           {
-            "id": "P30",
+            "id": "P29",
             "lon": -6725201.77895668,
             "lat": 6611032.00271157,
             "accumulation": 1116.0,
@@ -392,7 +383,7 @@
             "original_lat": null
           },
           {
-            "id": "P31",
+            "id": "P30",
             "lon": -6726891.214738244,
             "lat": 6610468.857451048,
             "accumulation": 1207.0,
@@ -401,7 +392,7 @@
             "original_lat": null
           },
           {
-            "id": "P32",
+            "id": "P31",
             "lon": -6717430.374361483,
             "lat": 6609905.712190527,
             "accumulation": 1883.0,
@@ -410,7 +401,7 @@
             "original_lat": null
           },
           {
-            "id": "P33",
+            "id": "P32",
             "lon": -6732522.667343458,
             "lat": 6609793.083138422,
             "accumulation": 2875.0,
@@ -419,16 +410,16 @@
             "original_lat": null
           },
           {
-            "id": "P34",
+            "id": "P33",
             "lon": -6684092.1749386145,
             "lat": 6608779.421669484,
-            "accumulation": 1055.0,
+            "accumulation": 1073.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P35",
+            "id": "P34",
             "lon": -6724188.117487741,
             "lat": 6608328.905461066,
             "accumulation": 1444.0,
@@ -437,7 +428,7 @@
             "original_lat": null
           },
           {
-            "id": "P36",
+            "id": "P35",
             "lon": -6706617.985359472,
             "lat": 6605625.808210564,
             "accumulation": 1220.0,
@@ -446,7 +437,7 @@
             "original_lat": null
           },
           {
-            "id": "P37",
+            "id": "P36",
             "lon": -6684430.062094928,
             "lat": 6605175.292002146,
             "accumulation": 1296.0,
@@ -455,7 +446,7 @@
             "original_lat": null
           },
           {
-            "id": "P38",
+            "id": "P37",
             "lon": -6711348.405547852,
             "lat": 6603035.340012165,
             "accumulation": 1628.0,
@@ -464,7 +455,7 @@
             "original_lat": null
           },
           {
-            "id": "P39",
+            "id": "P38",
             "lon": -6729031.166728226,
             "lat": 6601233.275178497,
             "accumulation": 3027.0,
@@ -473,7 +464,7 @@
             "original_lat": null
           },
           {
-            "id": "P40",
+            "id": "P39",
             "lon": -6729031.166728226,
             "lat": 6600782.758970079,
             "accumulation": 1812.0,
@@ -482,7 +473,7 @@
             "original_lat": null
           },
           {
-            "id": "P41",
+            "id": "P40",
             "lon": -6695467.709201148,
             "lat": 6600444.871813767,
             "accumulation": 1507.0,
@@ -491,16 +482,16 @@
             "original_lat": null
           },
           {
-            "id": "P42",
+            "id": "P41",
             "lon": -6708645.308297349,
             "lat": 6599881.726553245,
-            "accumulation": 4953.0,
+            "accumulation": 4965.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P43",
+            "id": "P42",
             "lon": -6704703.291473699,
             "lat": 6598980.694136411,
             "accumulation": 1675.0,
@@ -509,7 +500,7 @@
             "original_lat": null
           },
           {
-            "id": "P44",
+            "id": "P43",
             "lon": -6706392.727255263,
             "lat": 6597967.032667472,
             "accumulation": 7977.0,
@@ -518,7 +509,7 @@
             "original_lat": null
           },
           {
-            "id": "P45",
+            "id": "P44",
             "lon": -6705716.952942638,
             "lat": 6597967.032667472,
             "accumulation": 1118.0,
@@ -527,34 +518,34 @@
             "original_lat": null
           },
           {
+            "id": "P45",
+            "lon": -6675419.737926585,
+            "lat": 6597403.887406951,
+            "accumulation": 1161.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
             "id": "P46",
-            "lon": -6692088.837638019,
+            "lon": -6691976.208585914,
             "lat": 6594700.790156447,
-            "accumulation": 1838.0,
+            "accumulation": 1797.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
             "id": "P47",
-            "lon": -6676658.6574997315,
-            "lat": 6594250.273948031,
-            "accumulation": 2768.0,
+            "lon": -6723850.230331428,
+            "lat": 6593236.612479092,
+            "accumulation": 1845.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
             "id": "P48",
-            "lon": -6723850.230331428,
-            "lat": 6593236.612479092,
-            "accumulation": 1830.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P49",
             "lon": -6713263.099433625,
             "lat": 6591885.06385384,
             "accumulation": 1117.0,
@@ -563,7 +554,7 @@
             "original_lat": null
           },
           {
-            "id": "P50",
+            "id": "P49",
             "lon": -6731509.005874519,
             "lat": 6591321.918593319,
             "accumulation": 3691.0,
@@ -572,52 +563,25 @@
             "original_lat": null
           },
           {
+            "id": "P50",
+            "lon": -6714727.277110981,
+            "lat": 6589181.966603338,
+            "accumulation": 1519.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
             "id": "P51",
-            "lon": -6680150.158114964,
-            "lat": 6590984.031437006,
-            "accumulation": 2871.0,
+            "lon": -6715290.422371502,
+            "lat": 6588393.563238608,
+            "accumulation": 2781.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
             "id": "P52",
-            "lon": -6714502.019006772,
-            "lat": 6589407.224707547,
-            "accumulation": 1710.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P53",
-            "lon": -6715290.422371502,
-            "lat": 6588393.563238608,
-            "accumulation": 2779.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P54",
-            "lon": -6685668.981668075,
-            "lat": 6588055.676082294,
-            "accumulation": 1114.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P55",
-            "lon": -6681726.964844424,
-            "lat": 6586253.611248626,
-            "accumulation": 4315.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P56",
             "lon": -6732747.925447667,
             "lat": 6585465.207883896,
             "accumulation": 1969.0,
@@ -626,61 +590,52 @@
             "original_lat": null
           },
           {
+            "id": "P53",
+            "lon": -6709771.5988183925,
+            "lat": 6582311.594424976,
+            "accumulation": 1002.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P54",
+            "lon": -6697269.774034816,
+            "lat": 6579833.755278681,
+            "accumulation": 1902.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P55",
+            "lon": -6710672.631235226,
+            "lat": 6578256.948549221,
+            "accumulation": 2018.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P56",
+            "lon": -6728693.279571912,
+            "lat": 6577468.545184491,
+            "accumulation": 1696.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
             "id": "P57",
-            "lon": -6688597.337022786,
-            "lat": 6585465.207883896,
-            "accumulation": 1933.0,
+            "lon": -6731509.005874519,
+            "lat": 6577243.287080283,
+            "accumulation": 1050.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
             "id": "P58",
-            "lon": -6689948.885648037,
-            "lat": 6579721.126226577,
-            "accumulation": 5118.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P59",
-            "lon": -6710672.631235226,
-            "lat": 6578820.093809743,
-            "accumulation": 2040.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P60",
-            "lon": -6727341.730946661,
-            "lat": 6577243.287080283,
-            "accumulation": 1331.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P61",
-            "lon": -6692426.724794332,
-            "lat": 6577130.658028179,
-            "accumulation": 1135.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P62",
-            "lon": -6694454.047732209,
-            "lat": 6576229.625611344,
-            "accumulation": 1427.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P63",
             "lon": -6714614.648058876,
             "lat": 6576116.99655924,
             "accumulation": 3926.0,
@@ -689,7 +644,7 @@
             "original_lat": null
           },
           {
-            "id": "P64",
+            "id": "P59",
             "lon": -6727116.472842452,
             "lat": 6575215.964142406,
             "accumulation": 2290.0,
@@ -698,25 +653,7 @@
             "original_lat": null
           },
           {
-            "id": "P65",
-            "lon": -6695580.338253252,
-            "lat": 6570936.060162443,
-            "accumulation": 2476.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P66",
-            "lon": -6697607.661191129,
-            "lat": 6566994.043338792,
-            "accumulation": 2221.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P67",
+            "id": "P60",
             "lon": -6719232.439195152,
             "lat": 6564741.462296707,
             "accumulation": 4116.0,
@@ -725,10 +662,10 @@
             "original_lat": null
           },
           {
-            "id": "P68",
+            "id": "P61",
             "lon": -6715177.793319398,
             "lat": 6562376.252202517,
-            "accumulation": 1557.0,
+            "accumulation": 1579.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
@@ -736,7 +673,7 @@
         ],
         "metadata": {
           "method": "auto",
-          "count": 68,
+          "count": 61,
           "crs": "PROJCS[\"USA_Contiguous_Albers_Equal_Area_Conic_USGS_version\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.257222101004,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Albers_Conic_Equal_Area\"],PARAMETER[\"latitude_of_center\",23],PARAMETER[\"longitude_of_center\",-96],PARAMETER[\"standard_parallel_1\",29.5],PARAMETER[\"standard_parallel_2\",45.5],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"US survey foot\",0.304800609601219,AUTHORITY[\"EPSG\",\"9003\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
           "threshold": 1000.0,
           "snap_distance": null
@@ -745,7 +682,7 @@
     },
     "pour_points_2000": {
       "status": "completed",
-      "duration": 0.040987,
+      "duration": 0.041286,
       "error": null,
       "outputs": {
         "pour_points_geojson": "results/workflow_tests/07_parallel/pour_points_2000/pour_points.geojson",
@@ -770,24 +707,15 @@
           },
           {
             "id": "P3",
-            "lon": -6706392.727255263,
-            "lat": 6632318.89355928,
-            "accumulation": 4137.0,
+            "lon": -6707744.275880515,
+            "lat": 6630629.457777715,
+            "accumulation": 3209.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
             "id": "P4",
-            "lon": -6702000.194223196,
-            "lat": 6628940.021996152,
-            "accumulation": 2444.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P5",
             "lon": -6691300.434273289,
             "lat": 6624209.601807771,
             "accumulation": 2123.0,
@@ -796,7 +724,7 @@
             "original_lat": null
           },
           {
-            "id": "P6",
+            "id": "P5",
             "lon": -6722611.310758281,
             "lat": 6622520.166026207,
             "accumulation": 2027.0,
@@ -805,7 +733,7 @@
             "original_lat": null
           },
           {
-            "id": "P7",
+            "id": "P6",
             "lon": -6695355.080149043,
             "lat": 6618465.520150453,
             "accumulation": 3605.0,
@@ -814,16 +742,16 @@
             "original_lat": null
           },
           {
-            "id": "P8",
-            "lon": -6735788.909854483,
-            "lat": 6612496.180388926,
-            "accumulation": 4652.0,
+            "id": "P7",
+            "lon": -6734212.103125023,
+            "lat": 6614185.616170489,
+            "accumulation": 3611.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P9",
+            "id": "P8",
             "lon": -6695017.19299273,
             "lat": 6611257.260815778,
             "accumulation": 5924.0,
@@ -832,7 +760,7 @@
             "original_lat": null
           },
           {
-            "id": "P10",
+            "id": "P9",
             "lon": -6732522.667343458,
             "lat": 6609793.083138422,
             "accumulation": 2875.0,
@@ -841,7 +769,7 @@
             "original_lat": null
           },
           {
-            "id": "P11",
+            "id": "P10",
             "lon": -6729031.166728226,
             "lat": 6601233.275178497,
             "accumulation": 3027.0,
@@ -850,16 +778,16 @@
             "original_lat": null
           },
           {
-            "id": "P12",
+            "id": "P11",
             "lon": -6708645.308297349,
             "lat": 6599881.726553245,
-            "accumulation": 4953.0,
+            "accumulation": 4965.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P13",
+            "id": "P12",
             "lon": -6706392.727255263,
             "lat": 6597967.032667472,
             "accumulation": 7977.0,
@@ -868,16 +796,7 @@
             "original_lat": null
           },
           {
-            "id": "P14",
-            "lon": -6676658.6574997315,
-            "lat": 6594250.273948031,
-            "accumulation": 2768.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P15",
+            "id": "P13",
             "lon": -6731509.005874519,
             "lat": 6591321.918593319,
             "accumulation": 3691.0,
@@ -886,52 +805,25 @@
             "original_lat": null
           },
           {
-            "id": "P16",
-            "lon": -6680150.158114964,
-            "lat": 6590984.031437006,
-            "accumulation": 2871.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P17",
+            "id": "P14",
             "lon": -6715290.422371502,
             "lat": 6588393.563238608,
-            "accumulation": 2779.0,
+            "accumulation": 2781.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P18",
-            "lon": -6681726.964844424,
-            "lat": 6586253.611248626,
-            "accumulation": 4315.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P19",
-            "lon": -6689948.885648037,
-            "lat": 6579721.126226577,
-            "accumulation": 5118.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P20",
+            "id": "P15",
             "lon": -6710672.631235226,
-            "lat": 6578820.093809743,
-            "accumulation": 2040.0,
+            "lat": 6578256.948549221,
+            "accumulation": 2018.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P21",
+            "id": "P16",
             "lon": -6714614.648058876,
             "lat": 6576116.99655924,
             "accumulation": 3926.0,
@@ -940,7 +832,7 @@
             "original_lat": null
           },
           {
-            "id": "P22",
+            "id": "P17",
             "lon": -6727116.472842452,
             "lat": 6575215.964142406,
             "accumulation": 2290.0,
@@ -949,25 +841,7 @@
             "original_lat": null
           },
           {
-            "id": "P23",
-            "lon": -6695580.338253252,
-            "lat": 6570936.060162443,
-            "accumulation": 2476.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P24",
-            "lon": -6697607.661191129,
-            "lat": 6566994.043338792,
-            "accumulation": 2221.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P25",
+            "id": "P18",
             "lon": -6719232.439195152,
             "lat": 6564741.462296707,
             "accumulation": 4116.0,
@@ -978,7 +852,7 @@
         ],
         "metadata": {
           "method": "auto",
-          "count": 25,
+          "count": 18,
           "crs": "PROJCS[\"USA_Contiguous_Albers_Equal_Area_Conic_USGS_version\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.257222101004,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Albers_Conic_Equal_Area\"],PARAMETER[\"latitude_of_center\",23],PARAMETER[\"longitude_of_center\",-96],PARAMETER[\"standard_parallel_1\",29.5],PARAMETER[\"standard_parallel_2\",45.5],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"US survey foot\",0.304800609601219,AUTHORITY[\"EPSG\",\"9003\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
           "threshold": 2000.0,
           "snap_distance": null
@@ -987,7 +861,7 @@
     },
     "pour_points_500": {
       "status": "completed",
-      "duration": 0.047176,
+      "duration": 0.048381,
       "error": null,
       "outputs": {
         "pour_points_geojson": "results/workflow_tests/07_parallel/pour_points_500/pour_points.geojson",
@@ -1120,9 +994,9 @@
           },
           {
             "id": "P15",
-            "lon": -6701549.678014779,
-            "lat": 6634346.216497158,
-            "accumulation": 1272.0,
+            "lon": -6701437.048962675,
+            "lat": 6634909.361757679,
+            "accumulation": 541.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
@@ -1192,24 +1066,6 @@
           },
           {
             "id": "P23",
-            "lon": -6706392.727255263,
-            "lat": 6632318.89355928,
-            "accumulation": 4137.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P24",
-            "lon": -6703351.7428484475,
-            "lat": 6631981.0064029675,
-            "accumulation": 605.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P25",
             "lon": -6685218.465459657,
             "lat": 6631755.748298759,
             "accumulation": 703.0,
@@ -1218,16 +1074,7 @@
             "original_lat": null
           },
           {
-            "id": "P26",
-            "lon": -6703577.000952656,
-            "lat": 6630967.344934029,
-            "accumulation": 896.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P27",
+            "id": "P24",
             "lon": -6686682.643137014,
             "lat": 6630967.344934029,
             "accumulation": 1076.0,
@@ -1236,16 +1083,16 @@
             "original_lat": null
           },
           {
-            "id": "P28",
-            "lon": -6702000.194223196,
-            "lat": 6628940.021996152,
-            "accumulation": 2444.0,
+            "id": "P25",
+            "lon": -6707744.275880515,
+            "lat": 6630629.457777715,
+            "accumulation": 3209.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P29",
+            "id": "P26",
             "lon": -6689047.853231203,
             "lat": 6628827.392944047,
             "accumulation": 810.0,
@@ -1254,7 +1101,16 @@
             "original_lat": null
           },
           {
-            "id": "P30",
+            "id": "P27",
+            "lon": -6700986.532754257,
+            "lat": 6627137.957162483,
+            "accumulation": 1428.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P28",
             "lon": -6736352.055115004,
             "lat": 6625110.634224606,
             "accumulation": 584.0,
@@ -1263,7 +1119,7 @@
             "original_lat": null
           },
           {
-            "id": "P31",
+            "id": "P29",
             "lon": -6736577.313219213,
             "lat": 6624772.747068292,
             "accumulation": 501.0,
@@ -1272,7 +1128,7 @@
             "original_lat": null
           },
           {
-            "id": "P32",
+            "id": "P30",
             "lon": -6687808.933658056,
             "lat": 6624772.747068292,
             "accumulation": 776.0,
@@ -1281,7 +1137,7 @@
             "original_lat": null
           },
           {
-            "id": "P33",
+            "id": "P31",
             "lon": -6725990.18232141,
             "lat": 6624660.118016188,
             "accumulation": 575.0,
@@ -1290,7 +1146,7 @@
             "original_lat": null
           },
           {
-            "id": "P34",
+            "id": "P32",
             "lon": -6713375.72848573,
             "lat": 6624322.230859876,
             "accumulation": 731.0,
@@ -1299,7 +1155,7 @@
             "original_lat": null
           },
           {
-            "id": "P35",
+            "id": "P33",
             "lon": -6691300.434273289,
             "lat": 6624209.601807771,
             "accumulation": 2123.0,
@@ -1308,7 +1164,7 @@
             "original_lat": null
           },
           {
-            "id": "P36",
+            "id": "P34",
             "lon": -6700873.903702154,
             "lat": 6623195.940338832,
             "accumulation": 1598.0,
@@ -1317,7 +1173,7 @@
             "original_lat": null
           },
           {
-            "id": "P37",
+            "id": "P35",
             "lon": -6720020.842559882,
             "lat": 6622632.795078311,
             "accumulation": 669.0,
@@ -1326,7 +1182,7 @@
             "original_lat": null
           },
           {
-            "id": "P38",
+            "id": "P36",
             "lon": -6722611.310758281,
             "lat": 6622520.166026207,
             "accumulation": 2027.0,
@@ -1335,7 +1191,7 @@
             "original_lat": null
           },
           {
-            "id": "P39",
+            "id": "P37",
             "lon": -6707293.759672098,
             "lat": 6622294.907921999,
             "accumulation": 1744.0,
@@ -1344,7 +1200,7 @@
             "original_lat": null
           },
           {
-            "id": "P40",
+            "id": "P38",
             "lon": -6733536.328812397,
             "lat": 6622069.64981779,
             "accumulation": 1203.0,
@@ -1353,7 +1209,7 @@
             "original_lat": null
           },
           {
-            "id": "P41",
+            "id": "P39",
             "lon": -6720921.874976717,
             "lat": 6621844.391713581,
             "accumulation": 758.0,
@@ -1362,7 +1218,7 @@
             "original_lat": null
           },
           {
-            "id": "P42",
+            "id": "P40",
             "lon": -6695017.19299273,
             "lat": 6621619.133609373,
             "accumulation": 1635.0,
@@ -1371,7 +1227,7 @@
             "original_lat": null
           },
           {
-            "id": "P43",
+            "id": "P41",
             "lon": -6704478.033369491,
             "lat": 6621281.24645306,
             "accumulation": 581.0,
@@ -1380,16 +1236,7 @@
             "original_lat": null
           },
           {
-            "id": "P44",
-            "lon": -6685668.981668075,
-            "lat": 6620492.84308833,
-            "accumulation": 603.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P45",
+            "id": "P42",
             "lon": -6693890.902471688,
             "lat": 6619704.4397236,
             "accumulation": 986.0,
@@ -1398,7 +1245,7 @@
             "original_lat": null
           },
           {
-            "id": "P46",
+            "id": "P43",
             "lon": -6694566.676784313,
             "lat": 6619366.552567287,
             "accumulation": 601.0,
@@ -1407,7 +1254,7 @@
             "original_lat": null
           },
           {
-            "id": "P47",
+            "id": "P44",
             "lon": -6695355.080149043,
             "lat": 6618465.520150453,
             "accumulation": 3605.0,
@@ -1416,7 +1263,16 @@
             "original_lat": null
           },
           {
-            "id": "P48",
+            "id": "P45",
+            "lon": -6734212.103125023,
+            "lat": 6614185.616170489,
+            "accumulation": 3611.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P46",
             "lon": -6704252.775265282,
             "lat": 6614072.987118386,
             "accumulation": 891.0,
@@ -1425,7 +1281,7 @@
             "original_lat": null
           },
           {
-            "id": "P49",
+            "id": "P47",
             "lon": -6704928.549577908,
             "lat": 6613622.470909968,
             "accumulation": 1430.0,
@@ -1434,7 +1290,7 @@
             "original_lat": null
           },
           {
-            "id": "P50",
+            "id": "P48",
             "lon": -6686006.868824387,
             "lat": 6612834.067545238,
             "accumulation": 921.0,
@@ -1443,7 +1299,7 @@
             "original_lat": null
           },
           {
-            "id": "P51",
+            "id": "P49",
             "lon": -6720020.842559882,
             "lat": 6612721.4384931335,
             "accumulation": 1161.0,
@@ -1452,16 +1308,7 @@
             "original_lat": null
           },
           {
-            "id": "P52",
-            "lon": -6735788.909854483,
-            "lat": 6612496.180388926,
-            "accumulation": 4652.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P53",
+            "id": "P50",
             "lon": -6714164.13185046,
             "lat": 6612383.551336821,
             "accumulation": 1165.0,
@@ -1470,7 +1317,7 @@
             "original_lat": null
           },
           {
-            "id": "P54",
+            "id": "P51",
             "lon": -6722160.794549864,
             "lat": 6612270.922284717,
             "accumulation": 1098.0,
@@ -1479,7 +1326,7 @@
             "original_lat": null
           },
           {
-            "id": "P55",
+            "id": "P52",
             "lon": -6719570.326351465,
             "lat": 6612045.664180508,
             "accumulation": 514.0,
@@ -1488,7 +1335,7 @@
             "original_lat": null
           },
           {
-            "id": "P56",
+            "id": "P53",
             "lon": -6721710.278341447,
             "lat": 6611707.7770241955,
             "accumulation": 850.0,
@@ -1497,7 +1344,7 @@
             "original_lat": null
           },
           {
-            "id": "P57",
+            "id": "P54",
             "lon": -6683416.400625989,
             "lat": 6611369.889867882,
             "accumulation": 553.0,
@@ -1506,7 +1353,7 @@
             "original_lat": null
           },
           {
-            "id": "P58",
+            "id": "P55",
             "lon": -6695017.19299273,
             "lat": 6611257.260815778,
             "accumulation": 5924.0,
@@ -1515,7 +1362,7 @@
             "original_lat": null
           },
           {
-            "id": "P59",
+            "id": "P56",
             "lon": -6705266.436734221,
             "lat": 6611144.631763674,
             "accumulation": 1372.0,
@@ -1524,7 +1371,7 @@
             "original_lat": null
           },
           {
-            "id": "P60",
+            "id": "P57",
             "lon": -6725201.77895668,
             "lat": 6611032.00271157,
             "accumulation": 1116.0,
@@ -1533,7 +1380,7 @@
             "original_lat": null
           },
           {
-            "id": "P61",
+            "id": "P58",
             "lon": -6726891.214738244,
             "lat": 6610468.857451048,
             "accumulation": 1207.0,
@@ -1542,7 +1389,7 @@
             "original_lat": null
           },
           {
-            "id": "P62",
+            "id": "P59",
             "lon": -6706280.098203159,
             "lat": 6610243.59934684,
             "accumulation": 529.0,
@@ -1551,7 +1398,7 @@
             "original_lat": null
           },
           {
-            "id": "P63",
+            "id": "P60",
             "lon": -6717430.374361483,
             "lat": 6609905.712190527,
             "accumulation": 1883.0,
@@ -1560,7 +1407,7 @@
             "original_lat": null
           },
           {
-            "id": "P64",
+            "id": "P61",
             "lon": -6732522.667343458,
             "lat": 6609793.083138422,
             "accumulation": 2875.0,
@@ -1569,7 +1416,7 @@
             "original_lat": null
           },
           {
-            "id": "P65",
+            "id": "P62",
             "lon": -6712587.3251209995,
             "lat": 6609793.083138422,
             "accumulation": 622.0,
@@ -1578,16 +1425,16 @@
             "original_lat": null
           },
           {
-            "id": "P66",
+            "id": "P63",
             "lon": -6684092.1749386145,
             "lat": 6608779.421669484,
-            "accumulation": 1055.0,
+            "accumulation": 1073.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P67",
+            "id": "P64",
             "lon": -6682740.626313363,
             "lat": 6608666.79261738,
             "accumulation": 508.0,
@@ -1596,7 +1443,7 @@
             "original_lat": null
           },
           {
-            "id": "P68",
+            "id": "P65",
             "lon": -6724188.117487741,
             "lat": 6608328.905461066,
             "accumulation": 1444.0,
@@ -1605,16 +1452,16 @@
             "original_lat": null
           },
           {
-            "id": "P69",
-            "lon": -6685105.836407553,
-            "lat": 6606752.098731606,
-            "accumulation": 573.0,
+            "id": "P66",
+            "lon": -6685218.465459657,
+            "lat": 6606414.211575294,
+            "accumulation": 544.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P70",
+            "id": "P67",
             "lon": -6724751.262748263,
             "lat": 6606076.324418981,
             "accumulation": 987.0,
@@ -1623,7 +1470,7 @@
             "original_lat": null
           },
           {
-            "id": "P71",
+            "id": "P68",
             "lon": -6685556.35261597,
             "lat": 6605851.066314773,
             "accumulation": 790.0,
@@ -1632,7 +1479,7 @@
             "original_lat": null
           },
           {
-            "id": "P72",
+            "id": "P69",
             "lon": -6706617.985359472,
             "lat": 6605625.808210564,
             "accumulation": 1220.0,
@@ -1641,7 +1488,7 @@
             "original_lat": null
           },
           {
-            "id": "P73",
+            "id": "P70",
             "lon": -6684430.062094928,
             "lat": 6605175.292002146,
             "accumulation": 1296.0,
@@ -1650,7 +1497,7 @@
             "original_lat": null
           },
           {
-            "id": "P74",
+            "id": "P71",
             "lon": -6673955.560249229,
             "lat": 6604837.404845834,
             "accumulation": 528.0,
@@ -1659,7 +1506,7 @@
             "original_lat": null
           },
           {
-            "id": "P75",
+            "id": "P72",
             "lon": -6706730.614411577,
             "lat": 6604724.775793729,
             "accumulation": 517.0,
@@ -1668,7 +1515,7 @@
             "original_lat": null
           },
           {
-            "id": "P76",
+            "id": "P73",
             "lon": -6711348.405547852,
             "lat": 6603035.340012165,
             "accumulation": 1628.0,
@@ -1677,7 +1524,7 @@
             "original_lat": null
           },
           {
-            "id": "P77",
+            "id": "P74",
             "lon": -6707519.017776307,
             "lat": 6602472.194751644,
             "accumulation": 555.0,
@@ -1686,7 +1533,7 @@
             "original_lat": null
           },
           {
-            "id": "P78",
+            "id": "P75",
             "lon": -6729031.166728226,
             "lat": 6601233.275178497,
             "accumulation": 3027.0,
@@ -1695,7 +1542,7 @@
             "original_lat": null
           },
           {
-            "id": "P79",
+            "id": "P76",
             "lon": -6729031.166728226,
             "lat": 6600782.758970079,
             "accumulation": 1812.0,
@@ -1704,7 +1551,7 @@
             "original_lat": null
           },
           {
-            "id": "P80",
+            "id": "P77",
             "lon": -6695467.709201148,
             "lat": 6600444.871813767,
             "accumulation": 1507.0,
@@ -1713,16 +1560,16 @@
             "original_lat": null
           },
           {
-            "id": "P81",
+            "id": "P78",
             "lon": -6708645.308297349,
             "lat": 6599881.726553245,
-            "accumulation": 4953.0,
+            "accumulation": 4965.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P82",
+            "id": "P79",
             "lon": -6704703.291473699,
             "lat": 6598980.694136411,
             "accumulation": 1675.0,
@@ -1731,7 +1578,7 @@
             "original_lat": null
           },
           {
-            "id": "P83",
+            "id": "P80",
             "lon": -6699297.096972694,
             "lat": 6598079.661719576,
             "accumulation": 960.0,
@@ -1740,7 +1587,7 @@
             "original_lat": null
           },
           {
-            "id": "P84",
+            "id": "P81",
             "lon": -6720471.358768299,
             "lat": 6597967.032667472,
             "accumulation": 633.0,
@@ -1749,7 +1596,7 @@
             "original_lat": null
           },
           {
-            "id": "P85",
+            "id": "P82",
             "lon": -6706392.727255263,
             "lat": 6597967.032667472,
             "accumulation": 7977.0,
@@ -1758,7 +1605,7 @@
             "original_lat": null
           },
           {
-            "id": "P86",
+            "id": "P83",
             "lon": -6705716.952942638,
             "lat": 6597967.032667472,
             "accumulation": 1118.0,
@@ -1767,7 +1614,7 @@
             "original_lat": null
           },
           {
-            "id": "P87",
+            "id": "P84",
             "lon": -6679361.754750234,
             "lat": 6597516.516459055,
             "accumulation": 651.0,
@@ -1776,7 +1623,16 @@
             "original_lat": null
           },
           {
-            "id": "P88",
+            "id": "P85",
+            "lon": -6675419.737926585,
+            "lat": 6597403.887406951,
+            "accumulation": 1161.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P86",
             "lon": -6695355.080149043,
             "lat": 6597178.629302742,
             "accumulation": 948.0,
@@ -1785,16 +1641,16 @@
             "original_lat": null
           },
           {
-            "id": "P89",
-            "lon": -6692651.982898541,
-            "lat": 6595263.9354169695,
-            "accumulation": 580.0,
+            "id": "P87",
+            "lon": -6692877.241002749,
+            "lat": 6595489.193521177,
+            "accumulation": 600.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P90",
+            "id": "P88",
             "lon": -6726215.440425619,
             "lat": 6594926.048260656,
             "accumulation": 996.0,
@@ -1803,16 +1659,16 @@
             "original_lat": null
           },
           {
-            "id": "P91",
-            "lon": -6692088.837638019,
+            "id": "P89",
+            "lon": -6691976.208585914,
             "lat": 6594700.790156447,
-            "accumulation": 1838.0,
+            "accumulation": 1797.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P92",
+            "id": "P90",
             "lon": -6714389.389954668,
             "lat": 6594250.273948031,
             "accumulation": 658.0,
@@ -1821,16 +1677,16 @@
             "original_lat": null
           },
           {
-            "id": "P93",
-            "lon": -6676658.6574997315,
-            "lat": 6594250.273948031,
-            "accumulation": 2768.0,
+            "id": "P91",
+            "lon": -6684542.691147031,
+            "lat": 6594137.644895926,
+            "accumulation": 573.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P94",
+            "id": "P92",
             "lon": -6723624.9722272195,
             "lat": 6593912.386791718,
             "accumulation": 539.0,
@@ -1839,25 +1695,25 @@
             "original_lat": null
           },
           {
-            "id": "P95",
+            "id": "P93",
             "lon": -6691300.434273289,
             "lat": 6593574.499635405,
-            "accumulation": 557.0,
+            "accumulation": 694.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P96",
+            "id": "P94",
             "lon": -6723850.230331428,
             "lat": 6593236.612479092,
-            "accumulation": 1830.0,
+            "accumulation": 1845.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P97",
+            "id": "P95",
             "lon": -6713263.099433625,
             "lat": 6591885.06385384,
             "accumulation": 1117.0,
@@ -1866,7 +1722,7 @@
             "original_lat": null
           },
           {
-            "id": "P98",
+            "id": "P96",
             "lon": -6731509.005874519,
             "lat": 6591321.918593319,
             "accumulation": 3691.0,
@@ -1875,70 +1731,34 @@
             "original_lat": null
           },
           {
+            "id": "P97",
+            "lon": -6723737.601279324,
+            "lat": 6589970.369968068,
+            "accumulation": 635.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P98",
+            "lon": -6714727.277110981,
+            "lat": 6589181.966603338,
+            "accumulation": 1519.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
             "id": "P99",
-            "lon": -6680150.158114964,
-            "lat": 6590984.031437006,
-            "accumulation": 2871.0,
+            "lon": -6715290.422371502,
+            "lat": 6588393.563238608,
+            "accumulation": 2781.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
             "id": "P100",
-            "lon": -6723737.601279324,
-            "lat": 6590082.999020172,
-            "accumulation": 698.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P101",
-            "lon": -6714502.019006772,
-            "lat": 6589407.224707547,
-            "accumulation": 1710.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P102",
-            "lon": -6715290.422371502,
-            "lat": 6588393.563238608,
-            "accumulation": 2779.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P103",
-            "lon": -6685668.981668075,
-            "lat": 6588055.676082294,
-            "accumulation": 1114.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P104",
-            "lon": -6681726.964844424,
-            "lat": 6586253.611248626,
-            "accumulation": 4315.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P105",
-            "lon": -6687358.417449639,
-            "lat": 6586140.982196522,
-            "accumulation": 667.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P106",
             "lon": -6732747.925447667,
             "lat": 6585465.207883896,
             "accumulation": 1969.0,
@@ -1947,25 +1767,16 @@
             "original_lat": null
           },
           {
-            "id": "P107",
-            "lon": -6688597.337022786,
-            "lat": 6585465.207883896,
-            "accumulation": 1933.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P108",
+            "id": "P101",
             "lon": -6709771.5988183925,
             "lat": 6582311.594424976,
-            "accumulation": 991.0,
+            "accumulation": 1002.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P109",
+            "id": "P102",
             "lon": -6714839.906163085,
             "lat": 6582086.336320767,
             "accumulation": 659.0,
@@ -1974,16 +1785,7 @@
             "original_lat": null
           },
           {
-            "id": "P110",
-            "lon": -6689273.111335412,
-            "lat": 6581748.449164455,
-            "accumulation": 548.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P111",
+            "id": "P103",
             "lon": -6714727.277110981,
             "lat": 6580171.642434995,
             "accumulation": 654.0,
@@ -1992,61 +1794,43 @@
             "original_lat": null
           },
           {
-            "id": "P112",
-            "lon": -6689948.885648037,
-            "lat": 6579721.126226577,
-            "accumulation": 5118.0,
+            "id": "P104",
+            "lon": -6697269.774034816,
+            "lat": 6579833.755278681,
+            "accumulation": 1902.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P113",
+            "id": "P105",
             "lon": -6710672.631235226,
-            "lat": 6578820.093809743,
-            "accumulation": 2040.0,
+            "lat": 6578256.948549221,
+            "accumulation": 2018.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P114",
+            "id": "P106",
+            "lon": -6728693.279571912,
+            "lat": 6577468.545184491,
+            "accumulation": 1696.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P107",
             "lon": -6731509.005874519,
             "lat": 6577243.287080283,
-            "accumulation": 975.0,
+            "accumulation": 1050.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P115",
-            "lon": -6727341.730946661,
-            "lat": 6577243.287080283,
-            "accumulation": 1331.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P116",
-            "lon": -6692426.724794332,
-            "lat": 6577130.658028179,
-            "accumulation": 1135.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P117",
-            "lon": -6694454.047732209,
-            "lat": 6576229.625611344,
-            "accumulation": 1427.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P118",
+            "id": "P108",
             "lon": -6714614.648058876,
             "lat": 6576116.99655924,
             "accumulation": 3926.0,
@@ -2055,7 +1839,7 @@
             "original_lat": null
           },
           {
-            "id": "P119",
+            "id": "P109",
             "lon": -6711798.921756269,
             "lat": 6575666.480350823,
             "accumulation": 526.0,
@@ -2064,7 +1848,7 @@
             "original_lat": null
           },
           {
-            "id": "P120",
+            "id": "P110",
             "lon": -6727116.472842452,
             "lat": 6575215.964142406,
             "accumulation": 2290.0,
@@ -2073,16 +1857,25 @@
             "original_lat": null
           },
           {
-            "id": "P121",
-            "lon": -6727341.730946661,
-            "lat": 6572512.866891903,
-            "accumulation": 575.0,
+            "id": "P111",
+            "lon": -6698283.435503755,
+            "lat": 6574990.7060381975,
+            "accumulation": 704.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P122",
+            "id": "P112",
+            "lon": -6727341.730946661,
+            "lat": 6572512.866891903,
+            "accumulation": 582.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P113",
             "lon": -6725990.18232141,
             "lat": 6571949.721631382,
             "accumulation": 717.0,
@@ -2091,7 +1884,16 @@
             "original_lat": null
           },
           {
-            "id": "P123",
+            "id": "P114",
+            "lon": -6699297.096972694,
+            "lat": 6571837.092579277,
+            "accumulation": 940.0,
+            "snapped": false,
+            "original_lon": null,
+            "original_lat": null
+          },
+          {
+            "id": "P115",
             "lon": -6703689.630004761,
             "lat": 6571499.205422964,
             "accumulation": 631.0,
@@ -2100,16 +1902,7 @@
             "original_lat": null
           },
           {
-            "id": "P124",
-            "lon": -6695580.338253252,
-            "lat": 6570936.060162443,
-            "accumulation": 2476.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P125",
+            "id": "P116",
             "lon": -6723624.9722272195,
             "lat": 6569809.7696414,
             "accumulation": 618.0,
@@ -2118,7 +1911,7 @@
             "original_lat": null
           },
           {
-            "id": "P126",
+            "id": "P117",
             "lon": -6722386.052654073,
             "lat": 6568345.591964045,
             "accumulation": 546.0,
@@ -2127,16 +1920,7 @@
             "original_lat": null
           },
           {
-            "id": "P127",
-            "lon": -6697607.661191129,
-            "lat": 6566994.043338792,
-            "accumulation": 2221.0,
-            "snapped": false,
-            "original_lon": null,
-            "original_lat": null
-          },
-          {
-            "id": "P128",
+            "id": "P118",
             "lon": -6721597.649289343,
             "lat": 6566318.269026167,
             "accumulation": 766.0,
@@ -2145,7 +1929,7 @@
             "original_lat": null
           },
           {
-            "id": "P129",
+            "id": "P119",
             "lon": -6719232.439195152,
             "lat": 6564741.462296707,
             "accumulation": 4116.0,
@@ -2154,16 +1938,16 @@
             "original_lat": null
           },
           {
-            "id": "P130",
-            "lon": -6700085.500337424,
-            "lat": 6564741.462296707,
-            "accumulation": 881.0,
+            "id": "P120",
+            "lon": -6702112.823275301,
+            "lat": 6564065.687984081,
+            "accumulation": 646.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P131",
+            "id": "P121",
             "lon": -6706392.727255263,
             "lat": 6562826.768410934,
             "accumulation": 788.0,
@@ -2172,16 +1956,16 @@
             "original_lat": null
           },
           {
-            "id": "P132",
+            "id": "P122",
             "lon": -6715177.793319398,
             "lat": 6562376.252202517,
-            "accumulation": 1557.0,
+            "accumulation": 1579.0,
             "snapped": false,
             "original_lon": null,
             "original_lat": null
           },
           {
-            "id": "P133",
+            "id": "P123",
             "lon": -6705379.065786324,
             "lat": 6562376.252202517,
             "accumulation": 678.0,
@@ -2190,7 +1974,7 @@
             "original_lat": null
           },
           {
-            "id": "P134",
+            "id": "P124",
             "lon": -6706730.614411577,
             "lat": 6562150.9940983085,
             "accumulation": 645.0,
@@ -2199,7 +1983,7 @@
             "original_lat": null
           },
           {
-            "id": "P135",
+            "id": "P125",
             "lon": -6715740.93857992,
             "lat": 6558997.380639388,
             "accumulation": 645.0,
@@ -2210,7 +1994,7 @@
         ],
         "metadata": {
           "method": "auto",
-          "count": 135,
+          "count": 125,
           "crs": "PROJCS[\"USA_Contiguous_Albers_Equal_Area_Conic_USGS_version\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.257222101004,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Albers_Conic_Equal_Area\"],PARAMETER[\"latitude_of_center\",23],PARAMETER[\"longitude_of_center\",-96],PARAMETER[\"standard_parallel_1\",29.5],PARAMETER[\"standard_parallel_2\",45.5],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"US survey foot\",0.304800609601219,AUTHORITY[\"EPSG\",\"9003\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
           "threshold": 500.0,
           "snap_distance": null
@@ -2219,7 +2003,7 @@
     },
     "channel_network": {
       "status": "completed",
-      "duration": 0.000401,
+      "duration": 0.000414,
       "error": null,
       "outputs": {
         "channel_network": "results/workflow_tests/07_parallel/channels/channels.geojson",
