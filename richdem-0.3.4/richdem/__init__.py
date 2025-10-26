@@ -1,4 +1,7 @@
-import pkg_resources
+try:
+  import pkg_resources
+except ImportError:
+  pkg_resources = None
 import datetime
 import copy
 import numpy as np
@@ -18,8 +21,12 @@ except:
 
 
 def _RichDEMVersion():
+  try:
+    pyver = pkg_resources.require("richdem")[0].version
+  except:
+    pyver = "0.3.4"
   return "RichDEM (Python {pyver}) (hash={hash}, hashdate={compdate})".format(
-    pyver    = pkg_resources.require("richdem")[0].version,
+    pyver    = pyver,
     hash     = _richdem.rdHash(),
     compdate = _richdem.rdCompileTime()
   )

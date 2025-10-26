@@ -75,8 +75,8 @@ class ResultVisualizer:
                 stats_text = (
                     f"Min: {valid_data.min():.2f}\n"
                     f"Max: {valid_data.max():.2f}\n"
-                    f"Mean: {valid_data.mean():.2f}\n"
-                    f"Std: {valid_data.std():.2f}"
+            f"Mean: {float(valid_data.mean()):.2f}\n"
+            f"Std: {float(valid_data.std()):.2f}"
                 )
                 ax.text(
                     0.02, 0.98, stats_text,

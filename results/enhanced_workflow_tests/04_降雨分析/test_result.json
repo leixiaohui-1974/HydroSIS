@@ -1,0 +1,79 @@
+{
+  "scenario_id": "04",
+  "scenario_name": "降雨分析",
+  "config_file": "config/workflows/test_scenarios/04_precipitation_analysis.yaml",
+  "test_dir": "results/enhanced_workflow_tests/04_降雨分析",
+  "start_time": "2025-10-26T09:55:11.629533",
+  "status": "completed",
+  "outputs": {
+    "areal_precipitation": "results/workflow_tests/04_precipitation/areal_precip/areal_precip.csv"
+  },
+  "visualizations": {
+    "summary": "results/enhanced_workflow_tests/04_降雨分析/visualizations/test_summary.png"
+  },
+  "validation": {
+    "passed": true,
+    "errors": [],
+    "warnings": [
+      "输出文件缺失: rain_gauge.gauge_layout, rain_gauge.thiessen_polygons, precipitation.precipitation_timeseries, areal_precip.areal_precipitation"
+    ],
+    "metrics": {
+      "total_duration": 0.00106,
+      "step_count": 3,
+      "completed_steps": 3
+    },
+    "timestamp": "2025-10-26T09:55:11.629533",
+    "duration": 0.0036215782165527344
+  },
+  "duration": 0.0036215782165527344,
+  "run_id": "38e80920-57a5-43b2-bcd4-80216697bf1a",
+  "step_count": 3,
+  "progress_log": [
+    {
+      "percent": 33.33333333333333,
+      "step": "rain_gauge",
+      "status": "completed",
+      "duration": 0.000412
+    },
+    {
+      "percent": 66.66666666666666,
+      "step": "precipitation",
+      "status": "completed",
+      "duration": 0.000204
+    },
+    {
+      "percent": 100.0,
+      "step": "areal_precip",
+      "status": "completed",
+      "duration": 0.000205
+    }
+  ],
+  "end_time": "2025-10-26T09:55:11.633119",
+  "step_results": {
+    "rain_gauge": {
+      "status": "completed",
+      "duration": 0.000412,
+      "error": null,
+      "outputs": {
+        "gauge_layout": "results/workflow_tests/04_precipitation/rain_gauges/gauges.geojson",
+        "thiessen_polygons": "results/workflow_tests/04_precipitation/rain_gauges/thiessen.geojson"
+      }
+    },
+    "precipitation": {
+      "status": "completed",
+      "duration": 0.000204,
+      "error": null,
+      "outputs": {
+        "precipitation_timeseries": "results/workflow_tests/04_precipitation/precipitation/precip.csv"
+      }
+    },
+    "areal_precip": {
+      "status": "completed",
+      "duration": 0.000205,
+      "error": null,
+      "outputs": {
+        "areal_precipitation": "results/workflow_tests/04_precipitation/areal_precip/areal_precip.csv"
+      }
+    }
+  }
+}
