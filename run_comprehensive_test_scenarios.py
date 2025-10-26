@@ -45,7 +45,7 @@ class ComprehensiveVisualizer:
             self.ListedColormap = ListedColormap
             self.BoundaryNorm = BoundaryNorm
         except ImportError:
-            logger.warning("matplotlib未安装，某些可视化功能将不可用")
+            logger.warning("matplotlib not installed, some visualization features will be unavailable")
             self.plt = None
     
     def plot_flow_direction_correct(self, flow_dir_path: Path, output_path: Path):
@@ -100,7 +100,7 @@ class ComprehensiveVisualizer:
                 return output_path
         
         except Exception as e:
-            logger.error(f"绘制流向图失败: {e}")
+            logger.error(f"Failed to plot flow direction: {e}")
             return None
     
     def plot_pour_points_distribution(
@@ -184,11 +184,11 @@ class ComprehensiveVisualizer:
             self.plt.savefig(output_path, dpi=200, bbox_inches='tight')
             self.plt.close(fig)
             
-            logger.info(f"✓ 汇水点分布图已保存: {output_path}")
+            logger.info(f"Pour points distribution map saved: {output_path}")
             return output_path
         
         except Exception as e:
-            logger.error(f"绘制汇水点分布图失败: {e}")
+            logger.error(f"Failed to plot pour points distribution: {e}")
             return None
     
     def plot_rain_gauges_distribution(
@@ -249,11 +249,11 @@ class ComprehensiveVisualizer:
             self.plt.savefig(output_path, dpi=200, bbox_inches='tight')
             self.plt.close(fig)
             
-            logger.info(f"✓ 雨量站分布图已保存: {output_path}")
+            logger.info(f"Rain gauge distribution map saved: {output_path}")
             return output_path
         
         except Exception as e:
-            logger.error(f"绘制雨量站分布图失败: {e}")
+            logger.error(f"Failed to plot rain gauge distribution: {e}")
             return None
     
     def plot_timeseries_all_gauges(
@@ -321,11 +321,11 @@ class ComprehensiveVisualizer:
                 self.plt.close(fig)
                 output_paths.append(gauge_path)
             
-            logger.info(f"✓ 生成了 {len(output_paths)} 个雨量站时间序列图")
+            logger.info(f"Generated {len(output_paths)} rain gauge time series plots")
             return output_paths
         
         except Exception as e:
-            logger.error(f"绘制雨量站时间序列失败: {e}")
+            logger.error(f"Failed to plot rain gauge time series: {e}")
             return []
     
     def plot_discharge_timeseries(
@@ -394,11 +394,11 @@ class ComprehensiveVisualizer:
                 self.plt.close(fig)
                 output_paths.append(point_path)
             
-            logger.info(f"✓ 生成了 {len(output_paths)} 个径流时间序列图")
+            logger.info(f"Generated {len(output_paths)} discharge time series plots")
             return output_paths
         
         except Exception as e:
-            logger.error(f"绘制径流时间序列失败: {e}")
+            logger.error(f"Failed to plot discharge time series: {e}")
             return []
     
     def calculate_runoff_coefficients(
@@ -492,11 +492,11 @@ class ComprehensiveVisualizer:
                 self.plt.savefig(chart_path, dpi=150, bbox_inches='tight')
                 self.plt.close(fig)
             
-            logger.info(f"✓ 径流系数已计算并保存: {output_path}")
+            logger.info(f"Runoff coefficients calculated and saved: {output_path}")
             return output_path
         
         except Exception as e:
-            logger.error(f"计算径流系数失败: {e}")
+            logger.error(f"Failed to calculate runoff coefficients: {e}")
             return None
     
     def create_precipitation_runoff_comparison(
@@ -546,11 +546,11 @@ class ComprehensiveVisualizer:
                 self.plt.close(fig)
                 output_paths.append(comparison_path)
             
-            logger.info(f"✓ 生成了 {len(output_paths)} 个降雨径流对比图")
+            logger.info(f"Generated {len(output_paths)} precipitation-runoff comparison plots")
             return output_paths
         
         except Exception as e:
-            logger.error(f"创建降雨径流对比图失败: {e}")
+            logger.error(f"Failed to create precipitation-runoff comparison: {e}")
             return []
     
     def create_areal_precipitation_gif(
@@ -634,11 +634,11 @@ class ComprehensiveVisualizer:
                         loop=0
                     )
                     
-                    logger.info(f"✓ 面雨量动态GIF已保存: {output_path} (共{len(frame_paths)}帧)")
+                    logger.info(f"Areal precipitation GIF saved: {output_path} ({len(frame_paths)} frames)")
                     return output_path
         
         except Exception as e:
-            logger.error(f"创建面雨量GIF失败: {e}")
+            logger.error(f"Failed to create areal precipitation GIF: {e}")
             return None
 
 
@@ -686,7 +686,7 @@ class ComprehensiveTestRunner:
             # 加载并执行工作流
             from hydrosis.workflow_engine import WorkflowDefinition, WorkflowEngine
             
-            logger.info(f"📝 加载工作流: {config_file}")
+            logger.info(f"Loading workflow: {config_file}")
             workflow = WorkflowDefinition.from_yaml(config_file)
             
             engine = WorkflowEngine()
@@ -696,24 +696,24 @@ class ComprehensiveTestRunner:
             result['duration'] = time.time() - start_time
             result['run_id'] = run.run_id
             
-            logger.info(f"\n✨ 工作流执行完成: {run.status}")
+            logger.info(f"\nWorkflow execution completed: {run.status}")
             
             # 生成所有可视化
             viz_dir = test_dir / "visualizations"
             viz_dir.mkdir(parents=True, exist_ok=True)
             
-            logger.info("\n🎨 生成综合可视化...")
+            logger.info("\nGenerating comprehensive visualizations...")
             result['visualizations'] = self._generate_comprehensive_visualizations(
                 test_dir, viz_dir, run, workflow
             )
             
-            logger.info(f"\n✅ 测试完成: {scenario_name}")
+            logger.info(f"\nTest completed: {scenario_name}")
         
         except Exception as e:
             result['status'] = 'error'
             result['duration'] = time.time() - start_time
             result['error'] = str(e)
-            logger.error(f"✗ 测试失败: {e}")
+            logger.error(f"Test failed: {e}")
             import traceback
             logger.error(traceback.format_exc())
         
@@ -844,10 +844,10 @@ class ComprehensiveTestRunner:
                 if result:
                     visualizations['areal_precip_animation'] = str(result)
             
-            logger.info(f"   生成了 {len(visualizations)} 类可视化")
+            logger.info(f"   Generated {len(visualizations)} types of visualizations")
         
         except Exception as e:
-            logger.error(f"生成综合可视化失败: {e}")
+            logger.error(f"Failed to generate comprehensive visualizations: {e}")
             import traceback
             logger.error(traceback.format_exc())
         
@@ -862,14 +862,14 @@ class ComprehensiveTestRunner:
         total_start = time.time()
         
         scenarios = [
-            ("01", "最小测试", "config/workflows/test_scenarios/01_minimal_terrain.yaml"),
-            ("02", "两步测试", "config/workflows/test_scenarios/02_two_step_basic.yaml"),
-            ("03", "流域划分", "config/workflows/test_scenarios/03_three_step_delineation.yaml"),
-            ("04", "降雨分析", "config/workflows/test_scenarios/04_precipitation_analysis.yaml"),
-            ("05", "水文模拟", "config/workflows/test_scenarios/05_hydrologic_simulation.yaml"),
-            ("06", "参数率定", "config/workflows/test_scenarios/06_calibration_workflow.yaml"),
-            ("07", "并行分析", "config/workflows/test_scenarios/07_parallel_analysis.yaml"),
-            ("08", "完整流程", "config/workflows/test_scenarios/08_complete_eleven_steps.yaml"),
+            ("01", "Minimal_Terrain", "config/workflows/test_scenarios/01_minimal_terrain.yaml"),
+            ("02", "Two_Step_Basic", "config/workflows/test_scenarios/02_two_step_basic.yaml"),
+            ("03", "Watershed_Delineation", "config/workflows/test_scenarios/03_three_step_delineation.yaml"),
+            ("04", "Precipitation_Analysis", "config/workflows/test_scenarios/04_precipitation_analysis.yaml"),
+            ("05", "Hydrologic_Simulation", "config/workflows/test_scenarios/05_hydrologic_simulation.yaml"),
+            ("06", "Calibration", "config/workflows/test_scenarios/06_calibration_workflow.yaml"),
+            ("07", "Parallel_Analysis", "config/workflows/test_scenarios/07_parallel_analysis.yaml"),
+            ("08", "Complete_Workflow", "config/workflows/test_scenarios/08_complete_eleven_steps.yaml"),
         ]
         
         for scenario_id, scenario_name, config_file in scenarios:
@@ -883,12 +883,12 @@ class ComprehensiveTestRunner:
         total = len(self.test_results)
         
         logger.info("\n" + "#" * 80)
-        logger.info("测试总结")
+        logger.info("Test Summary")
         logger.info("#" * 80)
-        logger.info(f"总耗时: {total_elapsed:.2f}秒")
-        logger.info(f"测试总数: {total}")
-        logger.info(f"通过: {passed}")
-        logger.info(f"失败: {total - passed}")
+        logger.info(f"Total time: {total_elapsed:.2f} seconds")
+        logger.info(f"Total tests: {total}")
+        logger.info(f"Passed: {passed}")
+        logger.info(f"Failed: {total - passed}")
         
         # 保存总结
         summary_path = self.output_root / "TEST_SUMMARY.json"
@@ -902,7 +902,7 @@ class ComprehensiveTestRunner:
                 'results': self.test_results
             }, f, indent=2, ensure_ascii=False)
         
-        logger.info(f"\n✓ 总结已保存: {summary_path}")
+        logger.info(f"\nSummary saved: {summary_path}")
         
         return passed == total
 
