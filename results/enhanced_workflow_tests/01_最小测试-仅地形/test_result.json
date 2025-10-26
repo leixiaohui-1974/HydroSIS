@@ -3,7 +3,7 @@
   "scenario_name": "最小测试-仅地形",
   "config_file": "config/workflows/test_scenarios/01_minimal_terrain.yaml",
   "test_dir": "results/enhanced_workflow_tests/01_最小测试-仅地形",
-  "start_time": "2025-10-26T09:49:22.073182",
+  "start_time": "2025-10-26T09:54:57.906248",
   "status": "completed",
   "outputs": {
     "flow_direction": "results/enhanced_workflow_tests/01_最小测试-仅地形/outputs/terrain/flow_direction.tif",
@@ -21,29 +21,29 @@
     "errors": [],
     "warnings": [],
     "metrics": {
-      "total_duration": 0.744288,
+      "total_duration": 0.969178,
       "step_count": 1,
       "completed_steps": 1
     },
-    "timestamp": "2025-10-26T09:49:22.073182",
-    "duration": 1.6941542625427246
+    "timestamp": "2025-10-26T09:54:57.906248",
+    "duration": 1.8665635585784912
   },
-  "duration": 1.6941542625427246,
-  "run_id": "e8b7bcee-9418-4cd8-a36d-51244866233b",
+  "duration": 1.8665635585784912,
+  "run_id": "bf467f81-1425-407f-94b1-295aff5bd539",
   "step_count": 1,
   "progress_log": [
     {
       "percent": 100.0,
       "step": "terrain",
       "status": "completed",
-      "duration": 0.743986
+      "duration": 0.968945
     }
   ],
-  "end_time": "2025-10-26T09:49:23.767330",
+  "end_time": "2025-10-26T09:54:59.772799",
   "step_results": {
     "terrain": {
       "status": "completed",
-      "duration": 0.743986,
+      "duration": 0.968945,
       "error": null,
       "outputs": {
         "flow_direction": "results/enhanced_workflow_tests/01_最小测试-仅地形/outputs/terrain/flow_direction.tif",

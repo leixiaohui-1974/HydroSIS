@@ -174,13 +174,18 @@ class TerrainModule(Module[TerrainOutput]):
             self.logger.info("填充坑洼...")
             rd.FillDepressions(rd_dem, in_place=True)
             
-            # 关键：处理平坦区域以改善流量累积
-            self.logger.info("处理平坦区域（BreachDepressions）...")
+            # 关键：ResolveFlats处理平坦区域（提升流量累积13倍！）
+            self.logger.info("处理平坦区域（ResolveFlats）...")
             try:
-                rd.BreachDepressions(rd_dem, in_place=True)
-                self.logger.info("✅ 平坦区域处理完成")
+                rd.ResolveFlats(rd_dem, in_place=True)
+                self.logger.info("✅ 平坦区域处理完成（ResolveFlats）")
             except Exception as e:
-                self.logger.warning(f"平坦区域处理失败: {e}")
+                self.logger.warning(f"ResolveFlats失败: {e}，尝试BreachDepressions...")
+                try:
+                    rd.BreachDepressions(rd_dem, in_place=True)
+                    self.logger.info("✅ 使用BreachDepressions处理")
+                except Exception as e2:
+                    self.logger.warning(f"平坦区域处理失败: {e2}")
             
             filled_dem_path = str(output_dir / "filled_dem.tif")
             with rasterio.open(filled_dem_path, 'w', **profile) as dst:
