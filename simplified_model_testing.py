@@ -674,8 +674,8 @@ def main():
     if not tester.load_data(precip_file, discharge_file, watershed_file):
         return 1
     
-    # 运行测试（前3个分区）
-    tester.run_all_tests(zones=['Zone1', 'Zone2', 'Zone3'])
+    # 运行测试（所有6个分区）
+    tester.run_all_tests(zones=None)  # None表示所有分区
     
     logger.info(f"\nResults saved to: {output_dir}")
     

@@ -1,0 +1,74 @@
+2025-10-26 11:58:34,955 - INFO - ================================================================================
+2025-10-26 11:58:34,955 - INFO - HYDRAULIC VS HYDROLOGIC ROUTING COMPARISON
+2025-10-26 11:58:34,955 - INFO - ================================================================================
+2025-10-26 11:58:34,955 - INFO - 
+================================================================================
+2025-10-26 11:58:34,955 - INFO - HYDRAULIC VS HYDROLOGIC ROUTING COMPARISON - Zone6
+2025-10-26 11:58:34,955 - INFO - ================================================================================
+2025-10-26 11:58:34,955 - INFO - 
+1. Loading data...
+2025-10-26 11:58:34,960 - INFO -   Precipitation: 168 time steps
+2025-10-26 11:58:34,960 - INFO -   Observed discharge: 168 time steps
+2025-10-26 11:58:34,960 - INFO - 
+2. Extracting channel cross sections...
+2025-10-26 11:58:34,960 - INFO - Extracting channel network from DEM...
+2025-10-26 11:58:34,960 - INFO -   Extracted 10 cross sections
+2025-10-26 11:58:34,960 - INFO -   River length: 10.0 km
+2025-10-26 11:58:34,960 - INFO -   Width range: 30.0 - 12.0 m
+2025-10-26 11:58:34,960 - INFO -   Slope range: 0.0200 - 0.0065
+2025-10-26 11:58:34,963 - INFO -   Cross sections saved to: results/routing_comparison/Zone6_cross_sections.csv
+2025-10-26 11:58:34,963 - INFO - 
+3. Loading best runoff parameters...
+2025-10-26 11:58:34,963 - INFO -   Best model: HBV + Muskingum
+2025-10-26 11:58:34,963 - INFO -   NSE: 0.7640
+2025-10-26 11:58:34,963 - INFO - 
+4. Running runoff generation...
+2025-10-26 11:58:35,241 - INFO -   Inflow range: 0.00 - 749.74 m³/s
+2025-10-26 11:58:35,241 - INFO - 
+5. Running hydrologic routing methods...
+2025-10-26 11:58:35,241 - INFO -   a) Muskingum routing...
+2025-10-26 11:58:35,241 - INFO -      Outflow range: 0.00 - 699.76 m³/s
+2025-10-26 11:58:35,241 - INFO -   b) Lag routing...
+2025-10-26 11:58:35,241 - INFO -      Outflow range: 0.00 - 749.74 m³/s
+2025-10-26 11:58:35,241 - INFO - 
+6. Running hydraulic routing (Saint-Venant)...
+2025-10-26 11:58:35,241 - INFO -   Saint-Venant solver initialized:
+2025-10-26 11:58:35,241 - INFO -     Nodes: 10
+2025-10-26 11:58:35,241 - INFO -     dx: 1000.0 m
+2025-10-26 11:58:35,241 - INFO -     dt: 3600.0 s
+2025-10-26 11:58:35,242 - INFO -     Muskingum-Cunge parameters:
+2025-10-26 11:58:35,242 - INFO -       K = 0.50 hours
+2025-10-26 11:58:35,242 - INFO -       x = 0.496
+2025-10-26 11:58:35,242 - INFO -       Wave celerity c = 8.55 m/s
+2025-10-26 11:58:35,242 - INFO -       Reference depth = 1.94 m
+2025-10-26 11:58:35,242 - INFO -   Outflow range: 0.00 - 738.09 m³/s
+2025-10-26 11:58:35,242 - INFO - 
+7. Computing performance metrics...
+2025-10-26 11:58:35,243 - INFO -   No_Routing:
+2025-10-26 11:58:35,243 - INFO -     NSE: -1.5836
+2025-10-26 11:58:35,243 - INFO -     R²: 0.6273
+2025-10-26 11:58:35,243 - INFO -     RMSE: 133.61 m³/s
+2025-10-26 11:58:35,243 - INFO -   Muskingum:
+2025-10-26 11:58:35,243 - INFO -     NSE: -1.1335
+2025-10-26 11:58:35,243 - INFO -     R²: 0.7378
+2025-10-26 11:58:35,243 - INFO -     RMSE: 121.41 m³/s
+2025-10-26 11:58:35,243 - INFO -   Lag:
+2025-10-26 11:58:35,243 - INFO -     NSE: -2.4822
+2025-10-26 11:58:35,243 - INFO -     R²: 0.2893
+2025-10-26 11:58:35,243 - INFO -     RMSE: 155.12 m³/s
+2025-10-26 11:58:35,243 - INFO -   Saint_Venant:
+2025-10-26 11:58:35,243 - INFO -     NSE: -1.0412
+2025-10-26 11:58:35,243 - INFO -     R²: 0.8783
+2025-10-26 11:58:35,243 - INFO -     RMSE: 118.76 m³/s
+2025-10-26 11:58:35,243 - INFO - 
+8. Generating comparison plots...
+2025-10-26 11:58:36,344 - INFO -   Comparison plot saved: results/routing_comparison/Zone6_routing_comparison.png
+2025-10-26 11:58:36,344 - INFO - 
+9. Generating report...
+2025-10-26 11:58:36,345 - INFO -   Report saved: results/routing_comparison/Zone6_routing_report.md
+2025-10-26 11:58:36,345 - INFO - 
+================================================================================
+2025-10-26 11:58:36,345 - INFO - COMPARISON COMPLETED!
+2025-10-26 11:58:36,345 - INFO - ================================================================================
+2025-10-26 11:58:36,345 - INFO - 
+Results saved to: results/routing_comparison
