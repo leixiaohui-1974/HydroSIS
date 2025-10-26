@@ -1,0 +1,82 @@
+workflow:
+  id: "complete_simulation"
+  name: "完整水文模拟工作流"
+  version: "1.0"
+  description: "从DEM处理到流量模拟的完整水文建模流程"
+  
+  parameters:
+    dem_path: "data/dem.tif"
+    output_dir: "results/complete_workflow"
+    duration_hours: 168
+    intensity_mm_h: 10.0
+    runoff_model: "hbv"
+    routing_method: "muskingum"
+  
+  steps:
+    - id: "terrain"
+      module: "terrain"
+      inputs:
+        dem_path: "${parameters.dem_path}"
+        method: "d8"
+        fill_depressions: true
+        compute_slope: true
+        output_dir: "${parameters.output_dir}/01_terrain"
+    
+    - id: "pour_points"
+      module: "pour_points"
+      depends_on: ["terrain"]
+      inputs:
+        flow_accumulation: "${steps.terrain.outputs.flow_accumulation}"
+        method: "auto"
+        threshold: 1000.0
+        output_dir: "${parameters.output_dir}/02_pour_points"
+    
+    - id: "watershed"
+      module: "watershed_delineation"
+      depends_on: ["terrain", "pour_points"]
+      inputs:
+        flow_direction: "${steps.terrain.outputs.flow_direction}"
+        pour_points: "${steps.pour_points.outputs.pour_points_geojson}"
+        output_format: "geojson"
+        compute_topology: true
+        output_dir: "${parameters.output_dir}/03_watersheds"
+    
+    - id: "precipitation"
+      module: "precipitation_generation"
+      inputs:
+        method: "uniform"
+        duration_hours: "${parameters.duration_hours}"
+        intensity_mm_h: "${parameters.intensity_mm_h}"
+        output_dir: "${parameters.output_dir}/04_precipitation"
+    
+    - id: "areal_precip"
+      module: "areal_precipitation"
+      depends_on: ["precipitation", "watershed"]
+      inputs:
+        precipitation_timeseries: "${steps.precipitation.outputs.precipitation_timeseries}"
+        watersheds: "${steps.watershed.outputs.watersheds}"
+        method: "thiessen"
+        output_dir: "${parameters.output_dir}/05_areal_precip"
+    
+    - id: "runoff"
+      module: "runoff_generation"
+      depends_on: ["areal_precip", "watershed"]
+      inputs:
+        precipitation: "${steps.areal_precip.outputs.areal_precipitation}"
+        watersheds: "${steps.watershed.outputs.watersheds}"
+        model: "${parameters.runoff_model}"
+        output_dir: "${parameters.output_dir}/06_runoff"
+    
+    - id: "routing"
+      module: "routing"
+      depends_on: ["runoff", "watershed"]
+      inputs:
+        runoff: "${steps.runoff.outputs.runoff_timeseries}"
+        watersheds: "${steps.watershed.outputs.watersheds}"
+        method: "${parameters.routing_method}"
+        output_dir: "${parameters.output_dir}/07_routing"
+  
+  outputs:
+    discharge: "${steps.routing.outputs.discharge_timeseries}"
+    watersheds: "${steps.watershed.outputs.watersheds}"
+    pour_points: "${steps.pour_points.outputs.pour_points_geojson}"
