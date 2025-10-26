@@ -1,0 +1,66 @@
+workflow:
+  id: "test_parallel_analysis"
+  name: "并行分析工作流"
+  version: "1.0"
+  description: "测试多个独立步骤的并行执行能力"
+  
+  parameters:
+    dem_path: "data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif"
+    output_dir: "results/workflow_tests/07_parallel"
+  
+  steps:
+    # 第一步：地形处理（所有分支的基础）
+    - id: "terrain"
+      module: "terrain"
+      inputs:
+        dem_path: "${parameters.dem_path}"
+        method: "d8"
+        fill_depressions: true
+        compute_slope: true
+        output_dir: "${parameters.output_dir}/terrain"
+    
+    # 分支1：汇水点分析（阈值1000）
+    - id: "pour_points_1000"
+      module: "pour_points"
+      depends_on: ["terrain"]
+      inputs:
+        flow_accumulation: "${steps.terrain.outputs.flow_accumulation}"
+        method: "auto"
+        threshold: 1000.0
+        output_dir: "${parameters.output_dir}/pour_points_1000"
+    
+    # 分支2：汇水点分析（阈值2000）
+    - id: "pour_points_2000"
+      module: "pour_points"
+      depends_on: ["terrain"]
+      inputs:
+        flow_accumulation: "${steps.terrain.outputs.flow_accumulation}"
+        method: "auto"
+        threshold: 2000.0
+        output_dir: "${parameters.output_dir}/pour_points_2000"
+    
+    # 分支3：汇水点分析（阈值500）
+    - id: "pour_points_500"
+      module: "pour_points"
+      depends_on: ["terrain"]
+      inputs:
+        flow_accumulation: "${steps.terrain.outputs.flow_accumulation}"
+        method: "auto"
+        threshold: 500.0
+        output_dir: "${parameters.output_dir}/pour_points_500"
+    
+    # 分支4：河网提取
+    - id: "channel_network"
+      module: "channel_network"
+      depends_on: ["terrain"]
+      inputs:
+        flow_accumulation: "${steps.terrain.outputs.flow_accumulation}"
+        flow_direction: "${steps.terrain.outputs.flow_direction}"
+        threshold: 800.0
+        output_dir: "${parameters.output_dir}/channels"
+  
+  outputs:
+    pour_points_1000: "${steps.pour_points_1000.outputs.pour_points_geojson}"
+    pour_points_2000: "${steps.pour_points_2000.outputs.pour_points_geojson}"
+    pour_points_500: "${steps.pour_points_500.outputs.pour_points_geojson}"
+    channel_network: "${steps.channel_network.outputs.channel_network}"

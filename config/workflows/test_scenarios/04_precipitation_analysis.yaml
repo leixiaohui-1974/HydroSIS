@@ -1,0 +1,40 @@
+workflow:
+  id: "test_precipitation_analysis"
+  name: "降雨分析工作流"
+  version: "1.0"
+  description: "测试降雨生成、空间分布和面雨量计算"
+  
+  parameters:
+    output_dir: "results/workflow_tests/04_precipitation"
+    duration_hours: 72
+    intensity_mm_h: 5.0
+    watershed_file: "results/workflow_tests/03_delineation/watersheds/watersheds.geojson"
+  
+  steps:
+    - id: "rain_gauge"
+      module: "rain_gauge_layout"
+      inputs:
+        watershed: "${parameters.watershed_file}"
+        target_density: 0.01
+        output_dir: "${parameters.output_dir}/rain_gauges"
+    
+    - id: "precipitation"
+      module: "precipitation_generation"
+      inputs:
+        method: "uniform"
+        duration_hours: "${parameters.duration_hours}"
+        intensity_mm_h: "${parameters.intensity_mm_h}"
+        output_dir: "${parameters.output_dir}/precipitation"
+    
+    - id: "areal_precip"
+      module: "areal_precipitation"
+      depends_on: ["precipitation", "rain_gauge"]
+      inputs:
+        precipitation_timeseries: "${steps.precipitation.outputs.precipitation_timeseries}"
+        thiessen_polygons: "${steps.rain_gauge.outputs.thiessen_polygons}"
+        watersheds: "${parameters.watershed_file}"
+        method: "thiessen"
+        output_dir: "${parameters.output_dir}/areal_precip"
+  
+  outputs:
+    areal_precipitation: "${steps.areal_precip.outputs.areal_precipitation}"

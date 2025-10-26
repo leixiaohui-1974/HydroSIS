@@ -1,0 +1,37 @@
+workflow:
+  id: "test_calibration_workflow"
+  name: "参数率定工作流"
+  version: "1.0"
+  description: "测试参数率定和模型评估功能"
+  
+  parameters:
+    output_dir: "results/workflow_tests/06_calibration"
+    simulated_file: "results/workflow_tests/05_hydro_sim/routing/discharge_timeseries.csv"
+    observed_file: "data/Upper_Truckee_River/observed/discharge.csv"
+  
+  steps:
+    - id: "evaluation"
+      module: "evaluation"
+      inputs:
+        simulated: "${parameters.simulated_file}"
+        observed: "${parameters.observed_file}"
+        metrics: ["nse", "kge", "rmse", "mae"]
+        output_dir: "${parameters.output_dir}/evaluation"
+    
+    - id: "calibration"
+      module: "calibration"
+      depends_on: ["evaluation"]
+      inputs:
+        model_config: "config/model_config.json"
+        observed_data: "${parameters.observed_file}"
+        parameters_to_calibrate: ["field_capacity", "beta", "k0"]
+        parameter_bounds:
+          field_capacity: [50.0, 300.0]
+          beta: [1.0, 3.0]
+          k0: [0.05, 0.5]
+        objective: "nse"
+        output_dir: "${parameters.output_dir}/calibration"
+  
+  outputs:
+    metrics: "${steps.evaluation.outputs.metrics}"
+    calibrated_parameters: "${steps.calibration.outputs.calibrated_parameters}"

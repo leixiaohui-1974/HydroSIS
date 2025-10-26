@@ -1,0 +1,41 @@
+workflow:
+  id: "test_three_step_delineation"
+  name: "三步流域划分测试"
+  version: "1.0"
+  description: "测试地形处理->汇水点->流域划分的完整链路"
+  
+  parameters:
+    dem_path: "data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif"
+    output_dir: "results/workflow_tests/03_delineation"
+    threshold: 1500.0
+  
+  steps:
+    - id: "terrain"
+      module: "terrain"
+      inputs:
+        dem_path: "${parameters.dem_path}"
+        method: "d8"
+        fill_depressions: true
+        output_dir: "${parameters.output_dir}/terrain"
+    
+    - id: "pour_points"
+      module: "pour_points"
+      depends_on: ["terrain"]
+      inputs:
+        flow_accumulation: "${steps.terrain.outputs.flow_accumulation}"
+        method: "auto"
+        threshold: "${parameters.threshold}"
+        output_dir: "${parameters.output_dir}/pour_points"
+    
+    - id: "watershed"
+      module: "watershed_delineation"
+      depends_on: ["terrain", "pour_points"]
+      inputs:
+        flow_direction: "${steps.terrain.outputs.flow_direction}"
+        pour_points: "${steps.pour_points.outputs.pour_points_geojson}"
+        compute_topology: true
+        output_dir: "${parameters.output_dir}/watersheds"
+  
+  outputs:
+    watersheds: "${steps.watershed.outputs.watersheds}"
+    topology: "${steps.watershed.outputs.topology}"
