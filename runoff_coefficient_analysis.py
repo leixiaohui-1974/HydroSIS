@@ -326,11 +326,13 @@ class RunoffCoefficientAnalyzer:
         discharge_cols = [col for col in self.discharge_df.columns if col != self.discharge_df.columns[0]]
         
         for i, (pcol, dcol) in enumerate(zip(precip_cols, discharge_cols)):
-            # Total precipitation (mm)
+            # Total precipitation (mm) - hourly sum
             total_precip = self.precip_df[pcol].sum()
             
-            # Total discharge (m³) -> mm
-            total_discharge_m3 = self.discharge_df[dcol].sum()
+            # Total discharge: sum of m³/s values, need to convert to volume
+            # Each value is for 1 hour, so volume = sum(m³/s) * 3600 s
+            total_discharge_m3s_sum = self.discharge_df[dcol].sum()
+            total_discharge_m3 = total_discharge_m3s_sum * 3600  # m³
             
             # Get watershed area
             if self.watersheds is not None and i < len(self.watersheds):
@@ -338,6 +340,7 @@ class RunoffCoefficientAnalyzer:
                 area_km2 = area_m2 / 1e6
             else:
                 area_km2 = 100.0  # Default
+                area_m2 = area_km2 * 1e6
             
             # Convert discharge to depth
             if area_m2 > 0:
@@ -440,7 +443,8 @@ class RunoffCoefficientAnalyzer:
                 logger.info(f"    {model_name}: RC = {rc:.4f}")
             
             # Get observed runoff
-            observed_runoff_m3 = self.discharge_df[dcol].sum()
+            observed_runoff_m3s_sum = self.discharge_df[dcol].sum()
+            observed_runoff_m3 = observed_runoff_m3s_sum * 3600  # Convert to volume
             observed_runoff_mm = (observed_runoff_m3 / area_m2) * 1000
             
             # Create result
@@ -864,53 +868,53 @@ class RunoffCoefficientAnalyzer:
     
     def generate_report(self):
         """Generate comprehensive analysis report"""
-        logger.info("\nGenerating analysis report...")
+        logger.info("\n生成分析报告...")
         
         report_path = self.output_dir / 'runoff_coefficient_analysis_report.md'
         
         with open(report_path, 'w', encoding='utf-8') as f:
-            f.write("# Runoff Coefficient Analysis Report\n\n")
-            f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+            f.write("# 径流系数对比分析报告\n\n")
+            f.write(f"生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
             
-            f.write("## Summary\n\n")
-            f.write(f"- Total zones analyzed: {len(self.results)}\n")
-            f.write(f"- Runoff generation models: {', '.join(self.runoff_models.keys())}\n")
-            f.write(f"- Routing models: {', '.join(self.routing_models.keys())}\n\n")
+            f.write("## 分析概要\n\n")
+            f.write(f"- 分析分区数量: {len(self.results)}\n")
+            f.write(f"- 产流模型: {', '.join(self.runoff_models.keys())}\n")
+            f.write(f"- 汇流模型: {', '.join(self.routing_models.keys())}\n\n")
             
-            f.write("## Observed Runoff Coefficients\n\n")
-            f.write("| Zone | Observed RC | Precipitation (mm) | Runoff (mm) | Area (km²) |\n")
-            f.write("|------|-------------|--------------------|--------------|-----------|\n")
+            f.write("## 观测径流系数\n\n")
+            f.write("| 分区 | 观测RC | 降雨量(mm) | 径流量(mm) | 面积(km²) |\n")
+            f.write("|------|--------|-----------|-----------|----------|\n")
             
             for zone_id, result in self.results.items():
                 f.write(f"| {zone_id} | {result.observed_rc:.4f} | ")
                 f.write(f"{result.precipitation_mm:.2f} | {result.observed_runoff_mm:.2f} | ")
                 f.write(f"{result.area_km2:.2f} |\n")
             
-            f.write("\n## Model Performance by Zone\n\n")
+            f.write("\n## 各分区模型性能\n\n")
             
             for zone_id, result in self.results.items():
                 f.write(f"### {zone_id}\n\n")
-                f.write(f"**Observed RC**: {result.observed_rc:.4f}\n\n")
-                f.write("| Model | Simulated RC | Error | Status |\n")
-                f.write("|-------|--------------|-------|--------|\n")
+                f.write(f"**观测径流系数**: {result.observed_rc:.4f}\n\n")
+                f.write("| 模型 | 模拟RC | 误差 | 状态 |\n")
+                f.write("|------|--------|------|------|\n")
                 
                 for model_name, sim_rc in sorted(result.simulated_rc.items(), 
                                                  key=lambda x: abs(x[1] - result.observed_rc)):
                     error = abs(sim_rc - result.observed_rc)
                     if error < 0.05:
-                        status = "✅ Excellent"
+                        status = "✅ 优秀"
                     elif error < 0.1:
-                        status = "✓ Good"
+                        status = "✓ 良好"
                     elif error < 0.2:
-                        status = "⚠ Fair"
+                        status = "⚠ 一般"
                     else:
-                        status = "❌ Poor"
+                        status = "❌ 较差"
                     
                     f.write(f"| {model_name} | {sim_rc:.4f} | {error:.4f} | {status} |\n")
                 
                 f.write("\n")
             
-            f.write("## Recommendations\n\n")
+            f.write("## 模型选择建议\n\n")
             
             # Find best performing models overall
             model_errors = {}
@@ -925,15 +929,54 @@ class RunoffCoefficientAnalyzer:
             mean_errors = {m: np.mean(errors) for m, errors in model_errors.items()}
             best_models = sorted(mean_errors.items(), key=lambda x: x[1])[:3]
             
-            f.write("### Best Performing Models (Overall)\n\n")
+            f.write("### 总体最佳模型\n\n")
             for i, (model, error) in enumerate(best_models, 1):
-                f.write(f"{i}. **{model}**: Mean error = {error:.4f}\n")
+                f.write(f"{i}. **{model}**: 平均误差 = {error:.4f}\n")
             
-            f.write("\n### Zone-Specific Recommendations\n\n")
+            f.write("\n### 分区专用建议\n\n")
             for zone_id, result in self.results.items():
                 best_model = min(result.simulated_rc.items(), 
                                key=lambda x: abs(x[1] - result.observed_rc))
-                f.write(f"- **{zone_id}**: Use {best_model[0]} (error = {abs(best_model[1] - result.observed_rc):.4f})\n")
+                f.write(f"- **{zone_id}**: 推荐使用 {best_model[0]} (误差 = {abs(best_model[1] - result.observed_rc):.4f})\n")
+            
+            f.write("\n## 问题分析\n\n")
+            
+            # 分析常见问题
+            high_error_zones = [z for z, r in self.results.items() 
+                               if min(abs(rc - r.observed_rc) for rc in r.simulated_rc.values()) > 0.1]
+            
+            if high_error_zones:
+                f.write("### 高误差分区\n\n")
+                f.write(f"以下分区所有模型误差均较大（>0.1）：\n\n")
+                for zone in high_error_zones:
+                    result = self.results[zone]
+                    f.write(f"- **{zone}**: 观测RC={result.observed_rc:.4f}\n")
+                    best_sim = min(result.simulated_rc.items(), key=lambda x: abs(x[1] - result.observed_rc))
+                    f.write(f"  - 最佳模型: {best_sim[0]}, RC={best_sim[1]:.4f}, 误差={abs(best_sim[1]-result.observed_rc):.4f}\n")
+                
+                f.write("\n**可能原因**：\n")
+                f.write("1. 观测数据存在问题（面积计算、单位转换等）\n")
+                f.write("2. 该分区特殊水文过程未被模型捕捉\n")
+                f.write("3. 需要进一步参数率定\n")
+                f.write("4. 可能需要考虑其他损失项（如蒸发、渗漏）\n\n")
+            
+            # 分析模型系统性偏差
+            f.write("### 模型偏差分析\n\n")
+            for model_name in list(self.runoff_models.keys())[:3]:  # 主要产流模型
+                errors = [result.simulated_rc.get(model_name, 0) - result.observed_rc 
+                         for result in self.results.values()]
+                mean_bias = np.mean(errors)
+                
+                f.write(f"**{model_name}模型**:\n")
+                if abs(mean_bias) < 0.05:
+                    f.write(f"- 平均偏差: {mean_bias:+.4f} (无明显系统性偏差)\n")
+                elif mean_bias > 0:
+                    f.write(f"- 平均偏差: {mean_bias:+.4f} (系统性高估)\n")
+                    f.write(f"- 建议: 减小产流参数或增大土壤蓄水容量\n")
+                else:
+                    f.write(f"- 平均偏差: {mean_bias:+.4f} (系统性低估)\n")
+                    f.write(f"- 建议: 增大产流参数或减小土壤蓄水容量\n")
+                f.write("\n")
         
         logger.info(f"  Report saved: {report_path}")
         
@@ -967,9 +1010,10 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Example data paths (adjust as needed)
-    precip_file = Path("results/comprehensive_test_scenarios/08_Complete_Workflow/06_precipitation/precipitation_timeseries.csv")
-    discharge_file = Path("results/comprehensive_test_scenarios/08_Complete_Workflow/10_routing/discharge_timeseries.csv")
-    watershed_file = Path("results/comprehensive_test_scenarios/08_Complete_Workflow/03_watersheds/watersheds.geojson")
+    test_data_dir = Path("results/test_data_for_rc_analysis")
+    precip_file = test_data_dir / "precipitation_timeseries.csv"
+    discharge_file = test_data_dir / "discharge_timeseries.csv"
+    watershed_file = test_data_dir / "watersheds.geojson"
     
     # Check if files exist
     if not precip_file.exists():

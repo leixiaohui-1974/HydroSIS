@@ -1,0 +1,146 @@
+2025-10-26 11:35:36,129 - INFO - ================================================================================
+2025-10-26 11:35:36,129 - INFO - Runoff Coefficient Analysis and Calibration
+2025-10-26 11:35:36,129 - INFO - ================================================================================
+2025-10-26 11:35:36,495 - INFO - Loading data files...
+2025-10-26 11:35:36,498 - INFO -   Precipitation: 168 time steps, 6 zones
+2025-10-26 11:35:36,500 - INFO -   Discharge: 168 time steps, 6 points
+2025-10-26 11:35:36,622 - INFO -   Watersheds: 6 polygons
+2025-10-26 11:35:36,622 - INFO - 
+Analyzing all zones with multiple models...
+2025-10-26 11:35:36,622 - INFO - 
+Calculating observed runoff coefficients...
+2025-10-26 11:35:36,623 - INFO -   Zone1: RC = 0.4190 (P=1149.4mm, R=481.6mm)
+2025-10-26 11:35:36,624 - INFO -   Zone2: RC = 0.5108 (P=1256.1mm, R=641.6mm)
+2025-10-26 11:35:36,624 - INFO -   Zone3: RC = 0.5773 (P=1407.1mm, R=812.3mm)
+2025-10-26 11:35:36,624 - INFO -   Zone4: RC = 0.4369 (P=1373.4mm, R=600.0mm)
+2025-10-26 11:35:36,624 - INFO -   Zone5: RC = 0.5259 (P=1449.7mm, R=762.4mm)
+2025-10-26 11:35:36,625 - INFO -   Zone6: RC = 0.4692 (P=1521.5mm, R=713.9mm)
+2025-10-26 11:35:36,625 - INFO - 
+  Processing zone Zone1...
+2025-10-26 11:35:36,626 - INFO -     HBV: RC = 0.5867
+2025-10-26 11:35:36,626 - INFO -     SCS-CN: RC = 0.0111
+2025-10-26 11:35:36,626 - INFO -     Green-Ampt: RC = 0.1995
+2025-10-26 11:35:36,626 - INFO -     HBV+Muskingum: RC = 0.5782
+2025-10-26 11:35:36,626 - INFO -     HBV+Kinematic: RC = 0.5801
+2025-10-26 11:35:36,626 - INFO -     SCS-CN+Muskingum: RC = 0.0111
+2025-10-26 11:35:36,626 - INFO -     SCS-CN+Kinematic: RC = 0.0120
+2025-10-26 11:35:36,626 - INFO -     Green-Ampt+Muskingum: RC = 0.1995
+2025-10-26 11:35:36,626 - INFO -     Green-Ampt+Kinematic: RC = 0.1995
+2025-10-26 11:35:36,626 - INFO - 
+  Processing zone Zone2...
+2025-10-26 11:35:36,628 - INFO -     HBV: RC = 0.6247
+2025-10-26 11:35:36,628 - INFO -     SCS-CN: RC = 0.0111
+2025-10-26 11:35:36,628 - INFO -     Green-Ampt: RC = 0.1699
+2025-10-26 11:35:36,628 - INFO -     HBV+Muskingum: RC = 0.6173
+2025-10-26 11:35:36,628 - INFO -     HBV+Kinematic: RC = 0.6187
+2025-10-26 11:35:36,628 - INFO -     SCS-CN+Muskingum: RC = 0.0111
+2025-10-26 11:35:36,628 - INFO -     SCS-CN+Kinematic: RC = 0.0121
+2025-10-26 11:35:36,628 - INFO -     Green-Ampt+Muskingum: RC = 0.1698
+2025-10-26 11:35:36,628 - INFO -     Green-Ampt+Kinematic: RC = 0.1710
+2025-10-26 11:35:36,628 - INFO - 
+  Processing zone Zone3...
+2025-10-26 11:35:36,629 - INFO -     HBV: RC = 0.6478
+2025-10-26 11:35:36,629 - INFO -     SCS-CN: RC = 0.0202
+2025-10-26 11:35:36,629 - INFO -     Green-Ampt: RC = 0.2562
+2025-10-26 11:35:36,629 - INFO -     HBV+Muskingum: RC = 0.6388
+2025-10-26 11:35:36,629 - INFO -     HBV+Kinematic: RC = 0.6350
+2025-10-26 11:35:36,629 - INFO -     SCS-CN+Muskingum: RC = 0.0202
+2025-10-26 11:35:36,629 - INFO -     SCS-CN+Kinematic: RC = 0.0209
+2025-10-26 11:35:36,629 - INFO -     Green-Ampt+Muskingum: RC = 0.2562
+2025-10-26 11:35:36,629 - INFO -     Green-Ampt+Kinematic: RC = 0.2572
+2025-10-26 11:35:36,629 - INFO - 
+  Processing zone Zone4...
+2025-10-26 11:35:36,631 - INFO -     HBV: RC = 0.6478
+2025-10-26 11:35:36,631 - INFO -     SCS-CN: RC = 0.0105
+2025-10-26 11:35:36,631 - INFO -     Green-Ampt: RC = 0.1677
+2025-10-26 11:35:36,631 - INFO -     HBV+Muskingum: RC = 0.6402
+2025-10-26 11:35:36,631 - INFO -     HBV+Kinematic: RC = 0.6400
+2025-10-26 11:35:36,631 - INFO -     SCS-CN+Muskingum: RC = 0.0105
+2025-10-26 11:35:36,631 - INFO -     SCS-CN+Kinematic: RC = 0.0112
+2025-10-26 11:35:36,631 - INFO -     Green-Ampt+Muskingum: RC = 0.1677
+2025-10-26 11:35:36,631 - INFO -     Green-Ampt+Kinematic: RC = 0.1696
+2025-10-26 11:35:36,631 - INFO - 
+  Processing zone Zone5...
+2025-10-26 11:35:36,632 - INFO -     HBV: RC = 0.6494
+2025-10-26 11:35:36,632 - INFO -     SCS-CN: RC = 0.0107
+2025-10-26 11:35:36,632 - INFO -     Green-Ampt: RC = 0.2049
+2025-10-26 11:35:36,632 - INFO -     HBV+Muskingum: RC = 0.6403
+2025-10-26 11:35:36,632 - INFO -     HBV+Kinematic: RC = 0.6389
+2025-10-26 11:35:36,632 - INFO -     SCS-CN+Muskingum: RC = 0.0107
+2025-10-26 11:35:36,632 - INFO -     SCS-CN+Kinematic: RC = 0.0113
+2025-10-26 11:35:36,632 - INFO -     Green-Ampt+Muskingum: RC = 0.2020
+2025-10-26 11:35:36,632 - INFO -     Green-Ampt+Kinematic: RC = 0.2056
+2025-10-26 11:35:36,632 - INFO - 
+  Processing zone Zone6...
+2025-10-26 11:35:36,634 - INFO -     HBV: RC = 0.6438
+2025-10-26 11:35:36,634 - INFO -     SCS-CN: RC = 0.0120
+2025-10-26 11:35:36,634 - INFO -     Green-Ampt: RC = 0.2278
+2025-10-26 11:35:36,634 - INFO -     HBV+Muskingum: RC = 0.6321
+2025-10-26 11:35:36,634 - INFO -     HBV+Kinematic: RC = 0.6224
+2025-10-26 11:35:36,634 - INFO -     SCS-CN+Muskingum: RC = 0.0120
+2025-10-26 11:35:36,634 - INFO -     SCS-CN+Kinematic: RC = 0.0125
+2025-10-26 11:35:36,634 - INFO -     Green-Ampt+Muskingum: RC = 0.2269
+2025-10-26 11:35:36,634 - INFO -     Green-Ampt+Kinematic: RC = 0.2294
+2025-10-26 11:35:36,634 - INFO - 
+Performing sensitivity analysis for HBV on Zone1...
+2025-10-26 11:35:36,634 - INFO -   Testing parameter: field_capacity
+2025-10-26 11:35:36,637 - INFO -   Testing parameter: beta
+2025-10-26 11:35:36,639 - INFO -   Testing parameter: k0
+2025-10-26 11:35:36,642 - INFO -   Testing parameter: k1
+2025-10-26 11:35:36,644 - INFO -   Testing parameter: k2
+2025-10-26 11:35:36,650 - INFO -   Sensitivity results saved: results/runoff_coefficient_analysis/sensitivity_HBV_Zone1.csv
+2025-10-26 11:35:36,650 - INFO - 
+Calibrating HBV for Zone1...
+2025-10-26 11:35:36,650 - INFO -   Target RC: 0.4190
+2025-10-26 11:35:36,933 - INFO -   Running optimization...
+2025-10-26 11:35:39,357 - INFO -   Optimization complete!
+2025-10-26 11:35:39,357 - INFO -   Final error: 0.000000
+2025-10-26 11:35:39,358 - INFO -   Calibrated RC: 0.4190 (Target: 0.4190)
+2025-10-26 11:35:39,358 - INFO -   Calibrated parameters:
+2025-10-26 11:35:39,358 - INFO -     field_capacity = 416.3251
+2025-10-26 11:35:39,358 - INFO -     beta = 2.1103
+2025-10-26 11:35:39,358 - INFO -     k0 = 0.0144
+2025-10-26 11:35:39,358 - INFO -     k1 = 0.0183
+2025-10-26 11:35:39,358 - INFO -     k2 = 0.0009
+2025-10-26 11:35:39,358 - INFO - 
+Calibrating HBV for Zone2...
+2025-10-26 11:35:39,358 - INFO -   Target RC: 0.5108
+2025-10-26 11:35:39,358 - INFO -   Running optimization...
+2025-10-26 11:35:41,735 - INFO -   Optimization complete!
+2025-10-26 11:35:41,735 - INFO -   Final error: 0.000001
+2025-10-26 11:35:41,736 - INFO -   Calibrated RC: 0.5108 (Target: 0.5108)
+2025-10-26 11:35:41,736 - INFO -   Calibrated parameters:
+2025-10-26 11:35:41,736 - INFO -     field_capacity = 490.9915
+2025-10-26 11:35:41,736 - INFO -     beta = 2.6848
+2025-10-26 11:35:41,736 - INFO -     k0 = 0.0160
+2025-10-26 11:35:41,736 - INFO -     k1 = 0.0304
+2025-10-26 11:35:41,736 - INFO -     k2 = 0.0019
+2025-10-26 11:35:41,736 - INFO - 
+Calibrating HBV for Zone3...
+2025-10-26 11:35:41,736 - INFO -   Target RC: 0.5773
+2025-10-26 11:35:41,736 - INFO -   Running optimization...
+2025-10-26 11:35:44,116 - INFO -   Optimization complete!
+2025-10-26 11:35:44,117 - INFO -   Final error: 0.000000
+2025-10-26 11:35:44,117 - INFO -   Calibrated RC: 0.5773 (Target: 0.5773)
+2025-10-26 11:35:44,117 - INFO -   Calibrated parameters:
+2025-10-26 11:35:44,117 - INFO -     field_capacity = 436.6923
+2025-10-26 11:35:44,117 - INFO -     beta = 3.9320
+2025-10-26 11:35:44,117 - INFO -     k0 = 0.0336
+2025-10-26 11:35:44,117 - INFO -     k1 = 0.0159
+2025-10-26 11:35:44,117 - INFO -     k2 = 0.0024
+2025-10-26 11:35:44,117 - INFO - 
+Generating comparison plots...
+2025-10-26 11:35:44,534 - INFO -   RC comparison plot saved: results/runoff_coefficient_analysis/rc_comparison_all_zones.png
+/workspace/runoff_coefficient_analysis.py:803: MatplotlibDeprecationWarning: The 'labels' parameter of boxplot() has been renamed 'tick_labels' since Matplotlib 3.9; support for the old name will be dropped in 3.11.
+  bp = ax2.boxplot(error_by_model, labels=models, patch_artist=True)
+2025-10-26 11:35:48,531 - INFO -   Error analysis plot saved: results/runoff_coefficient_analysis/error_analysis.png
+2025-10-26 11:35:48,890 - INFO -   Best model selection plot saved: results/runoff_coefficient_analysis/best_model_selection.png
+2025-10-26 11:35:48,891 - INFO - 
+生成分析报告...
+2025-10-26 11:35:48,892 - INFO -   Report saved: results/runoff_coefficient_analysis/runoff_coefficient_analysis_report.md
+2025-10-26 11:35:48,893 - INFO -   JSON results saved: results/runoff_coefficient_analysis/analysis_results.json
+2025-10-26 11:35:48,893 - INFO - 
+================================================================================
+2025-10-26 11:35:48,893 - INFO - Analysis complete!
+2025-10-26 11:35:48,893 - INFO - Results saved to: results/runoff_coefficient_analysis
+2025-10-26 11:35:48,893 - INFO - ================================================================================
