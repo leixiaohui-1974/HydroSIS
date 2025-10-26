@@ -1,0 +1,31 @@
+workflow:
+  id: "test_two_step_basic"
+  name: "两步基础测试-地形+汇水点"
+  version: "1.0"
+  description: "测试两个模块的串联和数据传递"
+  
+  parameters:
+    dem_path: "data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif"
+    output_dir: "results/enhanced_workflow_tests/02_两步基础测试/outputs"
+    threshold: 1000.0
+  
+  steps:
+    - id: "terrain"
+      module: "terrain"
+      inputs:
+        dem_path: "${parameters.dem_path}"
+        method: "d8"
+        output_dir: "${parameters.output_dir}/terrain"
+    
+    - id: "pour_points"
+      module: "pour_points"
+      depends_on: ["terrain"]
+      inputs:
+        flow_accumulation: "${steps.terrain.outputs.flow_accumulation}"
+        method: "auto"
+        threshold: "${parameters.threshold}"
+        output_dir: "${parameters.output_dir}/pour_points"
+  
+  outputs:
+    pour_points: "${steps.pour_points.outputs.pour_points_geojson}"
+    point_count: "${steps.pour_points.outputs.metadata}"

@@ -1,0 +1,32 @@
+workflow:
+  id: "pour_points_only"
+  name: "汇水点生成工作流"
+  version: "1.0"
+  description: "从DEM自动生成流域汇水点"
+  
+  parameters:
+    dem_path: "data/dem.tif"
+    output_dir: "results/pour_points_workflow"
+    threshold: 1000.0
+  
+  steps:
+    - id: "terrain_processing"
+      module: "terrain"
+      inputs:
+        dem_path: "${parameters.dem_path}"
+        method: "d8"
+        fill_depressions: true
+        output_dir: "${parameters.output_dir}/terrain"
+    
+    - id: "pour_point_generation"
+      module: "pour_points"
+      depends_on: ["terrain_processing"]
+      inputs:
+        flow_accumulation: "${steps.terrain_processing.outputs.flow_accumulation}"
+        method: "auto"
+        threshold: "${parameters.threshold}"
+        output_dir: "${parameters.output_dir}/pour_points"
+  
+  outputs:
+    pour_points: "${steps.pour_point_generation.outputs.pour_points_geojson}"
+    flow_accumulation: "${steps.terrain_processing.outputs.flow_accumulation}"

@@ -1,0 +1,43 @@
+workflow:
+  id: "test_hydrologic_simulation"
+  name: "水文模拟工作流"
+  version: "1.0"
+  description: "测试产流和汇流模拟的完整过程"
+  
+  parameters:
+    output_dir: "results/workflow_tests/05_hydro_sim"
+    precipitation_file: "results/workflow_tests/04_precipitation/areal_precip/areal_precipitation.csv"
+    watershed_file: "results/workflow_tests/03_delineation/watersheds/watersheds.geojson"
+    runoff_model: "hbv"
+    routing_method: "muskingum"
+  
+  steps:
+    - id: "runoff"
+      module: "runoff_generation"
+      inputs:
+        precipitation: "${parameters.precipitation_file}"
+        watersheds: "${parameters.watershed_file}"
+        model: "${parameters.runoff_model}"
+        parameters:
+          field_capacity: 258.12
+          beta: 3.0
+          k0: 0.05
+          k1: 0.01
+          k2: 0.017
+          percolation: 5.0
+        output_dir: "${parameters.output_dir}/runoff"
+    
+    - id: "routing"
+      module: "routing"
+      depends_on: ["runoff"]
+      inputs:
+        runoff: "${steps.runoff.outputs.runoff_timeseries}"
+        watersheds: "${parameters.watershed_file}"
+        method: "${parameters.routing_method}"
+        parameters:
+          travel_time: 10.0
+          weighting_factor: 0.1
+        output_dir: "${parameters.output_dir}/routing"
+  
+  outputs:
+    discharge: "${steps.routing.outputs.discharge_timeseries}"

@@ -1,0 +1,49 @@
+# HydroSIS测试结果查看指南
+
+## 快速查看
+
+1. 查看测试总结：
+   cat results/enhanced_workflow_tests/TEST_SUMMARY.md
+
+2. 查看成功的3个测试：
+   cat results/enhanced_workflow_tests/04_降雨分析/TEST_REPORT.md
+   cat results/enhanced_workflow_tests/05_水文模拟/TEST_REPORT.md
+   cat results/enhanced_workflow_tests/06_参数率定/TEST_REPORT.md
+
+3. 查看可视化图表：
+   ls -lh results/enhanced_workflow_tests/*/visualizations/*.png
+
+## 目录结构
+
+results/enhanced_workflow_tests/
+├── TEST_SUMMARY.md              总结报告
+├── test_summary.json            JSON格式总结
+├── 01_最小测试-仅地形/
+│   ├── TEST_REPORT.md           详细报告
+│   └── test_result.json         JSON结果
+├── 04_降雨分析/                 ✅ 成功
+│   ├── TEST_REPORT.md
+│   ├── test_result.json
+│   └── visualizations/
+│       └── test_summary.png
+├── 05_水文模拟/                 ✅ 成功
+│   ├── TEST_REPORT.md
+│   ├── test_result.json
+│   └── visualizations/
+│       └── test_summary.png
+└── 06_参数率定/                 ✅ 成功
+    ├── TEST_REPORT.md
+    ├── test_result.json
+    └── visualizations/
+        └── test_summary.png
+
+## 关键文档
+
+1. FINAL_TESTING_SUMMARY_CN.md - 任务完成报告
+2. 最终测试总结_中文.md - 详细系统说明
+3. 测试执行总结报告.md - 执行情况分析
+
+## 重新运行测试
+
+python3 run_enhanced_workflow_tests.py
+

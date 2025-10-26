@@ -1,0 +1,128 @@
+workflow:
+  id: "test_complete_eleven_steps"
+  name: "完整十一步工作流"
+  version: "1.0"
+  description: "完整的从DEM到率定验证的十一步水文建模流程"
+  
+  parameters:
+    dem_path: "data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif"
+    observed_file: "data/Upper_Truckee_River/observed/discharge.csv"
+    output_dir: "results/workflow_tests/08_complete"
+    duration_hours: 168
+    intensity_mm_h: 10.0
+  
+  steps:
+    # 步骤1: DEM地形处理
+    - id: "step01_terrain"
+      module: "terrain"
+      inputs:
+        dem_path: "${parameters.dem_path}"
+        method: "d8"
+        fill_depressions: true
+        compute_slope: true
+        output_dir: "${parameters.output_dir}/01_terrain"
+    
+    # 步骤2: 汇水点生成
+    - id: "step02_pour_points"
+      module: "pour_points"
+      depends_on: ["step01_terrain"]
+      inputs:
+        flow_accumulation: "${steps.step01_terrain.outputs.flow_accumulation}"
+        method: "auto"
+        threshold: 1000.0
+        output_dir: "${parameters.output_dir}/02_pour_points"
+    
+    # 步骤3: 流域划分
+    - id: "step03_watershed"
+      module: "watershed_delineation"
+      depends_on: ["step01_terrain", "step02_pour_points"]
+      inputs:
+        flow_direction: "${steps.step01_terrain.outputs.flow_direction}"
+        pour_points: "${steps.step02_pour_points.outputs.pour_points_geojson}"
+        compute_topology: true
+        output_dir: "${parameters.output_dir}/03_watersheds"
+    
+    # 步骤4: 河网提取
+    - id: "step04_channel"
+      module: "channel_network"
+      depends_on: ["step01_terrain"]
+      inputs:
+        flow_accumulation: "${steps.step01_terrain.outputs.flow_accumulation}"
+        flow_direction: "${steps.step01_terrain.outputs.flow_direction}"
+        threshold: 500.0
+        output_dir: "${parameters.output_dir}/04_channels"
+    
+    # 步骤5: 雨量站布局
+    - id: "step05_rain_gauge"
+      module: "rain_gauge_layout"
+      depends_on: ["step03_watershed"]
+      inputs:
+        watershed: "${steps.step03_watershed.outputs.watersheds}"
+        target_density: 0.01
+        output_dir: "${parameters.output_dir}/05_rain_gauges"
+    
+    # 步骤6: 降雨序列生成
+    - id: "step06_precipitation"
+      module: "precipitation_generation"
+      inputs:
+        method: "uniform"
+        duration_hours: "${parameters.duration_hours}"
+        intensity_mm_h: "${parameters.intensity_mm_h}"
+        output_dir: "${parameters.output_dir}/06_precipitation"
+    
+    # 步骤7: 泰森多边形（包含在雨量站布局中）
+    # 步骤8: 面雨量计算
+    - id: "step08_areal_precip"
+      module: "areal_precipitation"
+      depends_on: ["step06_precipitation", "step05_rain_gauge"]
+      inputs:
+        precipitation_timeseries: "${steps.step06_precipitation.outputs.precipitation_timeseries}"
+        thiessen_polygons: "${steps.step05_rain_gauge.outputs.thiessen_polygons}"
+        watersheds: "${steps.step03_watershed.outputs.watersheds}"
+        method: "thiessen"
+        output_dir: "${parameters.output_dir}/08_areal_precip"
+    
+    # 步骤9: 产流模拟
+    - id: "step09_runoff"
+      module: "runoff_generation"
+      depends_on: ["step08_areal_precip", "step03_watershed"]
+      inputs:
+        precipitation: "${steps.step08_areal_precip.outputs.areal_precipitation}"
+        watersheds: "${steps.step03_watershed.outputs.watersheds}"
+        model: "hbv"
+        parameters:
+          field_capacity: 100.0
+          beta: 1.0
+          k0: 0.12
+          k1: 0.08
+          k2: 0.02
+          percolation: 1.0
+        output_dir: "${parameters.output_dir}/09_runoff"
+    
+    # 步骤10: 汇流演算
+    - id: "step10_routing"
+      module: "routing"
+      depends_on: ["step09_runoff", "step03_watershed"]
+      inputs:
+        runoff: "${steps.step09_runoff.outputs.runoff_timeseries}"
+        watersheds: "${steps.step03_watershed.outputs.watersheds}"
+        method: "muskingum"
+        parameters:
+          travel_time: 10.0
+          weighting_factor: 0.1
+        output_dir: "${parameters.output_dir}/10_routing"
+    
+    # 步骤11: 率定与验证
+    - id: "step11_evaluation"
+      module: "evaluation"
+      depends_on: ["step10_routing"]
+      inputs:
+        simulated: "${steps.step10_routing.outputs.discharge_timeseries}"
+        observed: "${parameters.observed_file}"
+        metrics: ["nse", "kge", "rmse", "mae", "pbias"]
+        output_dir: "${parameters.output_dir}/11_evaluation"
+  
+  outputs:
+    discharge: "${steps.step10_routing.outputs.discharge_timeseries}"
+    evaluation_metrics: "${steps.step11_evaluation.outputs.metrics}"
+    evaluation_report: "${steps.step11_evaluation.outputs.report}"

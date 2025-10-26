@@ -1,0 +1,23 @@
+workflow:
+  id: "test_minimal_terrain"
+  name: "最小测试-仅地形处理"
+  version: "1.0"
+  description: "测试单个模块的独立运行能力"
+  
+  parameters:
+    dem_path: "data/Upper_Truckee_River/terrain/UpTruckeeRv_S10_NED_30m/00/elevation.tif"
+    output_dir: "results/enhanced_workflow_tests/01_最小测试-仅地形/outputs"
+  
+  steps:
+    - id: "terrain"
+      module: "terrain"
+      inputs:
+        dem_path: "${parameters.dem_path}"
+        method: "d8"
+        fill_depressions: true
+        compute_slope: true
+        output_dir: "${parameters.output_dir}/terrain"
+  
+  outputs:
+    flow_direction: "${steps.terrain.outputs.flow_direction}"
+    flow_accumulation: "${steps.terrain.outputs.flow_accumulation}"
