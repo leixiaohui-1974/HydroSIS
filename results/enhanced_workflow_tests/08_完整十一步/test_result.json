@@ -3,7 +3,7 @@
   "scenario_name": "完整十一步",
   "config_file": "config/workflows/test_scenarios/08_complete_eleven_steps.yaml",
   "test_dir": "results/enhanced_workflow_tests/08_完整十一步",
-  "start_time": "2025-10-26T08:13:55.549631",
+  "start_time": "2025-10-26T08:28:10.788548",
   "status": "completed",
   "outputs": {
     "discharge": "results/workflow_tests/08_complete/10_routing/discharge.csv",
@@ -26,83 +26,83 @@
       "输出文件缺失: step04_channel.channel_network, step05_rain_gauge.gauge_layout, step05_rain_gauge.thiessen_polygons, step06_precipitation.precipitation_timeseries, step08_areal_precip.areal_precipitation, step09_runoff.runoff_timeseries, step10_routing.discharge_timeseries, step11_evaluation.report"
     ],
     "metrics": {
-      "total_duration": 0.528798,
+      "total_duration": 0.736085,
       "step_count": 10,
       "completed_steps": 10
     },
-    "timestamp": "2025-10-26T08:13:55.549631",
-    "duration": 0.5390167236328125
+    "timestamp": "2025-10-26T08:28:10.788548",
+    "duration": 0.7461285591125488
   },
-  "duration": 0.5390167236328125,
-  "run_id": "3190997c-f364-4e3e-b055-5fe3aab9ae1a",
+  "duration": 0.7461285591125488,
+  "run_id": "34d157f9-f829-43f6-83f8-36e2ff239b04",
   "step_count": 10,
   "progress_log": [
     {
       "percent": 10.0,
       "step": "step01_terrain",
       "status": "completed",
-      "duration": 0.397282
+      "duration": 0.390086
     },
     {
       "percent": 20.0,
       "step": "step06_precipitation",
       "status": "completed",
-      "duration": 0.000373
+      "duration": 0.000332
     },
     {
       "percent": 30.0,
-      "step": "step04_channel",
+      "step": "step02_pour_points",
       "status": "completed",
-      "duration": 0.000267
+      "duration": 0.044378
     },
     {
       "percent": 40.0,
-      "step": "step02_pour_points",
+      "step": "step04_channel",
       "status": "completed",
-      "duration": 0.046582
+      "duration": 0.000318
     },
     {
       "percent": 50.0,
       "step": "step03_watershed",
       "status": "completed",
-      "duration": 0.081808
+      "duration": 0.298964
     },
     {
       "percent": 60.0,
       "step": "step05_rain_gauge",
       "status": "completed",
-      "duration": 0.000465
+      "duration": 0.000347
     },
     {
       "percent": 70.0,
       "step": "step08_areal_precip",
       "status": "completed",
-      "duration": 0.000245
+      "duration": 0.00021
     },
     {
       "percent": 80.0,
       "step": "step09_runoff",
       "status": "completed",
-      "duration": 0.000254
+      "duration": 0.000179
     },
     {
       "percent": 90.0,
       "step": "step10_routing",
       "status": "completed",
-      "duration": 0.00026
+      "duration": 0.000178
     },
     {
       "percent": 100.0,
       "step": "step11_evaluation",
       "status": "completed",
-      "duration": 0.000221
+      "duration": 0.00017
     }
   ],
-  "end_time": "2025-10-26T08:13:56.088624",
+  "end_time": "2025-10-26T08:28:11.534664",
   "step_results": {
     "step01_terrain": {
       "status": "completed",
-      "duration": 0.397282,
+      "duration": 0.390086,
       "error": null,
       "outputs": {
         "flow_direction": "results/workflow_tests/08_complete/01_terrain/flow_direction.tif",
@@ -144,7 +144,7 @@
     },
     "step02_pour_points": {
       "status": "completed",
-      "duration": 0.046582,
+      "duration": 0.044378,
       "error": null,
       "outputs": {
         "pour_points_geojson": "results/workflow_tests/08_complete/02_pour_points/pour_points.geojson",
@@ -773,7 +773,7 @@
     },
     "step03_watershed": {
       "status": "completed",
-      "duration": 0.081808,
+      "duration": 0.298964,
       "error": null,
       "outputs": {
         "watersheds": "results/workflow_tests/08_complete/03_watersheds/watersheds.geojson",
@@ -1129,7 +1129,7 @@
     },
     "step04_channel": {
       "status": "completed",
-      "duration": 0.000267,
+      "duration": 0.000318,
       "error": null,
       "outputs": {
         "channel_network": "results/workflow_tests/08_complete/04_channels/channels.geojson",
@@ -1138,7 +1138,7 @@
     },
     "step05_rain_gauge": {
       "status": "completed",
-      "duration": 0.000465,
+      "duration": 0.000347,
       "error": null,
       "outputs": {
         "gauge_layout": "results/workflow_tests/08_complete/05_rain_gauges/gauges.geojson",
@@ -1147,7 +1147,7 @@
     },
     "step06_precipitation": {
       "status": "completed",
-      "duration": 0.000373,
+      "duration": 0.000332,
       "error": null,
       "outputs": {
         "precipitation_timeseries": "results/workflow_tests/08_complete/06_precipitation/precip.csv"
@@ -1155,7 +1155,7 @@
     },
     "step08_areal_precip": {
       "status": "completed",
-      "duration": 0.000245,
+      "duration": 0.00021,
       "error": null,
       "outputs": {
         "areal_precipitation": "results/workflow_tests/08_complete/08_areal_precip/areal_precip.csv"
@@ -1163,7 +1163,7 @@
     },
     "step09_runoff": {
       "status": "completed",
-      "duration": 0.000254,
+      "duration": 0.000179,
       "error": null,
       "outputs": {
         "runoff_timeseries": "results/workflow_tests/08_complete/09_runoff/runoff.csv"
@@ -1171,7 +1171,7 @@
     },
     "step10_routing": {
       "status": "completed",
-      "duration": 0.00026,
+      "duration": 0.000178,
       "error": null,
       "outputs": {
         "discharge_timeseries": "results/workflow_tests/08_complete/10_routing/discharge.csv"
@@ -1179,7 +1179,7 @@
     },
     "step11_evaluation": {
       "status": "completed",
-      "duration": 0.000221,
+      "duration": 0.00017,
       "error": null,
       "outputs": {
         "metrics": {},

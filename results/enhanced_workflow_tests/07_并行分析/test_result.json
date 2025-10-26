@@ -3,7 +3,7 @@
   "scenario_name": "并行分析",
   "config_file": "config/workflows/test_scenarios/07_parallel_analysis.yaml",
   "test_dir": "results/enhanced_workflow_tests/07_并行分析",
-  "start_time": "2025-10-26T08:13:49.561296",
+  "start_time": "2025-10-26T08:28:05.173304",
   "status": "completed",
   "outputs": {
     "pour_points_1000": "results/workflow_tests/07_parallel/pour_points_1000/pour_points.geojson",
@@ -28,53 +28,53 @@
       "输出文件缺失: channel_network.channel_network"
     ],
     "metrics": {
-      "total_duration": 0.539679,
+      "total_duration": 0.519131,
       "step_count": 5,
       "completed_steps": 5
     },
-    "timestamp": "2025-10-26T08:13:49.561296",
-    "duration": 0.5455775260925293
+    "timestamp": "2025-10-26T08:28:05.173304",
+    "duration": 0.5248112678527832
   },
-  "duration": 0.5455775260925293,
-  "run_id": "aa719a36-41a7-4c3f-b87f-ef8c757c855f",
+  "duration": 0.5248112678527832,
+  "run_id": "f768209d-0097-4af3-98dc-a751d87a596d",
   "step_count": 5,
   "progress_log": [
     {
       "percent": 20.0,
       "step": "terrain",
       "status": "completed",
-      "duration": 0.402511
+      "duration": 0.385308
     },
     {
       "percent": 40.0,
-      "step": "pour_points_500",
+      "step": "pour_points_1000",
       "status": "completed",
-      "duration": 0.050231
+      "duration": 0.0445
     },
     {
       "percent": 60.0,
       "step": "pour_points_2000",
       "status": "completed",
-      "duration": 0.041659
+      "duration": 0.040987
     },
     {
       "percent": 80.0,
       "step": "channel_network",
       "status": "completed",
-      "duration": 0.000417
+      "duration": 0.000401
     },
     {
       "percent": 100.0,
-      "step": "pour_points_1000",
+      "step": "pour_points_500",
       "status": "completed",
-      "duration": 0.044054
+      "duration": 0.047176
     }
   ],
-  "end_time": "2025-10-26T08:13:50.106843",
+  "end_time": "2025-10-26T08:28:05.698111",
   "step_results": {
     "terrain": {
       "status": "completed",
-      "duration": 0.402511,
+      "duration": 0.385308,
       "error": null,
       "outputs": {
         "flow_direction": "results/workflow_tests/07_parallel/terrain/flow_direction.tif",
@@ -116,7 +116,7 @@
     },
     "pour_points_1000": {
       "status": "completed",
-      "duration": 0.044054,
+      "duration": 0.0445,
       "error": null,
       "outputs": {
         "pour_points_geojson": "results/workflow_tests/07_parallel/pour_points_1000/pour_points.geojson",
@@ -745,7 +745,7 @@
     },
     "pour_points_2000": {
       "status": "completed",
-      "duration": 0.041659,
+      "duration": 0.040987,
       "error": null,
       "outputs": {
         "pour_points_geojson": "results/workflow_tests/07_parallel/pour_points_2000/pour_points.geojson",
@@ -987,7 +987,7 @@
     },
     "pour_points_500": {
       "status": "completed",
-      "duration": 0.050231,
+      "duration": 0.047176,
       "error": null,
       "outputs": {
         "pour_points_geojson": "results/workflow_tests/07_parallel/pour_points_500/pour_points.geojson",
@@ -2219,7 +2219,7 @@
     },
     "channel_network": {
       "status": "completed",
-      "duration": 0.000417,
+      "duration": 0.000401,
       "error": null,
       "outputs": {
         "channel_network": "results/workflow_tests/07_parallel/channels/channels.geojson",
