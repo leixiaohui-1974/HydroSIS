@@ -1,0 +1,36 @@
+# HydroMind Agent Docker Compose
+# 单独部署HydroMind服务
+
+version: '3.8'
+
+services:
+  hydromind:
+    build:
+      context: ..
+      dockerfile: mcp_server_mind/Dockerfile
+    container_name: hydromind-agent
+    ports:
+      - "8081:8081"
+    environment:
+      - QWEN_API_KEY=${QWEN_API_KEY:-}
+      - QWEN_MODEL=${QWEN_MODEL:-qwen-max}
+      - LLM_BACKEND=${LLM_BACKEND:-auto}
+      - PORT=8081
+      - HOST=0.0.0.0
+    volumes:
+      - ./knowledge_base:/app/mcp_server_mind/knowledge_base
+      - ./prompt_templates:/app/mcp_server_mind/prompt_templates
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - hydrosis-network
+
+networks:
+  hydrosis-network:
+    name: hydrosis-network
+    driver: bridge

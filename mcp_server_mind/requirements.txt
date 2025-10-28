@@ -1,0 +1,19 @@
+# HydroMind Agent - 认知智能体依赖
+
+# 核心依赖（最小化）
+# 无外部依赖，使用Python标准库
+
+# 可选依赖（生产环境）
+# pyyaml>=6.0  # YAML配置支持
+# pydantic>=2.0  # 数据验证
+# fastapi>=0.100.0  # Web API（如需部署）
+# uvicorn>=0.23.0  # ASGI服务器
+
+# 开发依赖
+# pytest>=7.0  # 测试
+# pytest-asyncio>=0.21.0  # 异步测试
+
+# 注意：
+# 1. LLM后端使用标准库urllib，无需额外依赖
+# 2. 阿里千问API通过环境变量QWEN_API_KEY配置
+# 3. Mock模式无需任何外部服务
