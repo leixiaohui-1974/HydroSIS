@@ -6,13 +6,23 @@ Twin-Agent Coordinator - 双智能体协调器
 
 import json
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 
 try:
     from .conversation_manager import ConversationManager
+    from .clients import HydroMindClient, HydroComputeClient
+    from .config_converter import ConfigConverter
 except ImportError:
     from conversation_manager import ConversationManager
+    try:
+        from clients import HydroMindClient, HydroComputeClient
+        from config_converter import ConfigConverter
+    except ImportError:
+        # 如果导入失败，定义占位符
+        HydroMindClient = None
+        HydroComputeClient = None
+        ConfigConverter = None
 
 
 class TwinAgentCoordinator:
@@ -20,9 +30,11 @@ class TwinAgentCoordinator:
     
     def __init__(
         self,
-        hydromind_client,  # HydroMind MCP客户端
-        hydrocompute_client,  # HydroCompute MCP客户端  
-        conversation_manager: Optional[ConversationManager] = None
+        hydromind_client=None,  # HydroMind MCP客户端
+        hydrocompute_client=None,  # HydroCompute MCP客户端  
+        conversation_manager: Optional[ConversationManager] = None,
+        hydromind_url: str = "http://localhost:8081",
+        hydrocompute_url: str = "http://localhost:8080"
     ):
         """
         初始化协调器
@@ -31,14 +43,27 @@ class TwinAgentCoordinator:
             hydromind_client: HydroMind客户端（认知智能体）
             hydrocompute_client: HydroCompute客户端（机理智能体）
             conversation_manager: 对话管理器
+            hydromind_url: HydroMind服务器地址（如果未提供客户端）
+            hydrocompute_url: HydroCompute服务器地址（如果未提供客户端）
         """
-        self.mind = hydromind_client
-        self.compute = hydrocompute_client
+        # 如果未提供客户端，自动创建
+        if hydromind_client is None and HydroMindClient is not None:
+            self.mind = HydroMindClient(hydromind_url)
+        else:
+            self.mind = hydromind_client
+        
+        if hydrocompute_client is None and HydroComputeClient is not None:
+            self.compute = HydroComputeClient(hydrocompute_url)
+        else:
+            self.compute = hydrocompute_client
+        
         self.conversation = conversation_manager or ConversationManager()
+        self.converter = ConfigConverter() if ConfigConverter is not None else None
         
         print("✅ 双智能体协调器初始化完成")
         print(f"   HydroMind (认知): {self.mind is not None}")
         print(f"   HydroCompute (机理): {self.compute is not None}")
+        print(f"   配置转换器: {self.converter is not None}")
     
     async def process_user_request(
         self,
@@ -82,62 +107,54 @@ class TwinAgentCoordinator:
             print(f"\n[阶段1] 认知理解...")
             
             # 1.1 意图识别
-            intent_result = await self.mind.call_tool("parse_user_intent", {
-                "user_input": user_input,
-                "conversation_history": self.conversation.get_history(session_id)
-            })
-            
-            if intent_result.get("isError"):
-                return self._error_response("意图识别失败", intent_result.get("error"))
-            
-            intent = intent_result.get("result", {})
+            intent = await self.mind.parse_user_intent(
+                user_input=user_input,
+                conversation_history=self.conversation.get_history(session_id)
+            )
             result["understanding"] = {"intent": intent}
             
             # 1.2 实体抽取
-            entities_result = await self.mind.call_tool("extract_entities", {
-                "user_input": user_input
-            })
-            
-            if not entities_result.get("isError"):
-                entities = entities_result.get("result", {})
-                result["understanding"]["entities"] = entities
-            else:
-                entities = {}
+            entities = await self.mind.extract_entities(user_input=user_input)
+            result["understanding"]["entities"] = entities
             
             # 1.3 需求验证
-            validation_result = await self.mind.call_tool("validate_requirements", {
-                "requirements": {
+            validation = await self.mind.validate_requirements(
+                requirements={
                     "intent": intent,
                     "entities": entities
                 }
-            })
+            )
             
-            if not validation_result.get("isError"):
-                validation = validation_result.get("result", {})
-                result["understanding"]["validation"] = validation
-                
-                # 如果需要澄清，直接返回
-                if not validation.get("is_valid"):
-                    result["status"] = "clarification_needed"
-                    result["clarification"] = {
-                        "question": self._generate_clarification_question(validation),
-                        "missing_info": validation.get("issues", [])
-                    }
-                    return result
+            result["understanding"]["validation"] = validation
+            
+            # 如果需要澄清，直接返回
+            if not validation.get("is_valid"):
+                result["status"] = "clarification_needed"
+                result["clarification"] = {
+                    "question": self._generate_clarification_question(validation),
+                    "missing_info": validation.get("issues", [])
+                }
+                return result
             
             # ========== 阶段2: 配置生成 (HydroMind) ==========
             print(f"[阶段2] 配置生成...")
             
-            config_result = await self.mind.call_tool("generate_model_config", {
-                "intent": intent,
-                "entities": entities
-            })
-            
-            if config_result.get("isError"):
-                return self._error_response("配置生成失败", config_result.get("error"))
-            
-            config_data = config_result.get("result", {})
+            config_data = await self.mind.generate_model_config(
+                intent=intent,
+                entities=entities
+            )
             result["configuration"] = config_data
+            
+            # 转换配置（如果有转换器）
+            if self.converter:
+                try:
+                    hydrosis_config = self.converter.hydromind_to_hydrosis(
+                        config_data.get("config", {})
+                    )
+                    result["configuration"]["hydrosis_config"] = hydrosis_config
+                except Exception as e:
+                    print(f"⚠️  配置转换失败: {e}")
+                    # 继续使用原配置
             
             # ========== 阶段3: 机理计算 (HydroCompute) ==========
             print(f"[阶段3] 机理计算...")
@@ -150,15 +167,13 @@ class TwinAgentCoordinator:
             
             # 3.1 创建项目（如果需要）
             if "create_project" in sub_intents or "create" in action:
-                project_result = await self.compute.call_tool("create_project", {
-                    "user_id": session_id,
-                    "project_name": entities.get("basin", {}).get("name", "项目"),
-                    "description": f"基于自然语言创建: {user_input[:50]}"
-                })
-                
-                if not project_result.get("isError"):
-                    compute_results["project"] = project_result.get("result", {})
-                    result["project_id"] = compute_results["project"].get("project_id")
+                project_info = await self.compute.create_project(
+                    user_id=session_id,
+                    project_name=entities.get("basin", {}).get("name", "项目"),
+                    description=f"基于自然语言创建: {user_input[:50]}"
+                )
+                compute_results["project"] = project_info
+                result["project_id"] = project_info.get("project_id")
             
             # 3.2 运行模拟（如果需要）
             if "run_simulation" in sub_intents or "simulate" in action:
@@ -166,13 +181,11 @@ class TwinAgentCoordinator:
                 project_id = result.get("project_id") or kwargs.get("project_id")
                 
                 if project_id:
-                    simulation_result = await self.compute.call_tool("run_simulation", {
-                        "project_id": project_id,
-                        "generate_report": False  # 我们用HydroMind生成报告
-                    })
-                    
-                    if not simulation_result.get("isError"):
-                        compute_results["simulation"] = simulation_result.get("result", {})
+                    simulation_info = await self.compute.run_simulation(
+                        project_id=project_id,
+                        generate_report=False  # 我们用HydroMind生成报告
+                    )
+                    compute_results["simulation"] = simulation_info
                 else:
                     compute_results["simulation"] = {
                         "status": "skipped",
@@ -185,27 +198,23 @@ class TwinAgentCoordinator:
             print(f"[阶段4] 结果解读...")
             
             if "simulation" in compute_results and compute_results["simulation"].get("status") != "skipped":
-                interpretation_result = await self.mind.call_tool("interpret_results", {
-                    "simulation_results": compute_results["simulation"],
-                    "model_config": config_data.get("config", {}),
-                    "user_objective": entities.get("objectives", ["水文模拟"])[0] if entities.get("objectives") else "水文模拟"
-                })
-                
-                if not interpretation_result.get("isError"):
-                    result["interpretation"] = interpretation_result.get("result", {})
+                interpretation = await self.mind.interpret_results(
+                    simulation_results=compute_results["simulation"],
+                    model_config=config_data.get("config", {}),
+                    user_objective=entities.get("objectives", ["水文模拟"])[0] if entities.get("objectives") else "水文模拟"
+                )
+                result["interpretation"] = interpretation
             
             # ========== 阶段5: 报告生成 (HydroMind) ==========
             print(f"[阶段5] 报告生成...")
             
             if "generate_report" in sub_intents or kwargs.get("generate_report", True):
-                report_result = await self.mind.call_tool("create_executive_report", {
-                    "workflow_result": compute_results.get("simulation", {}),
-                    "model_config": config_data.get("config", {}),
-                    "report_type": "executive"
-                })
-                
-                if not report_result.get("isError"):
-                    result["report"] = report_result.get("result", {})
+                report = await self.mind.create_executive_report(
+                    workflow_result=compute_results.get("simulation", {}),
+                    model_config=config_data.get("config", {}),
+                    report_type="executive"
+                )
+                result["report"] = report
             
             # ========== 完成 ==========
             result["status"] = "completed"
@@ -239,23 +248,18 @@ class TwinAgentCoordinator:
         - 配置预览
         - 问答交互
         """
-        intent_result = await self.mind.call_tool("parse_user_intent", {
-            "user_input": user_input,
-            "conversation_history": self.conversation.get_history(session_id)
-        })
+        intent = await self.mind.parse_user_intent(
+            user_input=user_input,
+            conversation_history=self.conversation.get_history(session_id)
+        )
         
-        entities_result = await self.mind.call_tool("extract_entities", {
-            "user_input": user_input
-        })
+        entities = await self.mind.extract_entities(user_input=user_input)
         
         return {
             "mode": "quick_understand",
-            "intent": intent_result.get("result", {}),
-            "entities": entities_result.get("result", {}),
-            "next_steps": self._suggest_next_steps(
-                intent_result.get("result", {}),
-                entities_result.get("result", {})
-            )
+            "intent": intent,
+            "entities": entities,
+            "next_steps": self._suggest_next_steps(intent, entities)
         }
     
     async def answer_question(
@@ -272,15 +276,10 @@ class TwinAgentCoordinator:
             context: 上下文（模拟结果、配置等）
             session_id: 会话ID
         """
-        qa_result = await self.mind.call_tool("answer_questions", {
-            "question": question,
-            "context": context
-        })
-        
-        if qa_result.get("isError"):
-            return {"error": qa_result.get("error")}
-        
-        return qa_result.get("result", {})
+        return await self.mind.answer_questions(
+            question=question,
+            context=context
+        )
     
     # ============ 辅助方法 ============
     

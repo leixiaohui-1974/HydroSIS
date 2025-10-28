@@ -1,0 +1,86 @@
+# HydroSIS Twin-Agent System
+# 双智能体系统完整部署
+
+version: '3.8'
+
+services:
+  # ========== HydroCompute Agent (机理智能体) ==========
+  hydrocompute:
+    build:
+      context: .
+      dockerfile: mcp_server/Dockerfile
+    container_name: hydrocompute-agent
+    ports:
+      - "8080:8080"
+    environment:
+      - DATA_ROOT=/data
+      - PORT=8080
+      - HOST=0.0.0.0
+      - WORKERS=4
+    volumes:
+      - hydrosis-data:/data
+      - ./config:/app/config:ro
+      - ./data:/app/data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - hydrosis-network
+
+  # ========== HydroMind Agent (认知智能体) ==========
+  hydromind:
+    build:
+      context: .
+      dockerfile: mcp_server_mind/Dockerfile
+    container_name: hydromind-agent
+    ports:
+      - "8081:8081"
+    environment:
+      - QWEN_API_KEY=${QWEN_API_KEY:-}
+      - QWEN_MODEL=${QWEN_MODEL:-qwen-max}
+      - LLM_BACKEND=${LLM_BACKEND:-auto}
+      - PORT=8081
+      - HOST=0.0.0.0
+    volumes:
+      - ./mcp_server_mind/knowledge_base:/app/mcp_server_mind/knowledge_base
+      - ./mcp_server_mind/prompt_templates:/app/mcp_server_mind/prompt_templates
+    depends_on:
+      - hydrocompute
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - hydrosis-network
+
+  # ========== Twin-Agent Coordinator (协调器) ==========
+  # 注意：协调器可以作为独立服务，也可以嵌入到应用中
+  # 这里暂时注释，因为协调器通常在应用层使用
+  # coordinator:
+  #   build:
+  #     context: .
+  #     dockerfile: mcp_orchestrator/Dockerfile
+  #   ports:
+  #     - "8082:8082"
+  #   environment:
+  #     - HYDROMIND_URL=http://hydromind:8081
+  #     - HYDROCOMPUTE_URL=http://hydrocompute:8080
+  #   depends_on:
+  #     - hydromind
+  #     - hydrocompute
+  #   networks:
+  #     - hydrosis-network
+
+volumes:
+  hydrosis-data:
+    name: hydrosis-data
+
+networks:
+  hydrosis-network:
+    name: hydrosis-network
+    driver: bridge
